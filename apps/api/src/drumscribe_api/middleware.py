@@ -7,6 +7,7 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 from starlette.responses import Response
 
 from .config import Settings
+from .enums import Environment
 from .errors import problem_response
 from .security import privacy_hash
 from .services.rate_limits import (
@@ -119,13 +120,16 @@ class PlatformMiddleware(BaseHTTPMiddleware):
             headers={"Retry-After": "1"},
         )
 
-    @staticmethod
-    def _secure(response: Response, request_id: str) -> Response:
+    def _secure(self, response: Response, request_id: str) -> Response:
         response.headers["X-Request-ID"] = request_id
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "camera=(), geolocation=(), microphone=(self)"
         response.headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'"
+        if self.settings.environment is Environment.PRODUCTION:
+            response.headers["Strict-Transport-Security"] = (
+                f"max-age={self.settings.hsts_max_age_seconds}; includeSubDomains"
+            )
         response.headers.setdefault("Cache-Control", "no-store")
         return response

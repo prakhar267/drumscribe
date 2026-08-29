@@ -65,6 +65,10 @@ class Settings(BaseSettings):
     cookie_domain: str | None = None
     public_api_url: str = "http://localhost:8000"
     web_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
+    allowed_hosts: list[str] = Field(
+        default_factory=lambda: ["localhost", "127.0.0.1", "testserver"]
+    )
+    hsts_max_age_seconds: int = Field(default=31_536_000, ge=0)
     dev_expose_magic_link: bool = True
     magic_link_delivery: Literal["development", "webhook"] = "development"
     magic_link_webhook_url: str | None = None
@@ -108,6 +112,12 @@ class Settings(BaseSettings):
         if self.environment is Environment.PRODUCTION:
             if any(origin == "*" for origin in self.web_origins):
                 raise ValueError("production CORS origins must be explicit")
+            if not self.allowed_hosts or any(
+                host in {"*", "localhost", "127.0.0.1", "testserver"} for host in self.allowed_hosts
+            ):
+                raise ValueError("production allowed hosts must be explicit public hostnames")
+            if self.hsts_max_age_seconds < 31_536_000:
+                raise ValueError("production HSTS must be at least one year")
             if not self.database_url.startswith(("postgresql+asyncpg://", "postgresql://")):
                 raise ValueError("production requires PostgreSQL")
             if self.storage_backend != "s3":

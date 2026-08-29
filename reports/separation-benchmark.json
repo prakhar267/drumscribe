@@ -1,0 +1,42 @@
+{
+  "coverage": {
+    "covered": [
+      "clean_studio_rock"
+    ],
+    "missing": [
+      "pop",
+      "indie",
+      "acoustic_rock",
+      "dense_electric_guitars",
+      "bass_heavy_mix",
+      "quiet_drums",
+      "loud_drums",
+      "reverb_heavy_drums",
+      "compressed_mastering",
+      "live_recording"
+    ]
+  },
+  "evidenceLevel": "synthetic_tooling_only",
+  "meanListeningScore": 3.0,
+  "meanSiSdrDb": 27.503060393350424,
+  "schemaVersion": 1,
+  "trackCount": 1,
+  "tracks": [
+    {
+      "condition": "clean_studio_rock",
+      "id": "generated-signal-tooling-check",
+      "listening": {
+        "bleed": 3,
+        "cymbalEnergy": 3,
+        "kickPreservation": 3,
+        "snarePreservation": 3,
+        "tomPreservation": 3,
+        "transientIntegrity": 3
+      },
+      "listeningMean": 3.0,
+      "modelVersion": "test-only",
+      "provider": "test-fixture",
+      "siSdrDb": 27.503060393350424
+    }
+  ]
+}

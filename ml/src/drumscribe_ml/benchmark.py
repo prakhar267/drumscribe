@@ -156,6 +156,102 @@ def evaluate_payload(payload: dict[str, Any], *, tolerance_seconds: float = 0.05
     }
 
 
+def evaluate_benchmark(payload: dict[str, Any]) -> dict[str, Any]:
+    """Evaluate all product onset tolerances plus quality/economics context."""
+    tolerances = (0.025, 0.05, 0.1)
+    reports = {
+        str(round(value * 1000)): evaluate_payload(payload, tolerance_seconds=value)
+        for value in tolerances
+    }
+    result = dict(reports["50"])
+    result["schemaVersion"] = 2
+    result["onsetToleranceReports"] = reports
+    result["providerCombinations"] = _provider_combinations(payload)
+    result["correctionBurden"] = _correction_burden(payload)
+    result["evidenceLevel"] = payload.get("evidenceLevel", "unspecified")
+    return result
+
+
+def _provider_combinations(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    totals: dict[str, dict[str, float | int | str]] = {}
+    for song in payload.get("songs", []):
+        providers = song.get("providers", {})
+        key = " → ".join(
+            str(providers.get(name, "unknown"))
+            for name in ("separation", "transcription", "beatTracking")
+        )
+        row = totals.setdefault(
+            key,
+            {
+                "combination": key,
+                "songs": 0,
+                "successfulSongs": 0,
+                "audioSeconds": 0.0,
+                "processingSeconds": 0.0,
+                "cost": 0.0,
+            },
+        )
+        row["songs"] = int(row["songs"]) + 1
+        row["successfulSongs"] = int(row["successfulSongs"]) + int(song.get("successful", True))
+        row["audioSeconds"] = float(row["audioSeconds"]) + float(song["durationSeconds"])
+        row["processingSeconds"] = float(row["processingSeconds"]) + float(
+            song.get("processingSeconds", 0)
+        )
+        row["cost"] = float(row["cost"]) + float(song.get("providerCost", 0))
+    output = []
+    for row in totals.values():
+        audio_minutes = float(row["audioSeconds"]) / 60
+        successes = int(row["successfulSongs"])
+        output.append(
+            {
+                **row,
+                "costCurrency": payload.get("costCurrency", "USD"),
+                "costPerAudioMinute": float(row["cost"]) / audio_minutes,
+                "costPerSuccessfulTranscription": (
+                    float(row["cost"]) / successes if successes else None
+                ),
+                "processingSecondsPerAudioMinute": float(row["processingSeconds"]) / audio_minutes,
+            }
+        )
+    return sorted(output, key=lambda row: str(row["combination"]))
+
+
+def _correction_burden(payload: dict[str, Any]) -> dict[str, Any]:
+    keys = (
+        "eventsAdded",
+        "eventsDeleted",
+        "eventsMoved",
+        "instrumentsReassigned",
+        "tempoCorrections",
+        "barLineCorrections",
+    )
+    totals = {key: 0 for key in keys}
+    correction_seconds = 0.0
+    duration_seconds = 0.0
+    measured_songs = 0
+    for song in payload.get("songs", []):
+        burden = song.get("correctionBurden")
+        if not isinstance(burden, dict):
+            continue
+        measured_songs += 1
+        duration_seconds += float(song["durationSeconds"])
+        correction_seconds += float(burden.get("correctionSeconds", 0))
+        for key in keys:
+            totals[key] += int(burden.get(key, 0))
+    correction_count = sum(totals.values())
+    audio_minutes = duration_seconds / 60
+    return {
+        **totals,
+        "measuredSongs": measured_songs,
+        "totalCorrections": correction_count,
+        "correctionSeconds": correction_seconds,
+        "correctionsPerAudioMinute": correction_count / audio_minutes if audio_minutes else None,
+        "correctionMinutesPerAudioMinute": correction_seconds / duration_seconds
+        if duration_seconds
+        else None,
+    }
+
+
 def _match_onsets(
     references: Sequence[float], predictions: Sequence[float], tolerance: float
 ) -> tuple[dict[str, int], list[float]]:
@@ -237,6 +333,20 @@ def render_html_report(report: dict[str, Any]) -> str:
     )
     embedded = json.dumps(report, separators=(",", ":")).replace("<", "\\u003c")
     overall = report["overall"]
+    tolerance_rows = "".join(
+        _table_row(f"{name} ms", item["overall"])
+        for name, item in report.get("onsetToleranceReports", {}).items()
+    )
+    burden = report.get("correctionBurden", {})
+    provider_rows = "".join(
+        "<tr>"
+        f"<td>{html.escape(str(item['combination']))}</td>"
+        f"<td>{item['successfulSongs']}/{item['songs']}</td>"
+        f"<td>{item['costPerAudioMinute']:.3f}</td>"
+        f"<td>{item['processingSecondsPerAudioMinute']:.1f}s</td>"
+        "</tr>"
+        for item in report.get("providerCombinations", [])
+    )
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
 <title>DrumScribe benchmark</title><style>
@@ -256,10 +366,19 @@ onset tolerance {report["toleranceSeconds"] * 1000:g} ms</p>
 <div class="metric">Per-song F1<strong>{overall["meanPerSongF1"]:.3f}</strong></div>
 <div class="metric">Timing MAE
 <strong>{_format_mae(overall["timingMaeSeconds"])}</strong></div></section>
+<p><strong>Evidence:</strong> {html.escape(str(report.get("evidenceLevel", "unspecified")))}</p>
+{f"<h2>Onset tolerances</h2>{_table(tolerance_rows)}" if tolerance_rows else ""}
 <h2>Input conditions</h2>{_table(condition_rows)}
 <h2>Canonical classes</h2>{_table(class_rows)}
 <h2>Coarse families</h2>{_table(family_rows)}
 <h2>Songs</h2>{_table(song_rows)}
+<h2>Correction burden</h2><p>{burden.get("totalCorrections", 0)} corrections ·
+{_format_rate(burden.get("correctionsPerAudioMinute"))} corrections/audio minute ·
+{_format_rate(burden.get("correctionMinutesPerAudioMinute"))} correction minutes/audio minute</p>
+<h2>Provider quality, latency & cost</h2>
+<table><thead><tr><th>Combination</th><th>Success</th><th>Cost/audio min</th>
+<th>Processing/audio min</th></tr></thead>
+<tbody>{provider_rows}</tbody></table>
 <script id="benchmark-data" type="application/json">{embedded}</script></body></html>"""
 
 
@@ -284,6 +403,10 @@ def _format_mae(value: float | None) -> str:
     return "—" if value is None else f"{value * 1000:.1f} ms"
 
 
+def _format_rate(value: float | None) -> str:
+    return "—" if value is None else f"{value:.2f}"
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("input", type=Path)
@@ -294,7 +417,11 @@ def main(argv: list[str] | None = None) -> int:
     if args.json_path.resolve() == args.html_path.resolve():
         parser.error("--json and --html must be different paths")
     payload = json.loads(args.input.read_text(encoding="utf-8"))
-    report = evaluate_payload(payload, tolerance_seconds=args.tolerance_ms / 1000)
+    report = (
+        evaluate_benchmark(payload)
+        if args.tolerance_ms == 50
+        else evaluate_payload(payload, tolerance_seconds=args.tolerance_ms / 1000)
+    )
     for path in (args.json_path, args.html_path):
         path.parent.mkdir(parents=True, exist_ok=True)
         if path.exists():

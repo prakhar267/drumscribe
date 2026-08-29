@@ -10,7 +10,7 @@ import {
   Trash2,
 } from "lucide-react";
 import type { PointerEvent as ReactPointerEvent } from "react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@/lib/api/client";
 import type {
   DrumProject,
@@ -116,6 +116,16 @@ export function TimingEditor({
   const [message, setMessage] = useState<string | null>(null);
   const [taps, setTaps] = useState<number[]>([]);
   const timelineRef = useRef<HTMLDivElement>(null);
+  const editingStartedAtRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    editingStartedAtRef.current = performance.now();
+  }, []);
+
+  const editingDurationSeconds = () =>
+    editingStartedAtRef.current === null
+      ? undefined
+      : Math.min(3600, (performance.now() - editingStartedAtRef.current) / 1000);
 
   const activeSegment = useMemo(
     () => segmentAt(segments, currentTime),
@@ -288,6 +298,7 @@ export function TimingEditor({
         measureStart: requantize === "selected" ? measureStart - 1 : undefined,
         measureEnd: requantize === "selected" ? measureEnd - 1 : undefined,
         preserveManualEdits: preserveManual,
+        editingDurationSeconds: editingDurationSeconds(),
       });
       await onApplied(result);
       setSaveState("saved");
@@ -309,6 +320,7 @@ export function TimingEditor({
         measureStart: requantize === "selected" ? measureStart - 1 : undefined,
         measureEnd: requantize === "selected" ? measureEnd - 1 : undefined,
         preserveManualEdits: preserveManual,
+        editingDurationSeconds: editingDurationSeconds(),
       });
       await onApplied(result);
       setSaveState("saved");

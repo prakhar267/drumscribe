@@ -8,6 +8,7 @@ import structlog
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from .api.router import api_router
 from .config import Settings, get_settings
@@ -117,6 +118,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         ],
         max_age=600,
     )
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=app_settings.allowed_hosts)
     app.add_exception_handler(APIError, api_error_handler)  # type: ignore[arg-type]
     app.add_exception_handler(RequestValidationError, validation_error_handler)  # type: ignore[arg-type]
     app.add_exception_handler(Exception, unhandled_error_handler)

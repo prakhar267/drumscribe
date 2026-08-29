@@ -44,11 +44,13 @@ export function AdminDashboard() {
           <article><Waves /><span>Quantized hits</span><strong>{diagnostics.eventCount}</strong><small>{diagnostics.lowConfidenceEventCount} flagged for review</small></article>
           <article><Database /><span>Private assets</span><strong>{diagnostics.assets.length}</strong><small>metadata only</small></article>
           <article><ShieldCheck /><span>Job retries</span><strong>{diagnostics.job.retryCount}</strong><small>durable queue attempts</small></article>
+          <article><Activity /><span>Human corrections</span><strong>{diagnostics.correctionBurden.totalCorrections ?? 0}</strong><small>{Number(diagnostics.correctionBurden.correctionsPerAudioMinute ?? 0).toFixed(1)} / audio minute</small></article>
         </section>
         <div className="admin-grid">
           <section className="surface admin-card"><header><div><Activity /><span><strong>Stage timings</strong><small>{diagnostics.job.id}</small></span></div><span className="pill pill-lime">{diagnostics.job.stage}</span></header><div className="debug-code"><code>{JSON.stringify(diagnostics.stageTimings, null, 2)}</code></div></section>
           <section className="surface admin-card"><header><div><Database /><span><strong>Asset metadata</strong><small>private content excluded</small></span></div></header><div className="debug-code"><code>{JSON.stringify(diagnostics.assets, null, 2)}</code></div></section>
           <section className="surface admin-card admin-wide"><header><div><Braces /><span><strong>Providers & model runs</strong><small>reproducibility record</small></span></div></header><div className="debug-code"><code>{JSON.stringify({ providerVersions: diagnostics.providerVersions, modelRuns: diagnostics.modelRuns, technicalErrorDetail: diagnostics.technicalErrorDetail }, null, 2)}</code></div></section>
+          <section className="surface admin-card admin-wide"><header><div><Activity /><span><strong>Correction burden</strong><small>product-quality signal, not academic accuracy</small></span></div></header><div className="debug-code"><code>{JSON.stringify(diagnostics.correctionBurden, null, 2)}</code></div></section>
         </div>
       </>}
     </main>

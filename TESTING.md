@@ -11,6 +11,11 @@ uv run --project packages/music-engine pytest packages/music-engine/tests
 uv run --project ml pytest ml/tests
 ```
 
+The ML tests also exercise real PCM augmentation, log-mel feature generation,
+canonical label preservation, calibration, 25/50/100 ms evaluation, SI-SDR,
+provider economics and correction-burden reporting. Committed benchmark inputs
+are synthetic tooling checks and are labelled accordingly.
+
 The web suite covers editing commands, transport/loop state, upload validation, and critical rendering. API tests cover authorization, transitions, bulk revisions, signed access, and validation contracts. Music-engine tests use deterministic synthetic fixtures for quantization and export semantics.
 
 ## Full acceptance
@@ -41,3 +46,7 @@ The browser suite checks the major homepage, upload, progress, editor, notation,
 ## GPU/research checks
 
 Expensive source-separation and research-transcription checks do not run on every pull request. The optional workflow records environment, provider/model hash, dataset manifest hash, and benchmark artifacts. A passing GPU job does not authorize a model for commercial production.
+
+Paid provider smoke tests are separately opt-in with `RUN_LIVE_ML_TESTS=1` and
+`DRUMSCRIBE_LIVE_TEST_AUDIO` pointing to a rights-cleared fixture. They are skipped
+by normal CI and never fall back to a fixture provider.

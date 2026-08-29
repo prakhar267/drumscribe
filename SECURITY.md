@@ -12,6 +12,7 @@ Every project, asset, event, revision, and export operation is scoped to the aut
 - Configurable byte, duration, rate, and concurrency limits apply before expensive work.
 - FFmpeg/FFprobe run through argument arrays with timeouts and constrained working directories.
 - Session cookies are HTTP-only, same-site, and secure outside local development. Magic-link tokens are single-use, short-lived, and stored as hashes.
+- Production rejects unlisted Host headers and emits one-year HSTS after TLS termination is verified.
 - Bulk edits are transactional, authorized, bounded, and revisioned.
 - Structured errors contain stable codes; logs exclude raw audio, signed URLs, tokens, and full user filenames.
 - Delete operations revoke access immediately and enqueue idempotent asset purging. Account deletion cascades through owned projects.
@@ -26,4 +27,3 @@ Set an exact origin allow-list; do not use wildcard CORS with credentials. At th
 ## Reporting
 
 This private pre-release repository has no public security intake address yet. Establish one before launch and add coordinated-disclosure terms. Legal, privacy, terms, and copyright copy requires counsel review.
-

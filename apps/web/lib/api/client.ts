@@ -48,6 +48,7 @@ export interface AdminJobDiagnostics {
   modelRuns: Array<Record<string, unknown>>;
   eventCount: number;
   lowConfidenceEventCount: number;
+  correctionBurden: Record<string, number | null>;
 }
 
 class ApiError extends Error {
@@ -316,7 +317,12 @@ export const api = {
     }
   },
 
-  async bulkUpdateEvents(projectId: string, changes: EventChanges, revision: number) {
+  async bulkUpdateEvents(
+    projectId: string,
+    changes: EventChanges,
+    revision: number,
+    editingDurationSeconds?: number,
+  ) {
     if (typeof window !== "undefined" && DEMO_MODE && demoProjects.some((project) => project.id === projectId)) {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(changes.snapshot));
       return { revision: revision + 1, savedAt: new Date().toISOString() };
@@ -328,6 +334,7 @@ export const api = {
         deleteIds: changes.deleteIds,
         expectedVersion: revision,
         revisionLabel: "Editor autosave",
+        editingDurationSeconds,
       }),
     });
     return { revision: response.version, savedAt: new Date().toISOString() };
@@ -349,6 +356,7 @@ export const api = {
     measureStart?: number;
     measureEnd?: number;
     preserveManualEdits: boolean;
+    editingDurationSeconds?: number;
   }): Promise<TimingMap> {
     if (DEMO_MODE && demoProjects.some((project) => project.id === projectId)) {
       return {
@@ -374,6 +382,7 @@ export const api = {
     measureStart?: number;
     measureEnd?: number;
     preserveManualEdits: boolean;
+    editingDurationSeconds?: number;
   }): Promise<TimingMap> {
     if (DEMO_MODE && demoProjects.some((project) => project.id === projectId)) {
       return demoTiming(readDemoProject(projectId));

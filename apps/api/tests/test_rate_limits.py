@@ -184,3 +184,16 @@ def test_middleware_fails_closed_for_auth_and_open_for_general_routes(
         assert auth_response.json()["code"] == "RATE_LIMIT_UNAVAILABLE"
         assert auth_response.headers["Retry-After"] == "1"
         assert client.get("/api/v1/projects").status_code == 200
+
+
+def test_production_middleware_sets_hsts(settings: Settings) -> None:
+    configured = settings.model_copy(
+        update={
+            "environment": Environment.PRODUCTION,
+            "enable_rate_limiting": False,
+            "hsts_max_age_seconds": 31_536_000,
+        }
+    )
+    with TestClient(_middleware_app(configured)) as client:
+        response = client.get("/api/v1/projects")
+    assert response.headers["Strict-Transport-Security"] == ("max-age=31536000; includeSubDomains")

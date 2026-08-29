@@ -5,7 +5,7 @@ from sqlalchemy import func, select
 
 from ...dependencies import AdminPrincipal, DBSession
 from ...errors import not_found
-from ...models import AudioAsset, DrumEvent, ModelRun, ProcessingJob
+from ...models import AudioAsset, DrumEvent, ModelRun, ProcessingJob, ProductEvent, Project
 from ...schemas import AdminJobDiagnostics, AdminModelRun, AssetResponse
 from ...services.jobs import job_response
 
@@ -54,6 +54,38 @@ async def job_diagnostics(
         )
         or 0
     )
+    correction_events = list(
+        (
+            await db.execute(
+                select(ProductEvent).where(
+                    ProductEvent.project_id == job.project_id,
+                    ProductEvent.name.in_(("transcription_corrected", "timing_corrected")),
+                )
+            )
+        ).scalars()
+    )
+    duration_seconds = float(
+        await db.scalar(select(Project.duration_seconds).where(Project.id == job.project_id)) or 0
+    )
+    correction_keys = (
+        "eventsAdded",
+        "eventsDeleted",
+        "eventsMoved",
+        "instrumentsReassigned",
+        "velocitiesChanged",
+        "tempoCorrections",
+        "timeSignatureCorrections",
+        "barLineCorrections",
+        "beatsMoved",
+    )
+    correction_totals = {
+        key: sum(int(event.properties.get(key) or 0) for event in correction_events)
+        for key in correction_keys
+    }
+    editing_seconds = sum(
+        float(event.properties.get("editingDurationSeconds") or 0) for event in correction_events
+    )
+    correction_count = sum(correction_totals.values())
     return AdminJobDiagnostics(
         job=job_response(job),
         provider_versions=job.provider_versions,
@@ -66,4 +98,15 @@ async def job_diagnostics(
         model_runs=[AdminModelRun.model_validate(run) for run in model_runs],
         event_count=event_count,
         low_confidence_event_count=low_confidence_count,
+        correction_burden={
+            **correction_totals,
+            "editingDurationSeconds": editing_seconds,
+            "totalCorrections": correction_count,
+            "correctionsPerAudioMinute": (
+                correction_count / (duration_seconds / 60) if duration_seconds else None
+            ),
+            "correctionMinutesPerAudioMinute": (
+                editing_seconds / duration_seconds if duration_seconds else None
+            ),
+        },
     )

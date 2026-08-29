@@ -1,4 +1,5 @@
 import uuid
+from dataclasses import dataclass
 from math import isclose
 
 from sqlalchemy import select
@@ -12,6 +13,24 @@ from ..security import utcnow
 from .revisions import create_revision, current_snapshot
 
 
+@dataclass(slots=True)
+class CorrectionBurden:
+    events_added: int = 0
+    events_deleted: int = 0
+    events_moved: int = 0
+    instruments_reassigned: int = 0
+    velocities_changed: int = 0
+
+    def as_dict(self) -> dict[str, int]:
+        return {
+            "eventsAdded": self.events_added,
+            "eventsDeleted": self.events_deleted,
+            "eventsMoved": self.events_moved,
+            "instrumentsReassigned": self.instruments_reassigned,
+            "velocitiesChanged": self.velocities_changed,
+        }
+
+
 async def apply_bulk_events(
     db: AsyncSession,
     *,
@@ -20,7 +39,7 @@ async def apply_bulk_events(
     payload: BulkEventsRequest,
     user_id: uuid.UUID,
     max_events: int,
-) -> tuple[list[DrumEvent], list[uuid.UUID], uuid.UUID | None]:
+) -> tuple[list[DrumEvent], list[uuid.UUID], uuid.UUID | None, CorrectionBurden]:
     operation_count = len(payload.upserts) + len(payload.delete_ids)
     if operation_count == 0:
         raise APIError(422, "EMPTY_EDIT_BATCH", "Submit at least one event change.")
@@ -63,6 +82,7 @@ async def apply_bulk_events(
             raise not_found("Drum event")
 
     upserted: list[DrumEvent] = []
+    burden = CorrectionBurden()
     for write in payload.upserts:
         event = existing.get(write.id) if write.id else None
         if event is None:
@@ -85,6 +105,7 @@ async def apply_bulk_events(
                 manually_edited=True,
             )
             db.add(event)
+            burden.events_added += 1
         else:
             confidence_changed = (
                 "confidence" in write.model_fields_set and event.confidence != write.confidence
@@ -107,6 +128,14 @@ async def apply_bulk_events(
             )
             if not materially_changed:
                 continue
+            burden.events_moved += int(
+                not isclose(event.onset_seconds, write.onset_seconds, abs_tol=1e-9)
+                or not isclose(event.quantized_onset, write.quantized_onset, abs_tol=1e-9)
+                or event.measure_index != write.measure_index
+                or not isclose(event.beat_position, write.beat_position, abs_tol=1e-9)
+            )
+            burden.instruments_reassigned += int(event.instrument != write.instrument)
+            burden.velocities_changed += int(event.velocity != write.velocity)
             event.instrument = write.instrument
             event.onset_seconds = write.onset_seconds
             event.duration_seconds = write.duration_seconds
@@ -130,9 +159,10 @@ async def apply_bulk_events(
         event.deleted_at = utcnow()
         event.manually_edited = True
         deleted.append(event_id)
+        burden.events_deleted += 1
 
     if not upserted and not deleted:
-        return [], [], None
+        return [], [], None, burden
 
     transcription.version += 1
     project.edit_version = transcription.version
@@ -148,4 +178,4 @@ async def apply_bulk_events(
     )
     if revision.id is None:
         raise RuntimeError("revision identifier was not generated")
-    return upserted, deleted, revision.id
+    return upserted, deleted, revision.id, burden

@@ -288,9 +288,7 @@ async def test_klangio_beat_adapter_requires_downbeats_and_builds_canonical_grid
         headers={"kl-api-key": "test-key"},
         transport=httpx.MockTransport(handler),
     ) as client:
-        result = await KlangioBeatTrackingProvider(
-            provider_config(), client=client
-        ).track(source)
+        result = await KlangioBeatTrackingProvider(provider_config(), client=client).track(source)
 
     assert result.bar_one_seconds == 0.2
     assert result.segments[0].bpm == 120
@@ -320,6 +318,7 @@ def production_settings(**overrides: Any) -> Settings:
         "session_secret": "a" * 40,
         "s3_access_key_id": "access",
         "s3_secret_access_key": "secret",
+        "allowed_hosts": ["api.drumscribe.test"],
     }
     values.update(overrides)
     return Settings(**values)

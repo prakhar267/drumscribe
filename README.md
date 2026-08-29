@@ -49,9 +49,13 @@ uv run --project apps/api uvicorn drumscribe_api.main:app --reload --port 8000
 # Music engine
 uv sync --project packages/music-engine --extra pdf --group dev
 uv run --project packages/music-engine pytest packages/music-engine/tests
-uv sync --project ml --all-extras
+uv sync --project ml --extra dev
 uv run --project ml pytest ml/tests
 ```
+
+Run the release-equivalent local gate with `make ci`. `make ci-fast` skips only
+network dependency audits for rapid iteration. Paid provider validation is
+explicitly opt-in with `RUN_LIVE_ML_TESTS=1` and a rights-cleared audio path.
 
 Generate a rights-cleared audio/MIDI/ground-truth fixture with:
 
@@ -78,6 +82,10 @@ The implementation checklist is in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.
 - Legal pages are launch-ready placeholders only and require review by qualified counsel before public release.
 - No payment integration is present. Every account receives the internal `FREE_BETA` entitlement.
 
-See [SECURITY.md](SECURITY.md), [MODEL_LICENSING.md](MODEL_LICENSING.md), and [DEPLOYMENT.md](DEPLOYMENT.md) before exposing an environment publicly.
+See [SECURITY.md](SECURITY.md), [MODEL_LICENSING.md](MODEL_LICENSING.md),
+[ML_EVALUATION.md](ML_EVALUATION.md), [DEPLOYMENT.md](DEPLOYMENT.md),
+[OPERATIONS.md](OPERATIONS.md), [INCIDENT_RESPONSE.md](INCIDENT_RESPONSE.md),
+[DATA_RETENTION.md](DATA_RETENTION.md), and [LAUNCH_CHECKLIST.md](LAUNCH_CHECKLIST.md)
+before exposing an environment publicly.
 Third-party runtime obligations are recorded in
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

@@ -1,0 +1,14 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width"><title>DrumScribe separation benchmark</title>
+<style>body{font:15px system-ui;max-width:1100px;margin:2rem auto;padding:0 1rem}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:.55rem;
+border-bottom:1px solid #ccc}.blocked{padding:1rem;border:1px solid #b66;
+background:#fee}</style></head><body>
+<h1>DrumScribe source-separation benchmark</h1>
+<p><strong>Evidence:</strong> synthetic_tooling_only</p>
+<p>1 tracks · mean listening score
+3.00/5 · mean SI-SDR 27.50 dB</p>
+<p class='blocked'>Missing required conditions: pop, indie, acoustic_rock, dense_electric_guitars, bass_heavy_mix, quiet_drums, loud_drums, reverb_heavy_drums, compressed_mastering, live_recording</p>
+<table><thead><tr><th>Track</th><th>Condition</th><th>Provider</th>
+<th>SI-SDR dB</th><th>Listening</th></tr></thead><tbody><tr><td>generated-signal-tooling-check</td><td>clean_studio_rock</td><td>test-fixture</td><td>27.50</td><td>3.00/5</td></tr></tbody></table>
+<script id="benchmark-data" type="application/json">{"schemaVersion":1,"evidenceLevel":"synthetic_tooling_only","trackCount":1,"coverage":{"covered":["clean_studio_rock"],"missing":["pop","indie","acoustic_rock","dense_electric_guitars","bass_heavy_mix","quiet_drums","loud_drums","reverb_heavy_drums","compressed_mastering","live_recording"]},"meanSiSdrDb":27.503060393350424,"meanListeningScore":3.0,"tracks":[{"id":"generated-signal-tooling-check","condition":"clean_studio_rock","provider":"test-fixture","modelVersion":"test-only","siSdrDb":27.503060393350424,"listening":{"bleed":3,"cymbalEnergy":3,"kickPreservation":3,"snarePreservation":3,"tomPreservation":3,"transientIntegrity":3},"listeningMean":3.0}]}</script></body></html>

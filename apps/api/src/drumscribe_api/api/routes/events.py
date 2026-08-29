@@ -49,6 +49,7 @@ async def update_timing(
 ) -> TimingResponse:
     project = await owned_project(str(project_id), db, principal)
     transcription = await active_transcription(db, project)
+    previous = parse_timing(transcription, project.duration_seconds or 0)
     state = TimingState(
         bar_one_seconds=payload.bar_one_seconds,
         segments=tuple(payload.segments),
@@ -90,6 +91,32 @@ async def update_timing(
             "requantizedEvents": count,
             "segments": len(state.segments),
             "beats": len(state.beats),
+            "barLineCorrections": int(
+                abs(previous.bar_one_seconds - state.bar_one_seconds) > 0.001
+            ),
+            "tempoCorrections": sum(
+                1
+                for index, segment in enumerate(state.segments)
+                if index >= len(previous.segments)
+                or abs(previous.segments[index].bpm - segment.bpm) > 0.01
+            ),
+            "timeSignatureCorrections": sum(
+                1
+                for index, segment in enumerate(state.segments)
+                if index >= len(previous.segments)
+                or previous.segments[index].time_signature_numerator
+                != segment.time_signature_numerator
+                or previous.segments[index].time_signature_denominator
+                != segment.time_signature_denominator
+            ),
+            "beatsMoved": sum(
+                1
+                for index, beat in enumerate(state.beats)
+                if index >= len(previous.beats)
+                or abs(previous.beats[index].time_seconds - beat.time_seconds) > 0.001
+            )
+            + max(0, len(previous.beats) - len(state.beats)),
+            "editingDurationSeconds": payload.editing_duration_seconds,
         },
     )
     await db.commit()
@@ -202,7 +229,7 @@ async def bulk_edit_events(
 ) -> BulkEventsResponse:
     project = await owned_project(str(project_id), db, principal)
     transcription = await active_transcription(db, project)
-    upserted, deleted_ids, revision_id = await apply_bulk_events(
+    upserted, deleted_ids, revision_id, burden = await apply_bulk_events(
         db,
         project=project,
         transcription=transcription,
@@ -228,7 +255,13 @@ async def bulk_edit_events(
             "transcription_corrected",
             user_id=principal.user.id,
             project_id=project.id,
-            properties={"upserts": len(upserted), "deletions": len(deleted_ids)},
+            properties={
+                **burden.as_dict(),
+                "upserts": len(upserted),
+                "deletions": len(deleted_ids),
+                "editingDurationSeconds": payload.editing_duration_seconds,
+                "audioDurationSeconds": project.duration_seconds,
+            },
         )
     await db.commit()
     return BulkEventsResponse(

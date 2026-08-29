@@ -32,6 +32,7 @@ rights. `require_production_safe()` rejects unresolved and non-commercial provid
 |---|---|---|---|
 | FFmpeg / FFprobe | Build-dependent LGPL/GPL configuration | No model | Runtime executable only; production image must record exact build/configuration and notices |
 | NumPy | BSD-3-Clause | No model | Optional research dependency; retain notices |
+| PyTorch | BSD-3-Clause | No bundled weights | Optional training-only dependency; do not treat the framework license as approval for any checkpoint or dataset |
 | SciPy | BSD-3-Clause | No model | Optional research dependency; retain notices |
 | librosa | ISC | No model | Optional research dependency; retain notices |
 | ReportLab | BSD | No model | Optional PDF dependency; engine also includes a dependency-free PDF fallback |
@@ -62,3 +63,9 @@ and a rights-cleared live benchmark have not been supplied. The implemented adap
 therefore remain fail-closed. The deterministic mock can exercise the pipeline, and
 the spectral heuristic can support local research, but neither may be used to make a
 production-quality transcription claim.
+
+The repository's `drumscribe-events` CRNN architecture has no bundled checkpoint.
+Any trained artifact starts as `NEEDS_LEGAL_REVIEW` and may become
+`APPROVED_PRODUCTION` only after its exact dataset manifests, augmentation inputs,
+Git/config provenance, model SHA-256, evaluation report and required attributions
+pass the gate above.

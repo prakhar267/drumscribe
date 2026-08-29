@@ -13,7 +13,7 @@ The provided Compose stack is for local development and acceptance testing. The 
 3. Create a private bucket with block-public-access, encryption, versioning/lifecycle rules, and narrowly scoped workload credentials.
 4. Set `DRUMSCRIBE_S3_PUBLIC_ENDPOINT_URL` to a browser-reachable TLS endpoint while keeping `DRUMSCRIBE_S3_ENDPOINT_URL` private.
 5. Provision exact-origin bucket CORS for `GET`, `HEAD`, and signed `PUT` plus the required `Content-Type` headers. Set `DRUMSCRIBE_S3_CONFIGURE_BUCKET_CORS=true` only when the API workload is intentionally allowed to manage that policy; otherwise manage the equivalent rule in infrastructure.
-6. Set secure cookies, exact API CORS origins, trusted proxy ranges, and Redis-backed production rate limits.
+6. Set secure cookies, exact API CORS origins, trusted proxy ranges, and Redis-backed production rate limits. Set `DRUMSCRIBE_ALLOWED_HOSTS` to the public API hostname and retain a one-year-or-longer `DRUMSCRIBE_HSTS_MAX_AGE_SECONDS` after TLS is verified.
 7. Configure the magic-link delivery webhook and its secret; disable development token exposure.
 8. Set `DRUMSCRIBE_PIPELINE_PROVIDER=music_engine` and select only provider adapters whose exact code, weights, data, contract, and commercial use are approved in `MODEL_LICENSING.md`. The repository intentionally ships no pre-approved commercial model.
 9. Run Celery workers and exactly one Celery Beat (or equivalent managed scheduler) so retention and deletion purges execute. Compose uses `worker --beat` only for a single-node local stack.

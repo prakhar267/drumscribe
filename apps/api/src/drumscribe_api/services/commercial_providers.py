@@ -176,9 +176,7 @@ class AudioShakeSourceSeparationProvider:
         self.model = model
         self._client = client
 
-    async def separate_drums(
-        self, source: Path, destination: Path
-    ) -> SeparatedAudioResult:
+    async def separate_drums(self, source: Path, destination: Path) -> SeparatedAudioResult:
         started = time.monotonic()
         owns_client = self._client is None
         client = self._client or httpx.AsyncClient(
@@ -341,9 +339,7 @@ class MusicAISourceSeparationProvider:
         self.result_key = result_key
         self._client = client
 
-    async def separate_drums(
-        self, source: Path, destination: Path
-    ) -> SeparatedAudioResult:
+    async def separate_drums(self, source: Path, destination: Path) -> SeparatedAudioResult:
         started = time.monotonic()
         owns_client = self._client is None
         client = self._client or httpx.AsyncClient(
@@ -711,9 +707,7 @@ class KlangioBeatTrackingProvider(_KlangioBase):
                 )
             segments = self._segments(payload, beats)
             confidence_values = [beat.confidence for beat in beats if beat.confidence is not None]
-            confidence = (
-                statistics.fmean(confidence_values) if confidence_values else None
-            )
+            confidence = statistics.fmean(confidence_values) if confidence_values else None
             return BeatTrackingResult(
                 segments=segments,
                 beats=beats,
@@ -789,9 +783,7 @@ class KlangioBeatTrackingProvider(_KlangioBase):
             numerator = round(_number(item, "timeSignatureNumerator", "numerator") or 4)
             denominator = round(_number(item, "timeSignatureDenominator", "denominator") or 4)
             start_measure = round(_number(item, "startMeasure", "start_measure") or 0)
-            segments.append(
-                TempoSegment(start, bpm, numerator, denominator, max(0, start_measure))
-            )
+            segments.append(TempoSegment(start, bpm, numerator, denominator, max(0, start_measure)))
         if segments:
             return tuple(sorted(segments, key=lambda item: item.start_seconds))
         intervals = [

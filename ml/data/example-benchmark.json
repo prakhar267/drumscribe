@@ -1,9 +1,18 @@
 {
+  "costCurrency": "USD",
+  "evidenceLevel": "synthetic_tooling_only",
   "songs": [
     {
       "condition": "clean_stem",
       "durationSeconds": 8.0,
       "id": "synthetic-clean-stem",
+      "processingSeconds": 1.2,
+      "providerCost": 0,
+      "providers": {
+        "beatTracking": "test-fixture",
+        "separation": "not-applicable",
+        "transcription": "synthetic-tooling-check"
+      },
       "predictions": [
         {"instrument": "KICK", "onsetSeconds": 0.018},
         {"instrument": "SNARE", "onsetSeconds": 0.506},
@@ -21,6 +30,13 @@
       "condition": "full_mix",
       "durationSeconds": 8.0,
       "id": "synthetic-full-mix",
+      "processingSeconds": 1.4,
+      "providerCost": 0,
+      "providers": {
+        "beatTracking": "test-fixture",
+        "separation": "synthetic-tooling-check",
+        "transcription": "synthetic-tooling-check"
+      },
       "predictions": [
         {"instrument": "KICK", "onsetSeconds": 0.031},
         {"instrument": "SNARE", "onsetSeconds": 0.558},

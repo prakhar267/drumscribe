@@ -5,7 +5,7 @@ from __future__ import annotations
 import bisect
 import uuid
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -92,8 +92,13 @@ def parse_timing(
                 time_signature_numerator=_integer(
                     signature, "numerator", transcription.time_signature_numerator
                 ),
-                time_signature_denominator=_integer(
-                    signature, "denominator", transcription.time_signature_denominator
+                time_signature_denominator=cast(
+                    Literal[1, 2, 4, 8, 16, 32],
+                    _integer(
+                        signature,
+                        "denominator",
+                        transcription.time_signature_denominator,
+                    ),
                 ),
                 start_measure=max(0, start_measure),
             )

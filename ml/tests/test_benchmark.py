@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from drumscribe_ml.benchmark import evaluate_payload, main, render_html_report
+from drumscribe_ml.benchmark import evaluate_benchmark, evaluate_payload, main, render_html_report
 
 
 def _payload():
@@ -99,5 +99,35 @@ def test_benchmark_cli_writes_json_and_html(tmp_path):
         )
         == 0
     )
-    assert json.loads(json_path.read_text())["overall"]["f1"] == pytest.approx(0.5)
+    report = json.loads(json_path.read_text())
+    assert report["overall"]["f1"] == pytest.approx(0.5)
+    assert set(report["onsetToleranceReports"]) == {"25", "50", "100"}
     assert "Input conditions" in html_path.read_text()
+
+
+def test_product_benchmark_tracks_economics_and_correction_burden():
+    payload = _payload()
+    payload["evidenceLevel"] = "licensed_evaluation"
+    payload["songs"][0].update(
+        {
+            "providers": {
+                "separation": "separator-v1",
+                "transcription": "transcriber-v2",
+                "beatTracking": "beat-v1",
+            },
+            "processingSeconds": 40,
+            "providerCost": 0.25,
+            "correctionBurden": {
+                "eventsAdded": 1,
+                "eventsDeleted": 2,
+                "eventsMoved": 3,
+                "instrumentsReassigned": 1,
+                "tempoCorrections": 1,
+                "barLineCorrections": 0,
+                "correctionSeconds": 90,
+            },
+        }
+    )
+    report = evaluate_benchmark(payload)
+    assert report["correctionBurden"]["totalCorrections"] == 8
+    assert report["providerCombinations"][0]["costPerAudioMinute"] == pytest.approx(0.25)

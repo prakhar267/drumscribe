@@ -63,6 +63,7 @@ export function EditorClient({ projectId }: { projectId: string }) {
   const savedTitleRef = useRef("");
   const latestTitleRef = useRef(project.title);
   const saveChainRef = useRef<Promise<void>>(Promise.resolve());
+  const editStartedAtRef = useRef<number | null>(null);
 
   const cleanAfter = useCallback((savedEvents: DrumEvent[], savedTitle: string) => {
     const pending = diffDrumEvents(savedEvents, latestEventsRef.current);
@@ -74,9 +75,20 @@ export function EditorClient({ projectId }: { projectId: string }) {
       const changes = diffDrumEvents(savedEventsRef.current, snapshot);
       if (!changes.upserts.length && !changes.deleteIds.length) return;
       setSaveState("saving");
-      const result = await api.bulkUpdateEvents(projectId, { ...changes, snapshot }, revisionRef.current);
+      const editingDurationSeconds = editStartedAtRef.current === null
+        ? undefined
+        : Math.min(3600, (performance.now() - editStartedAtRef.current) / 1000);
+      const result = await api.bulkUpdateEvents(
+        projectId,
+        { ...changes, snapshot },
+        revisionRef.current,
+        editingDurationSeconds,
+      );
       revisionRef.current = result.revision;
       savedEventsRef.current = snapshot.map((event) => ({ ...event }));
+      editStartedAtRef.current = cleanAfter(savedEventsRef.current, savedTitleRef.current)
+        ? null
+        : performance.now();
       setSaveState(cleanAfter(savedEventsRef.current, savedTitleRef.current) ? "saved" : "editing");
     }).catch((reason) => {
       setSaveState("error");
@@ -148,6 +160,7 @@ export function EditorClient({ projectId }: { projectId: string }) {
     if (!hydratedRef.current) return;
     const changes = diffDrumEvents(savedEventsRef.current, events);
     if (!changes.upserts.length && !changes.deleteIds.length) return;
+    editStartedAtRef.current ??= performance.now();
     setSaveState("editing");
     const timer = window.setTimeout(() => {
       void persistEvents(events).catch(() => undefined);

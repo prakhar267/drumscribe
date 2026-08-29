@@ -51,9 +51,7 @@ async def test_rights_cleared_audio_through_live_commercial_pipeline(tmp_path: P
         CommercialHTTPConfig(
             api_key=required_env("DRUMSCRIBE_AUDIOSHAKE_API_KEY"),
             contract_reference=required_env("DRUMSCRIBE_AUDIOSHAKE_CONTRACT_REFERENCE"),
-            base_url=os.getenv(
-                "DRUMSCRIBE_AUDIOSHAKE_API_URL", "https://api.audioshake.ai"
-            ),
+            base_url=os.getenv("DRUMSCRIBE_AUDIOSHAKE_API_URL", "https://api.audioshake.ai"),
             timeout_seconds=timeout,
             poll_interval_seconds=poll,
         ),

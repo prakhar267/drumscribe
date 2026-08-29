@@ -239,6 +239,7 @@ class BulkEventsRequest(APIModel):
     delete_ids: list[uuid.UUID] = Field(default_factory=list)
     expected_version: int = Field(ge=1)
     revision_label: str = Field(default="Autosave", min_length=1, max_length=200)
+    editing_duration_seconds: float | None = Field(default=None, ge=0, le=3600)
 
     @field_validator("delete_ids")
     @classmethod
@@ -295,6 +296,7 @@ class TimingUpdateRequest(APIModel):
     measure_start: int | None = Field(default=None, ge=0)
     measure_end: int | None = Field(default=None, ge=0)
     preserve_manual_edits: bool = True
+    editing_duration_seconds: float | None = Field(default=None, ge=0, le=3600)
 
     @model_validator(mode="after")
     def validate_timing(self) -> "TimingUpdateRequest":
@@ -330,6 +332,7 @@ class TimingResetRequest(APIModel):
     measure_start: int | None = Field(default=None, ge=0)
     measure_end: int | None = Field(default=None, ge=0)
     preserve_manual_edits: bool = True
+    editing_duration_seconds: float | None = Field(default=None, ge=0, le=3600)
 
     @model_validator(mode="after")
     def validate_measure_range(self) -> "TimingResetRequest":
@@ -432,6 +435,7 @@ class AdminJobDiagnostics(APIModel):
     model_runs: list[AdminModelRun]
     event_count: int
     low_confidence_event_count: int
+    correction_burden: dict[str, Any]
 
 
 class ProblemDetail(APIModel):
