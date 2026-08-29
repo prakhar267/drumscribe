@@ -11,9 +11,10 @@
     "test": "pnpm --filter @drumscribe/web test",
     "test:e2e": "pnpm --filter @drumscribe/web test:e2e",
     "api:dev": "uv run --project apps/api uvicorn drumscribe_api.main:app --reload --port 8000",
-    "api:test": "uv run --project apps/api pytest",
+    "api:test": "uv run --project apps/api pytest apps/api/tests",
+    "music:test": "uv run --project packages/music-engine pytest packages/music-engine/tests",
+    "ml:test": "uv run --project ml pytest ml/tests",
     "worker": "uv run --project apps/api python -m drumscribe_api.worker",
-    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm api:test && pnpm build"
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm api:test && pnpm music:test && pnpm ml:test && pnpm build"
   }
 }
-

@@ -39,12 +39,15 @@ jobs:
           python-version: "3.12"
           enable-cache: true
       - run: uv sync --project packages/music-engine --all-extras --dev
-      - run: uv run --project packages/music-engine ruff check .
-      - run: uv run --project packages/music-engine pytest
+      - run: uv run --project packages/music-engine ruff check packages/music-engine/src packages/music-engine/tests
+      - run: uv run --project packages/music-engine pytest packages/music-engine/tests
+      - run: uv sync --project ml --all-extras --dev
+      - run: uv run --project ml ruff check ml/src ml/tests
+      - run: uv run --project ml pytest ml/tests
       - run: uv sync --project apps/api --all-extras --dev
-      - run: uv run --project apps/api ruff check .
-      - run: uv run --project apps/api pytest
-      - run: uv run --project apps/api alembic upgrade head
+      - run: uv run --project apps/api ruff check apps/api/src apps/api/tests
+      - run: uv run --project apps/api pytest apps/api/tests
+      - run: uv run --project apps/api alembic -c apps/api/alembic.ini upgrade head
         env:
           DATABASE_URL: sqlite+aiosqlite:///./migration-check.sqlite3
 

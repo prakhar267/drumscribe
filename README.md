@@ -38,12 +38,14 @@ pnpm build
 # API
 uv sync --project apps/api --all-extras
 uv run --project apps/api alembic upgrade head
-uv run --project apps/api pytest
+uv run --project apps/api pytest apps/api/tests
 uv run --project apps/api uvicorn drumscribe_api.main:app --reload --port 8000
 
 # Music engine
 uv sync --project packages/music-engine --all-extras
-uv run --project packages/music-engine pytest
+uv run --project packages/music-engine pytest packages/music-engine/tests
+uv sync --project ml --all-extras
+uv run --project ml pytest ml/tests
 ```
 
 The implementation checklist is in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md), and the architecture rationale is in [ARCHITECTURE.md](ARCHITECTURE.md).
@@ -57,4 +59,3 @@ The implementation checklist is in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.
 - No payment integration is present. Every account receives the internal `FREE_BETA` entitlement.
 
 See [SECURITY.md](SECURITY.md), [MODEL_LICENSING.md](MODEL_LICENSING.md), and [DEPLOYMENT.md](DEPLOYMENT.md) before exposing an environment publicly.
-

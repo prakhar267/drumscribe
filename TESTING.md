@@ -6,8 +6,9 @@
 pnpm lint
 pnpm typecheck
 pnpm test
-uv run --project apps/api pytest
-uv run --project packages/music-engine pytest
+uv run --project apps/api pytest apps/api/tests
+uv run --project packages/music-engine pytest packages/music-engine/tests
+uv run --project ml pytest ml/tests
 ```
 
 The web suite covers editing commands, transport/loop state, upload validation, and critical rendering. API tests cover authorization, transitions, bulk revisions, signed access, and validation contracts. Music-engine tests use deterministic synthetic fixtures for quantization and export semantics.
@@ -33,4 +34,3 @@ Playwright captures stable screenshots for the homepage, upload, progress, proje
 ## GPU/research checks
 
 Expensive source-separation and research-transcription checks do not run on every pull request. The optional workflow records environment, provider/model hash, dataset manifest hash, and benchmark artifacts. A passing GPU job does not authorize a model for commercial production.
-
