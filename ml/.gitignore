@@ -1,0 +1,7 @@
+# The repository-level `data/` rule prevents accidental dataset commits. This one
+# tiny, hand-authored benchmark fixture is intentionally versioned; audio/datasets
+# remain ignored.
+!data/
+data/*
+!data/example-benchmark.json
+

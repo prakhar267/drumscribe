@@ -1,0 +1,36 @@
+{
+  "songs": [
+    {
+      "condition": "clean_stem",
+      "durationSeconds": 8.0,
+      "id": "synthetic-clean-stem",
+      "predictions": [
+        {"instrument": "KICK", "onsetSeconds": 0.018},
+        {"instrument": "SNARE", "onsetSeconds": 0.506},
+        {"instrument": "CLOSED_HIHAT", "onsetSeconds": 0.998},
+        {"instrument": "KICK", "onsetSeconds": 1.48}
+      ],
+      "references": [
+        {"instrument": "KICK", "onsetSeconds": 0.0},
+        {"instrument": "SNARE", "onsetSeconds": 0.5},
+        {"instrument": "CLOSED_HIHAT", "onsetSeconds": 1.0},
+        {"instrument": "KICK", "onsetSeconds": 1.5}
+      ]
+    },
+    {
+      "condition": "full_mix",
+      "durationSeconds": 8.0,
+      "id": "synthetic-full-mix",
+      "predictions": [
+        {"instrument": "KICK", "onsetSeconds": 0.031},
+        {"instrument": "SNARE", "onsetSeconds": 0.558},
+        {"instrument": "CRASH", "onsetSeconds": 1.8}
+      ],
+      "references": [
+        {"instrument": "KICK", "onsetSeconds": 0.0},
+        {"instrument": "SNARE", "onsetSeconds": 0.5},
+        {"instrument": "CLOSED_HIHAT", "onsetSeconds": 1.0}
+      ]
+    }
+  ]
+}
