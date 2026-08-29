@@ -1,0 +1,19 @@
+{
+  "name": "drumscribe",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@11.19.0",
+  "scripts": {
+    "dev": "pnpm --filter @drumscribe/web dev",
+    "build": "pnpm --filter @drumscribe/web build",
+    "lint": "pnpm --filter @drumscribe/web lint",
+    "typecheck": "pnpm --filter @drumscribe/web typecheck",
+    "test": "pnpm --filter @drumscribe/web test",
+    "test:e2e": "pnpm --filter @drumscribe/web test:e2e",
+    "api:dev": "uv run --project apps/api uvicorn drumscribe_api.main:app --reload --port 8000",
+    "api:test": "uv run --project apps/api pytest",
+    "worker": "uv run --project apps/api python -m drumscribe_api.worker",
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm api:test && pnpm build"
+  }
+}
+
