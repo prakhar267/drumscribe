@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { memo, useRef, useState } from "react";
 import { EDITOR_ROWS, INSTRUMENT_LABELS, type DrumEvent, type Instrument, type SnapValue } from "@/lib/domain";
 import { snapSeconds } from "@/lib/music";
 
@@ -8,7 +8,7 @@ const ROW_HEIGHT = 30;
 
 interface Point { x: number; y: number }
 
-export function DrumGrid({ events, duration, bpm, beatsPerMeasure, selectedIds, snap, zoom, confidenceOverlay, onAdd, onSelect, onMove }: {
+export const DrumGrid = memo(function DrumGrid({ events, duration, bpm, beatsPerMeasure, selectedIds, snap, zoom, confidenceOverlay, onAdd, onSelect, onMove }: {
   events: DrumEvent[];
   duration: number;
   bpm: number;
@@ -149,4 +149,4 @@ export function DrumGrid({ events, duration, bpm, beatsPerMeasure, selectedIds, 
       </div>
     </section>
   );
-}
+});

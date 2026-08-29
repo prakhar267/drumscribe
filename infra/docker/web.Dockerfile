@@ -6,7 +6,7 @@ WORKDIR /app
 
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml* ./
 COPY apps/web/package.json ./apps/web/package.json
-RUN pnpm install --filter @drumscribe/web... --frozen-lockfile=false
+RUN pnpm install --filter @drumscribe/web... --frozen-lockfile
 
 COPY apps/web ./apps/web
 ARG NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
@@ -16,13 +16,10 @@ ENV NEXT_PUBLIC_DEMO_MODE=$NEXT_PUBLIC_DEMO_MODE
 RUN pnpm --filter @drumscribe/web build
 
 FROM node:22-bookworm-slim AS runtime
-ENV NODE_ENV=production \
-    PNPM_HOME=/pnpm \
-    PATH=/pnpm:$PATH
-RUN corepack enable \
-    && useradd --create-home --uid 10001 drumscribe
-WORKDIR /app
+ENV NODE_ENV=production
+RUN useradd --create-home --uid 10001 drumscribe
+WORKDIR /app/apps/web
 COPY --from=build --chown=drumscribe:drumscribe /app /app
 USER drumscribe
 EXPOSE 3000
-CMD ["pnpm", "--filter", "@drumscribe/web", "start"]
+CMD ["node", "node_modules/next/dist/bin/next", "start"]

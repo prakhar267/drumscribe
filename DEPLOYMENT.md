@@ -11,13 +11,15 @@ The provided Compose stack is for local development and acceptance testing. The 
 1. Generate a unique 32+ byte application secret and store it in the platform secret manager.
 2. Use a dedicated database role and run `alembic upgrade head` once as a release job.
 3. Create a private bucket with block-public-access, encryption, versioning/lifecycle rules, and narrowly scoped workload credentials.
-4. Set `S3_PUBLIC_ENDPOINT_URL` to a browser-reachable TLS endpoint while keeping the internal endpoint private.
-5. Set secure cookies, exact CORS origins, trusted proxy ranges, and production rate limits.
-6. Configure SMTP and Google OAuth callback URLs if those sign-in methods are enabled.
-7. Set `ALLOW_RESEARCH_PROVIDERS=false`; production startup must reject unresolved or non-commercial providers.
-8. Configure Sentry-compatible exception capture and an OTLP endpoint, with filename/audio metadata redaction enabled.
-9. Run web, API, music-engine, migration, authorization, and signed-URL tests against the release image.
-10. Verify backup restore, anonymous retention, project deletion, and account deletion in the target environment.
+4. Set `DRUMSCRIBE_S3_PUBLIC_ENDPOINT_URL` to a browser-reachable TLS endpoint while keeping `DRUMSCRIBE_S3_ENDPOINT_URL` private.
+5. Provision exact-origin bucket CORS for `GET`, `HEAD`, and signed `PUT` plus the required `Content-Type` headers. Set `DRUMSCRIBE_S3_CONFIGURE_BUCKET_CORS=true` only when the API workload is intentionally allowed to manage that policy; otherwise manage the equivalent rule in infrastructure.
+6. Set secure cookies, exact API CORS origins, trusted proxy ranges, and Redis-backed production rate limits.
+7. Configure the magic-link delivery webhook and its secret; disable development token exposure.
+8. Set `DRUMSCRIBE_PIPELINE_PROVIDER=music_engine` and select only provider adapters whose exact code, weights, data, contract, and commercial use are approved in `MODEL_LICENSING.md`. The repository intentionally ships no pre-approved commercial model.
+9. Run Celery workers and exactly one Celery Beat (or equivalent managed scheduler) so retention and deletion purges execute. Compose uses `worker --beat` only for a single-node local stack.
+10. Configure Sentry-compatible exception/tracing capture with filename and audio-metadata redaction.
+11. Run web, API, music-engine, migration, authorization, signed-URL, bucket-CORS, and full-stack browser tests against the release images.
+12. Verify backup restore, anonymous retention, quarantine restore/purge, project deletion, and account deletion in the target environment.
 
 ## Scaling
 
@@ -26,4 +28,3 @@ Scale API processes independently from workers. Queue routing can later separate
 ## Rollback
 
 Application rollback must not downgrade the database destructively. Mark migrations with their compatibility window, deploy additive schema changes before consumers, and perform removals only after the old release is no longer runnable. Model versions and provider parameters are stored per run, so inference regressions can be rolled back independently.
-

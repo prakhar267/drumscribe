@@ -2,3 +2,13 @@ packages:
   - "apps/web"
   - "packages/*"
 
+# pnpm 11 blocks dependency scripts unless each exact reviewed release is listed.
+allowBuilds:
+  sharp@0.35.4: true
+  unrs-resolver@1.12.2: true
+
+minimumReleaseAgeExclude:
+  - lucide-react@1.35.0
+  - next@16.3.3
+  - eslint-config-next@16.3.3
+  - sharp@0.35.4

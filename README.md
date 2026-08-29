@@ -15,6 +15,11 @@ docker compose up --build
 
 Open <http://localhost:3000>. MinIO's local console is available at <http://localhost:9001>; the bucket is private and application downloads are signed.
 
+The stack runs a deterministic, explicitly development-only transcription
+provider so a fresh clone can exercise signed upload, queued FFmpeg processing,
+editing, exports, and revocable deletion without third-party credentials. It is
+not presented as a commercially deployable ML model.
+
 For a faster frontend-only product tour:
 
 ```bash
@@ -42,10 +47,25 @@ uv run --project apps/api pytest apps/api/tests
 uv run --project apps/api uvicorn drumscribe_api.main:app --reload --port 8000
 
 # Music engine
-uv sync --project packages/music-engine --all-extras
+uv sync --project packages/music-engine --extra pdf --group dev
 uv run --project packages/music-engine pytest packages/music-engine/tests
 uv sync --project ml --all-extras
 uv run --project ml pytest ml/tests
+```
+
+Generate a rights-cleared audio/MIDI/ground-truth fixture with:
+
+```bash
+uv run --project packages/music-engine drumscribe-synthetic ./tmp/synthetic-demo --bars 4
+```
+
+Run the real browser/API/worker/PostgreSQL/Valkey/MinIO acceptance path after the
+Compose stack is healthy:
+
+```bash
+pnpm install --frozen-lockfile
+docker compose up --detach --build --wait --wait-timeout 180
+pnpm test:e2e:stack
 ```
 
 The implementation checklist is in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md), and the architecture rationale is in [ARCHITECTURE.md](ARCHITECTURE.md).
@@ -59,3 +79,5 @@ The implementation checklist is in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.
 - No payment integration is present. Every account receives the internal `FREE_BETA` entitlement.
 
 See [SECURITY.md](SECURITY.md), [MODEL_LICENSING.md](MODEL_LICENSING.md), and [DEPLOYMENT.md](DEPLOYMENT.md) before exposing an environment publicly.
+Third-party runtime obligations are recorded in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

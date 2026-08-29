@@ -14,6 +14,7 @@ interface TransportContextValue {
   loop: LoopRange;
   mixer: MixerState;
   bpm: number;
+  beatsPerMeasure: number;
   togglePlayback: () => void;
   playWithCountIn: (bars: 0 | 1 | 2) => void;
   seek: (time: number) => void;
@@ -21,7 +22,7 @@ interface TransportContextValue {
   setLoop: (loop: LoopRange) => void;
   setMixer: (mixer: MixerState) => void;
   skipMeasure: (direction: -1 | 1) => void;
-  loadAudioSources: (sources: { originalUrl: string; drumsUrl?: string; bpm?: number; preservePosition?: boolean }) => void;
+  loadAudioSources: (sources: { originalUrl: string; drumsUrl?: string; bpm?: number; beatsPerMeasure?: number; preservePosition?: boolean }) => void;
 }
 
 const TransportContext = createContext<TransportContextValue | null>(null);
@@ -37,6 +38,7 @@ export function TransportProvider({ children }: { children: ReactNode }) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(DEMO_DURATION);
   const [bpm, setBpm] = useState(DEMO_BPM);
+  const [beatsPerMeasure, setBeatsPerMeasure] = useState(4);
   const [playing, setPlaying] = useState(false);
   const [countingIn, setCountingIn] = useState(false);
   const [playbackRate, setRateState] = useState(1);
@@ -111,7 +113,7 @@ export function TransportProvider({ children }: { children: ReactNode }) {
       const beat = Math.floor(nextTime / (60 / bpm));
       if (beat !== lastBeatRef.current) {
         lastBeatRef.current = beat;
-        clickMetronome(beat % 4 === 0);
+        clickMetronome(beat % beatsPerMeasure === 0);
       }
       frameRef.current = requestAnimationFrame(update);
     };
@@ -119,7 +121,7 @@ export function TransportProvider({ children }: { children: ReactNode }) {
     return () => {
       if (frameRef.current) cancelAnimationFrame(frameRef.current);
     };
-  }, [bpm, clickMetronome, loop, playing]);
+  }, [beatsPerMeasure, bpm, clickMetronome, loop, playing]);
 
   const togglePlayback = useCallback(() => {
     const audio = audioRef.current;
@@ -158,16 +160,16 @@ export function TransportProvider({ children }: { children: ReactNode }) {
       setCountingIn(false);
       return;
     }
-    const totalBeats = bars * 4;
+    const totalBeats = bars * beatsPerMeasure;
     const beatMilliseconds = 60_000 / bpm;
     setCountingIn(true);
-    countInTimersRef.current = Array.from({ length: totalBeats }, (_, beat) => window.setTimeout(() => clickMetronome(beat % 4 === 0, .82), beat * beatMilliseconds));
+    countInTimersRef.current = Array.from({ length: totalBeats }, (_, beat) => window.setTimeout(() => clickMetronome(beat % beatsPerMeasure === 0, .82), beat * beatMilliseconds));
     countInTimersRef.current.push(window.setTimeout(() => {
       setCountingIn(false);
       countInTimersRef.current = [];
       togglePlayback();
     }, totalBeats * beatMilliseconds));
-  }, [bpm, clickMetronome, countingIn, playing, togglePlayback]);
+  }, [beatsPerMeasure, bpm, clickMetronome, countingIn, playing, togglePlayback]);
 
   const setPlaybackRate = useCallback((rate: number) => {
     if (audioRef.current) audioRef.current.playbackRate = rate;
@@ -178,8 +180,8 @@ export function TransportProvider({ children }: { children: ReactNode }) {
 
   const setLoop = useCallback((value: LoopRange) => setLoopState({ ...value, end: Math.max(value.start + 0.1, value.end) }), []);
   const setMixer = useCallback((value: MixerState) => setMixerState(value), []);
-  const skipMeasure = useCallback((direction: -1 | 1) => seek(currentTime + direction * 4 * 60 / bpm), [bpm, currentTime, seek]);
-  const loadAudioSources = useCallback((sources: { originalUrl: string; drumsUrl?: string; bpm?: number; preservePosition?: boolean }) => {
+  const skipMeasure = useCallback((direction: -1 | 1) => seek(currentTime + direction * beatsPerMeasure * 60 / bpm), [beatsPerMeasure, bpm, currentTime, seek]);
+  const loadAudioSources = useCallback((sources: { originalUrl: string; drumsUrl?: string; bpm?: number; beatsPerMeasure?: number; preservePosition?: boolean }) => {
     const audio = audioRef.current;
     if (!audio) return;
     const wasPlaying = !audio.paused;
@@ -214,6 +216,7 @@ export function TransportProvider({ children }: { children: ReactNode }) {
     audio.addEventListener("loadedmetadata", resume, { once: true });
     audio.load();
     if (sources.bpm) setBpm(sources.bpm);
+    if (sources.beatsPerMeasure) setBeatsPerMeasure(sources.beatsPerMeasure);
     if (!sources.preservePosition) setCurrentTime(0);
     if (!wasPlaying) setPlaying(false);
     setCountingIn(false);
@@ -228,6 +231,7 @@ export function TransportProvider({ children }: { children: ReactNode }) {
     loop,
     mixer,
     bpm,
+    beatsPerMeasure,
     togglePlayback,
     playWithCountIn,
     seek,
@@ -236,7 +240,7 @@ export function TransportProvider({ children }: { children: ReactNode }) {
     setMixer,
     skipMeasure,
     loadAudioSources,
-  }), [bpm, countingIn, currentTime, duration, loadAudioSources, loop, mixer, playbackRate, playWithCountIn, playing, seek, setLoop, setMixer, setPlaybackRate, skipMeasure, togglePlayback]);
+  }), [beatsPerMeasure, bpm, countingIn, currentTime, duration, loadAudioSources, loop, mixer, playbackRate, playWithCountIn, playing, seek, setLoop, setMixer, setPlaybackRate, skipMeasure, togglePlayback]);
 
   return <TransportContext.Provider value={value}>{children}</TransportContext.Provider>;
 }

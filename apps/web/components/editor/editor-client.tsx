@@ -104,13 +104,13 @@ export function EditorClient({ projectId }: { projectId: string }) {
   useEffect(() => {
     let active = true;
     let audioRefreshTimer: number | undefined;
-    const refreshAudio = async (bpm: number, preservePosition: boolean) => {
+    const refreshAudio = async (bpm: number, beatsPerMeasure: number, preservePosition: boolean) => {
       try {
         const sources = await api.getAudioSources(projectId);
         if (!active || !sources) return;
-        loadAudioSources({ ...sources, bpm, preservePosition });
+        loadAudioSources({ ...sources, bpm, beatsPerMeasure, preservePosition });
         const refreshIn = Math.max(5_000, Date.parse(sources.expiresAt) - Date.now() - 60_000);
-        audioRefreshTimer = window.setTimeout(() => void refreshAudio(bpm, true), Number.isFinite(refreshIn) ? refreshIn : 8 * 60_000);
+        audioRefreshTimer = window.setTimeout(() => void refreshAudio(bpm, beatsPerMeasure, true), Number.isFinite(refreshIn) ? refreshIn : 8 * 60_000);
       } catch { /* Playback keeps its current buffered source and retries on the next page load. */ }
     };
     void api.getProject(projectId).then((result) => {
@@ -125,7 +125,7 @@ export function EditorClient({ projectId }: { projectId: string }) {
       revisionRef.current = result.revision;
       hydratedRef.current = true;
       setSaveState("saved");
-      void refreshAudio(result.project.bpm, false);
+      void refreshAudio(result.project.bpm, result.project.beatsPerMeasure, false);
       void api.getWaveformPeaks(projectId).then((peaks) => { if (peaks) setWaveform(peaks); }).catch(() => undefined);
     });
     return () => { active = false; if (audioRefreshTimer) window.clearTimeout(audioRefreshTimer); };

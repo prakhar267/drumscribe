@@ -10,11 +10,12 @@
     "typecheck": "pnpm --filter @drumscribe/web typecheck",
     "test": "pnpm --filter @drumscribe/web test",
     "test:e2e": "pnpm --filter @drumscribe/web test:e2e",
+    "test:e2e:stack": "DRUMSCRIBE_FULL_STACK_E2E=1 pnpm --filter @drumscribe/web exec playwright test --project=chromium full-stack.spec.ts",
     "api:dev": "uv run --project apps/api uvicorn drumscribe_api.main:app --reload --port 8000",
     "api:test": "uv run --project apps/api pytest apps/api/tests",
     "music:test": "uv run --project packages/music-engine pytest packages/music-engine/tests",
     "ml:test": "uv run --project ml pytest ml/tests",
-    "worker": "uv run --project apps/api celery -A drumscribe_api.tasks:celery_app worker --loglevel=INFO --concurrency=1",
+    "worker": "uv run --project apps/api celery -A drumscribe_api.tasks:celery_app worker --beat --loglevel=INFO --concurrency=1",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm api:test && pnpm music:test && pnpm ml:test && pnpm build"
   }
 }

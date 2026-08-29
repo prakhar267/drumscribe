@@ -6,52 +6,52 @@ This is the living delivery checklist for the production-oriented first release.
 
 - [x] Record architecture and product decisions.
 - [x] Establish monorepo, source-control, formatting, and test conventions.
-- [ ] Verify runtime dependency and model licensing.
+- [x] Verify runtime dependency and model licensing; keep unresolved models fail-closed.
 
 ## Phase 1 — platform
 
-- [ ] Next.js web application with typed API client.
-- [ ] FastAPI versioned REST API and OpenAPI schema.
-- [ ] PostgreSQL models and Alembic migrations.
-- [ ] Secure anonymous/session authentication and optional Google/email adapters.
-- [ ] Private S3-compatible storage and signed upload/download URLs.
-- [ ] Redis-backed, retryable worker jobs.
+- [x] Next.js web application with typed API client.
+- [x] FastAPI versioned REST API and OpenAPI schema.
+- [x] PostgreSQL models and Alembic migrations.
+- [x] Secure anonymous sessions and one-time email magic-link conversion.
+- [x] Private S3-compatible storage and signed upload/download URLs.
+- [x] Redis-backed, retryable worker jobs.
 
 ## Phase 2 — upload and projects
 
-- [ ] Drag/drop and file-picker upload with rights confirmation.
-- [ ] MIME plus FFprobe validation, configurable 150 MB / 12 minute limits.
-- [ ] Project dashboard, search, sort, rename, duplicate, and recoverable deletion.
-- [ ] Durable processing progress with friendly weighted stages.
+- [x] Drag/drop and file-picker upload with rights confirmation.
+- [x] MIME plus FFprobe validation, configurable 150 MB / 12 minute limits.
+- [x] Project dashboard, search, sort, rename, duplicate, and recoverable deletion.
+- [x] Durable processing progress with friendly weighted stages.
 
 ## Phase 3–5 — music pipeline
 
-- [ ] Safe FFmpeg normalization and metadata capture.
-- [ ] Replaceable source-separation, transcription, beat tracking, quantization, and notation providers.
-- [ ] Commercial-safe production provider gate and clearly labelled local research provider.
-- [ ] Canonical drum-event model retaining raw and quantized timing.
-- [ ] MusicXML, MIDI, and PDF export from latest canonical events.
-- [ ] Rights-cleared deterministic synthetic demo and ground truth.
+- [x] Safe FFmpeg normalization and metadata capture.
+- [x] Replaceable source-separation, transcription, beat tracking, quantization, and notation providers.
+- [x] Commercial-safe production provider gate and clearly labelled local research provider.
+- [x] Canonical drum-event model retaining raw and quantized timing.
+- [x] MusicXML, MIDI, and PDF export from latest canonical events.
+- [x] Rights-cleared deterministic synthetic demo and ground truth.
 
 ## Phase 6–9 — editor and practice
 
-- [ ] One authoritative audio transport shared by waveform, notation, grid, and playhead.
-- [ ] Editable drum grid: add, delete, drag, selection, copy/paste, velocity, zoom, and snap.
-- [ ] Score rendering with playback and selection highlighting.
-- [ ] Command-based undo/redo, debounced autosave, and server snapshots.
-- [ ] Review-uncertain workflow, confidence strip, looping, speed, count-in, metronome, and mixer.
-- [ ] Keyboard shortcuts and accessible shortcut help.
-- [ ] Latest-revision asynchronous export workflow.
+- [x] One authoritative audio transport shared by waveform, notation, grid, and playhead.
+- [x] Editable drum grid: add, delete, drag, selection, copy/paste, velocity, zoom, and snap.
+- [x] MusicXML/Verovio score rendering with playback and selection highlighting.
+- [x] Command-based undo/redo, delta autosave, optimistic concurrency, and server snapshots.
+- [x] Review-uncertain workflow, confidence strip, looping, speed, count-in, metronome, and mixer.
+- [x] Keyboard shortcuts and accessible shortcut help.
+- [x] Latest-revision asynchronous export workflow.
 
 ## Phase 10–12 — operations and quality
 
-- [ ] Protected admin/debug pipeline inspection.
-- [ ] ML benchmark CLI with JSON and HTML reports.
-- [ ] Structured logging, error monitoring hooks, OpenTelemetry hooks, and product events.
-- [ ] Dockerfiles and Compose for web/API/worker/Postgres/Redis/MinIO.
-- [ ] Unit, authorization, integration, Playwright E2E, and visual smoke tests.
-- [ ] CI for lint, typecheck, builds, tests, migrations, and dependency scanning.
-- [ ] Deployment, security, testing, evaluation, and local-development documentation.
+- [x] Protected, role-authorized admin/debug pipeline inspection.
+- [x] ML benchmark CLI with JSON and HTML reports.
+- [x] Structured logging, Sentry-compatible error/tracing hooks, and product events.
+- [x] Dockerfiles and Compose for web/API/worker/beat/Postgres/Valkey/MinIO.
+- [x] Unit, authorization, integration, Playwright UI, and real-stack acceptance tests.
+- [x] CI for lint, typecheck, builds, tests, migrations, dependency scanning, and real-stack E2E.
+- [x] Deployment, security, testing, evaluation, and local-development documentation.
 
 ## Acceptance run
 
@@ -61,4 +61,3 @@ This is the living delivery checklist for the production-oriented first release.
 - [ ] Loop four measures, switch to 0.5x, edit a snare, undo/redo, refresh, and retain the edit.
 - [ ] Export current revision as MIDI, MusicXML, and readable PDF.
 - [ ] Delete the project and verify every associated asset becomes inaccessible.
-

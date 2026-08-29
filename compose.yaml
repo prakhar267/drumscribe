@@ -65,7 +65,7 @@ services:
     environment:
       MINIO_ROOT_USER: ${S3_ACCESS_KEY:-drumscribe-local}
       MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-local-development-only}
-      S3_BUCKET: ${S3_BUCKET:-drumscribe-private}
+      S3_BUCKET: ${DRUMSCRIBE_S3_BUCKET:-drumscribe-private}
     restart: "no"
 
   api:
@@ -86,6 +86,7 @@ services:
       DRUMSCRIBE_S3_BUCKET: ${DRUMSCRIBE_S3_BUCKET:-drumscribe-private}
       DRUMSCRIBE_S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY:-drumscribe-local}
       DRUMSCRIBE_S3_SECRET_ACCESS_KEY: ${S3_SECRET_KEY:-local-development-only}
+      DRUMSCRIBE_S3_CONFIGURE_BUCKET_CORS: "true"
       DRUMSCRIBE_PUBLIC_API_URL: http://localhost:8000
       DRUMSCRIBE_WEB_ORIGINS: '["http://localhost:3000"]'
       DRUMSCRIBE_SESSION_SECRET: ${DRUMSCRIBE_SESSION_SECRET:-local-development-secret-change-before-deploying}
@@ -98,7 +99,7 @@ services:
       minio-init:
         condition: service_completed_successfully
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:8000/api/v1/health"]
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/api/v1/health/ready"]
       interval: 10s
       timeout: 5s
       retries: 12
@@ -125,7 +126,7 @@ services:
       DRUMSCRIBE_S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY:-drumscribe-local}
       DRUMSCRIBE_S3_SECRET_ACCESS_KEY: ${S3_SECRET_KEY:-local-development-only}
       DRUMSCRIBE_SESSION_SECRET: ${DRUMSCRIBE_SESSION_SECRET:-local-development-secret-change-before-deploying}
-    command: ["celery", "-A", "drumscribe_api.tasks:celery_app", "worker", "--loglevel=INFO", "--concurrency=1"]
+    command: ["celery", "-A", "drumscribe_api.tasks:celery_app", "worker", "--beat", "--loglevel=INFO", "--concurrency=1"]
     depends_on:
       api:
         condition: service_healthy
@@ -141,9 +142,16 @@ services:
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}
       NEXT_PUBLIC_DEMO_MODE: ${NEXT_PUBLIC_DEMO_MODE:-false}
+      API_ORIGIN: http://api:8000
+      ADMIN_UI_KEY: ${ADMIN_UI_KEY:-}
     depends_on:
       api:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
     ports:
       - "127.0.0.1:3000:3000"
     restart: unless-stopped

@@ -15,7 +15,14 @@ The web suite covers editing commands, transport/loop state, upload validation, 
 
 ## Full acceptance
 
-Start the Compose stack, then run `pnpm test:e2e`. The browser suite must exercise anonymous upload, progress recovery, editor playback, hit correction, undo/redo, autosave/reload, loop/rate controls, all three exports, and deletion. Tests must use generated audio only.
+The normal `pnpm test:e2e` suite runs deterministic desktop/mobile UI tests without external services. The release acceptance path uses the actual PostgreSQL, Valkey, MinIO, API, Celery worker, FFmpeg pipeline, and production web build:
+
+```bash
+docker compose up --detach --build --wait --wait-timeout 180
+pnpm test:e2e:stack
+```
+
+`full-stack.spec.ts` exercises direct private upload from the browser, anonymous-to-email ownership conversion, background processing, editor playback and correction, undo/redo, serialized autosave plus reload, loop/rate controls, semantic MIDI/MusicXML/PDF downloads, project deletion, and revocation of a previously issued audio URL. It generates its own rights-cleared WAV fixture.
 
 Before a release, additionally verify:
 
@@ -29,7 +36,7 @@ Before a release, additionally verify:
 
 ## Visual QA
 
-Playwright captures stable screenshots for the homepage, upload, progress, project library, editor, practice mode, export dialog, and admin diagnostics. Mask time-varying text and animations; review visual diffs rather than automatically accepting snapshots.
+The browser suite checks the major homepage, upload, progress, editor, notation, and mobile states. Before a visual baseline is accepted or updated, capture the homepage, upload, progress, project library, editor, practice mode, export dialog, and populated admin diagnostics at fixed viewports; mask time-varying text and animations and review the rendered diff rather than accepting it automatically.
 
 ## GPU/research checks
 

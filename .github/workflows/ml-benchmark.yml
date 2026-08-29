@@ -6,7 +6,7 @@ on:
       manifest:
         description: Repository-relative licensed evaluation manifest
         required: true
-        default: ml/data/example-manifest.json
+        default: ml/data/example-benchmark.json
 
 permissions:
   contents: read
