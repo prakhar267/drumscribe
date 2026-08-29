@@ -19,17 +19,16 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.12"
-      - run: uv sync --project packages/music-engine --all-extras --dev
+      - run: uv sync --project ml --all-extras --dev
       - name: Benchmark deterministic provider
         run: >-
-          uv run --project packages/music-engine drumscribe-benchmark
-          --manifest "${{ inputs.manifest }}"
-          --json-out benchmark.json
-          --html-out benchmark.html
+          uv run --project ml drumscribe-benchmark
+          "${{ inputs.manifest }}"
+          --json benchmark.json
+          --html benchmark.html
       - uses: actions/upload-artifact@v4
         with:
           name: ml-benchmark
           path: |
             benchmark.json
             benchmark.html
-
