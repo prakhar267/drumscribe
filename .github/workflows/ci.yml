@@ -55,3 +55,38 @@ jobs:
       - run: cp .env.example .env
       - run: docker compose config --quiet
 
+  dependency-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.19.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm audit --audit-level high
+      - name: Audit API dependencies
+        run: |
+          uv export --project apps/api --all-extras --no-dev --output-file /tmp/api-requirements.txt
+          uvx pip-audit --requirement /tmp/api-requirements.txt
+      - name: Audit music-engine dependencies
+        run: |
+          uv export --project packages/music-engine --all-extras --no-dev --output-file /tmp/music-requirements.txt
+          uvx pip-audit --requirement /tmp/music-requirements.txt
+
+  dependency-review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
