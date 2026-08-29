@@ -1,0 +1,6 @@
+allowBuilds:
+  sharp@0.34.5: true
+  unrs-resolver@1.12.2: true
+
+minimumReleaseAgeExclude:
+  - lucide-react@1.35.0
