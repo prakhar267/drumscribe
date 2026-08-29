@@ -14,7 +14,7 @@
     "api:test": "uv run --project apps/api pytest apps/api/tests",
     "music:test": "uv run --project packages/music-engine pytest packages/music-engine/tests",
     "ml:test": "uv run --project ml pytest ml/tests",
-    "worker": "uv run --project apps/api python -m drumscribe_api.worker",
+    "worker": "uv run --project apps/api celery -A drumscribe_api.tasks:celery_app worker --loglevel=INFO --concurrency=1",
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm api:test && pnpm music:test && pnpm ml:test && pnpm build"
   }
 }

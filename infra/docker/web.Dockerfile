@@ -10,7 +10,9 @@ RUN pnpm install --filter @drumscribe/web... --frozen-lockfile=false
 
 COPY apps/web ./apps/web
 ARG NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+ARG NEXT_PUBLIC_DEMO_MODE=false
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_DEMO_MODE=$NEXT_PUBLIC_DEMO_MODE
 RUN pnpm --filter @drumscribe/web build
 
 FROM node:22-bookworm-slim AS runtime
@@ -24,4 +26,3 @@ COPY --from=build --chown=drumscribe:drumscribe /app /app
 USER drumscribe
 EXPOSE 3000
 CMD ["pnpm", "--filter", "@drumscribe/web", "start"]
-

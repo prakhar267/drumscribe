@@ -76,10 +76,19 @@ services:
       - path: .env
         required: false
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-drumscribe}:${POSTGRES_PASSWORD:-local-development-only}@postgres:5432/${POSTGRES_DB:-drumscribe}
-      REDIS_URL: redis://valkey:6379/0
-      S3_ENDPOINT_URL: http://minio:9000
-      S3_PUBLIC_ENDPOINT_URL: http://localhost:9000
+      DRUMSCRIBE_ENVIRONMENT: development
+      DRUMSCRIBE_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-drumscribe}:${POSTGRES_PASSWORD:-local-development-only}@postgres:5432/${POSTGRES_DB:-drumscribe}
+      DRUMSCRIBE_REDIS_URL: redis://valkey:6379/0
+      DRUMSCRIBE_QUEUE_BACKEND: celery
+      DRUMSCRIBE_STORAGE_BACKEND: s3
+      DRUMSCRIBE_S3_ENDPOINT_URL: http://minio:9000
+      DRUMSCRIBE_S3_PUBLIC_ENDPOINT_URL: http://localhost:9000
+      DRUMSCRIBE_S3_BUCKET: ${DRUMSCRIBE_S3_BUCKET:-drumscribe-private}
+      DRUMSCRIBE_S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY:-drumscribe-local}
+      DRUMSCRIBE_S3_SECRET_ACCESS_KEY: ${S3_SECRET_KEY:-local-development-only}
+      DRUMSCRIBE_PUBLIC_API_URL: http://localhost:8000
+      DRUMSCRIBE_WEB_ORIGINS: '["http://localhost:3000"]'
+      DRUMSCRIBE_SESSION_SECRET: ${DRUMSCRIBE_SESSION_SECRET:-local-development-secret-change-before-deploying}
     command: ["sh", "-ec", "alembic upgrade head && uvicorn drumscribe_api.main:app --host 0.0.0.0 --port 8000"]
     depends_on:
       postgres:
@@ -105,10 +114,18 @@ services:
       - path: .env
         required: false
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-drumscribe}:${POSTGRES_PASSWORD:-local-development-only}@postgres:5432/${POSTGRES_DB:-drumscribe}
-      REDIS_URL: redis://valkey:6379/0
-      S3_ENDPOINT_URL: http://minio:9000
-    command: ["python", "-m", "drumscribe_api.worker"]
+      DRUMSCRIBE_ENVIRONMENT: development
+      DRUMSCRIBE_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-drumscribe}:${POSTGRES_PASSWORD:-local-development-only}@postgres:5432/${POSTGRES_DB:-drumscribe}
+      DRUMSCRIBE_REDIS_URL: redis://valkey:6379/0
+      DRUMSCRIBE_QUEUE_BACKEND: celery
+      DRUMSCRIBE_STORAGE_BACKEND: s3
+      DRUMSCRIBE_S3_ENDPOINT_URL: http://minio:9000
+      DRUMSCRIBE_S3_PUBLIC_ENDPOINT_URL: http://localhost:9000
+      DRUMSCRIBE_S3_BUCKET: ${DRUMSCRIBE_S3_BUCKET:-drumscribe-private}
+      DRUMSCRIBE_S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY:-drumscribe-local}
+      DRUMSCRIBE_S3_SECRET_ACCESS_KEY: ${S3_SECRET_KEY:-local-development-only}
+      DRUMSCRIBE_SESSION_SECRET: ${DRUMSCRIBE_SESSION_SECRET:-local-development-secret-change-before-deploying}
+    command: ["celery", "-A", "drumscribe_api.tasks:celery_app", "worker", "--loglevel=INFO", "--concurrency=1"]
     depends_on:
       api:
         condition: service_healthy
@@ -120,8 +137,10 @@ services:
       dockerfile: infra/docker/web.Dockerfile
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}
+        NEXT_PUBLIC_DEMO_MODE: ${NEXT_PUBLIC_DEMO_MODE:-false}
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}
+      NEXT_PUBLIC_DEMO_MODE: ${NEXT_PUBLIC_DEMO_MODE:-false}
     depends_on:
       api:
         condition: service_healthy
