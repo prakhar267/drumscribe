@@ -12,7 +12,7 @@ dependencies = []
 audio = [
   "numpy>=2.0,<3",
   "scipy>=1.14,<2",
-  "librosa>=0.10.2,<1",
+  "librosa>=0.10.2,<2",
   "soundfile>=0.12,<1",
 ]
 demucs = ["demucs>=4.0.1,<5"]
