@@ -22,7 +22,7 @@ docker compose up --detach --build --wait --wait-timeout 180
 pnpm test:e2e:stack
 ```
 
-`full-stack.spec.ts` exercises direct private upload from the browser, anonymous-to-email ownership conversion, background processing, editor playback and correction, undo/redo, serialized autosave plus reload, loop/rate controls, semantic MIDI/MusicXML/PDF downloads, project deletion, and revocation of a previously issued audio URL. It generates its own rights-cleared WAV fixture.
+`full-stack.spec.ts` exercises direct private upload from the browser, leaving and reopening durable job progress, anonymous-to-email ownership conversion, editor playback, correcting a snare with undo/redo, serialized autosave plus reload, a four-measure loop at 0.5×, and semantic MIDI/MusicXML/PDF downloads. Deletion must revoke every captured original-audio, drum-stem, waveform, and export URL. The test generates its own rights-cleared WAV fixture.
 
 Before a release, additionally verify:
 

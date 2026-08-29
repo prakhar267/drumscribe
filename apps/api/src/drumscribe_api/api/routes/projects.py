@@ -15,7 +15,7 @@ from ...dependencies import (
 )
 from ...enums import AssetStatus, EventSource, ProjectStatus, RevisionKind
 from ...errors import APIError
-from ...models import AudioAsset, DrumEvent, Project, Transcription
+from ...models import AudioAsset, DrumEvent, Export, Project, Transcription
 from ...schemas import (
     DeleteResponse,
     DuplicateProjectRequest,
@@ -26,6 +26,7 @@ from ...schemas import (
 )
 from ...security import as_utc, utcnow
 from ...services.audit import record_audit
+from ...services.exports import EXPORT_CONTENT_TYPES
 from ...services.revisions import create_revision
 from ...services.storage import ObjectNotFoundError, PrivateStorage
 
@@ -62,6 +63,34 @@ async def _quarantine_assets(
                 f"assets/{asset.id}/{uuid.uuid4()}"
             )
             content_type = asset.content_type or "application/octet-stream"
+            try:
+                await storage.copy(old_key, quarantine_key, content_type)
+            except ObjectNotFoundError:
+                continue
+            moves.append((old_key, quarantine_key, content_type))
+            await storage.delete_many([old_key])
+    except Exception:
+        await _revert_storage_moves(storage, moves)
+        raise
+    return moves
+
+
+async def _quarantine_exports(
+    storage: PrivateStorage,
+    project: Project,
+    exports: list[Export],
+) -> list[StorageMove]:
+    moves: list[StorageMove] = []
+    try:
+        for export in exports:
+            if not export.storage_key:
+                continue
+            old_key = export.storage_key
+            quarantine_key = (
+                f"quarantine/users/{project.owner_id}/projects/{project.id}/"
+                f"exports/{export.id}/{uuid.uuid4()}"
+            )
+            content_type = EXPORT_CONTENT_TYPES[export.format][0]
             try:
                 await storage.copy(old_key, quarantine_key, content_type)
             except ObjectNotFoundError:
@@ -191,8 +220,23 @@ async def delete_project(
             )
         ).scalars()
     )
+    exports = list(
+        (
+            await db.execute(
+                select(Export).where(
+                    Export.project_id == project.id,
+                    Export.deleted_at.is_(None),
+                )
+            )
+        ).scalars()
+    )
     storage = request.app.state.storage
     moves = await _quarantine_assets(storage, project, assets)
+    try:
+        moves.extend(await _quarantine_exports(storage, project, exports))
+    except Exception:
+        await _revert_storage_moves(storage, moves)
+        raise
     quarantine_keys = {old_key: new_key for old_key, new_key, _ in moves}
     purge_at = now + timedelta(hours=settings.project_delete_grace_hours)
     for asset in assets:
@@ -201,6 +245,14 @@ async def delete_project(
         asset.deleted_at = now
         asset.status = AssetStatus.DELETING
         asset.expires_at = purge_at if recoverable else now
+    for export in exports:
+        old_key = export.storage_key
+        export.deleted_at = now
+        if old_key and old_key in quarantine_keys:
+            export.storage_key = quarantine_keys[old_key]
+            export.expires_at = purge_at
+        else:
+            export.expires_at = now
     record_audit(
         db,
         "project.deleted",
@@ -246,10 +298,26 @@ async def restore_project(
             )
         ).scalars()
     )
+    exports = list(
+        (
+            await db.execute(
+                select(Export).where(
+                    Export.project_id == project.id,
+                    Export.deleted_at == project.deleted_at,
+                    Export.storage_key.is_not(None),
+                    Export.expires_at.is_not(None),
+                    Export.expires_at > now,
+                )
+            )
+        ).scalars()
+    )
     for asset in assets:
         asset.deleted_at = None
         asset.status = AssetStatus.VERIFIED
         asset.expires_at = None
+    for export in exports:
+        export.deleted_at = None
+        export.expires_at = now + timedelta(hours=settings.export_retention_hours)
     if project.original_asset_id is not None and not any(
         asset.id == project.original_asset_id for asset in assets
     ):

@@ -55,9 +55,9 @@ This is the living delivery checklist for the production-oriented first release.
 
 ## Acceptance run
 
-- [ ] Upload a valid audio file through a signed private-storage URL.
-- [ ] Leave/reopen while the job continues and reaches `READY`.
-- [ ] Play synchronized audio, score, waveform, and drum grid.
-- [ ] Loop four measures, switch to 0.5x, edit a snare, undo/redo, refresh, and retain the edit.
-- [ ] Export current revision as MIDI, MusicXML, and readable PDF.
-- [ ] Delete the project and verify every associated asset becomes inaccessible.
+- [x] Upload a valid audio file through a signed private-storage URL.
+- [x] Leave/reopen while the job continues and reaches `READY`.
+- [x] Play synchronized audio, score, waveform, and drum grid.
+- [x] Loop four measures, switch to 0.5x, edit a snare, undo/redo, refresh, and retain the edit.
+- [x] Export current revision as MIDI, MusicXML, and readable PDF.
+- [x] Delete the project and verify every associated asset becomes inaccessible.

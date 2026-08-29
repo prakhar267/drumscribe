@@ -177,6 +177,35 @@ def test_restore_never_revives_pipeline_deleted_history(client: TestClient, app)
     assert client.get(signed_after_restore).status_code == 200
 
 
+def test_project_delete_revokes_and_reissues_export_urls(client: TestClient, app) -> None:
+    create_session(client)
+    project = create_project(client)
+    upload_wav(client, project["id"])
+    process_project(client, app, project["id"])
+    requested = client.post(
+        f"/api/v1/projects/{project['id']}/exports",
+        json={"format": "MIDI"},
+        headers={"Idempotency-Key": "delete-export-lifecycle"},
+    )
+    assert requested.status_code == 202, requested.text
+    export_id = uuid.UUID(requested.json()["id"])
+    assert client.portal is not None
+    client.portal.call(app.state.export_service.run, export_id)
+    old_url = client.get(f"/api/v1/exports/{export_id}/download").json()["url"]
+    assert client.get(old_url).status_code == 200
+
+    assert client.delete(f"/api/v1/projects/{project['id']}").status_code == 200
+    assert client.get(old_url).status_code == 404
+    assert client.get(f"/api/v1/exports/{export_id}").status_code == 404
+
+    assert client.post(f"/api/v1/projects/{project['id']}/restore").status_code == 200
+    restored = client.get(f"/api/v1/exports/{export_id}/download")
+    assert restored.status_code == 200
+    new_url = restored.json()["url"]
+    assert new_url != old_url
+    assert client.get(new_url).content.startswith(b"MThd")
+
+
 def test_replacement_upload_scopes_idempotency_and_rebuilds_derived_audio(
     client: TestClient, app
 ) -> None:

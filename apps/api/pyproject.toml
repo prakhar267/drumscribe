@@ -10,7 +10,7 @@ dependencies = [
   "asyncpg>=0.30,<1",
   "boto3>=1.35,<2",
   "celery[redis]>=5.4,<6",
-  "drumscribe-music",
+  "drumscribe-music[pdf]",
   "email-validator>=2.2,<3",
   "fastapi>=0.115,<1",
   "httpx>=0.28,<1",

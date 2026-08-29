@@ -1,11 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
 
 const API_BASE = "http://localhost:8000/api/v1";
+const FIXTURE_SECONDS = 12;
+const FIXTURE_BPM = 120;
 
 function rightsClearedGrooveWav() {
   const sampleRate = 8_000;
-  const seconds = 3;
-  const sampleCount = sampleRate * seconds;
+  const sampleCount = sampleRate * FIXTURE_SECONDS;
   const buffer = Buffer.alloc(44 + sampleCount * 2);
   buffer.write("RIFF", 0);
   buffer.writeUInt32LE(36 + sampleCount * 2, 4);
@@ -49,11 +50,11 @@ async function requestExport(page: Page, projectId: string, format: "MIDI" | "MU
   const url = (await signed.json() as { url: string }).url;
   const artifact = await page.request.get(url);
   expect(artifact.ok()).toBeTruthy();
-  return artifact.body();
+  return { body: await artifact.body(), url };
 }
 
 test("real stack covers anonymous upload, conversion, editing, exports and revocable deletion", async ({ page }) => {
-  test.skip(process.env.DRUMSCRIBE_FULL_STACK_E2E !== "1", "Requires the Compose acceptance stack");
+  test.skip(process.env.DRUMSCRIBE_FULL_STACK_E2E !== "1", "Requires the full acceptance stack");
   test.setTimeout(240_000);
 
   await page.goto("/upload");
@@ -68,6 +69,10 @@ test("real stack covers anonymous upload, conversion, editing, exports and revoc
   await expect(page).toHaveURL(/\/jobs\/[0-9a-f-]+$/);
   const jobId = page.url().split("/").at(-1);
   expect(jobId).toMatch(/^[0-9a-f-]+$/);
+  // Closing the progress view must not own the job lifecycle. Reopen it from a
+  // separate route before waiting for the durable job to finish.
+  await page.goto("/");
+  await page.goto(`/jobs/${jobId}`);
 
   const openChart = page.getByTestId("open-chart");
   await expect(openChart).toBeVisible({ timeout: 120_000 });
@@ -77,7 +82,7 @@ test("real stack covers anonymous upload, conversion, editing, exports and revoc
 
   // Convert the anonymous owner before editing; the uploaded project must follow.
   await page.goto("/auth");
-  await page.getByLabel("Email address").fill(`e2e-${Date.now()}@example.test`);
+  await page.getByLabel("Email address").fill(`e2e-${Date.now()}@example.com`);
   await page.getByRole("button", { name: "Email me a sign-in link" }).click();
   const devContinue = page.getByRole("link", { name: "Continue sign-in" });
   await expect(devContinue).toBeVisible();
@@ -90,42 +95,77 @@ test("real stack covers anonymous upload, conversion, editing, exports and revoc
   const initialCount = await hits.count();
   expect(initialCount).toBeGreaterThan(0);
 
+  const originalSnare = page.getByRole("button", { name: "Snare hit at 0.50 seconds" });
+  await originalSnare.click();
+  await page.keyboard.press("Delete");
+  await expect(hits).toHaveCount(initialCount - 1);
+  await page.getByTestId("undo").click();
+  await expect(hits).toHaveCount(initialCount);
+  await page.getByTestId("redo").click();
+  await expect(hits).toHaveCount(initialCount - 1);
+
   const grid = page.getByTestId("drum-grid");
   const box = await grid.boundingBox();
   if (!box) throw new Error("Drum grid is not visible");
-  await page.mouse.click(box.x + box.width * 0.37, box.y + box.height - 15);
-  await expect(hits).toHaveCount(initialCount + 1);
-  await page.keyboard.press("Delete");
+  // Move the incorrect 0.50-second snare to the next empty sixteenth.
+  await page.mouse.click(box.x + box.width * (0.75 / FIXTURE_SECONDS), box.y + 11 * 30 + 15);
   await expect(hits).toHaveCount(initialCount);
+  const correctedSnare = page.getByRole("button", { name: "Snare hit at 0.75 seconds" });
+  await expect(correctedSnare).toBeVisible();
   await page.getByTestId("undo").click();
-  await expect(hits).toHaveCount(initialCount + 1);
+  await expect(hits).toHaveCount(initialCount - 1);
   await page.getByTestId("redo").click();
   await expect(hits).toHaveCount(initialCount);
-  await page.getByTestId("undo").click();
-  await page.getByTestId("loop-toggle").click();
+
+  const waveform = page.getByTestId("editor-waveform");
+  const waveformBox = await waveform.boundingBox();
+  if (!waveformBox) throw new Error("Waveform is not visible");
+  const loopEnd = 4 * 4 * 60 / FIXTURE_BPM;
+  const waveformY = waveformBox.y + waveformBox.height / 2;
+  await page.mouse.move(waveformBox.x + 2, waveformY);
+  await page.mouse.down();
+  await page.mouse.move(waveformBox.x + waveformBox.width * (loopEnd / FIXTURE_SECONDS), waveformY);
+  await page.mouse.up();
+  await expect(page.getByTestId("loop-toggle")).toHaveAttribute("aria-pressed", "true");
+  const loopBox = await page.locator(".wave-loop").boundingBox();
+  if (!loopBox) throw new Error("Four-measure loop is not visible");
+  expect(loopBox.width / waveformBox.width).toBeCloseTo(loopEnd / FIXTURE_SECONDS, 1);
+
   await page.getByTestId("playback-rate").selectOption("0.5");
   await page.getByTestId("transport-play").click();
   await page.waitForTimeout(300);
   await page.getByTestId("transport-play").click();
   await expect(page.getByRole("button", { name: "All changes saved" })).toBeVisible({ timeout: 15_000 });
   await page.reload();
-  await expect(page.getByTestId("grid-hit")).toHaveCount(initialCount + 1);
+  await expect(page.getByTestId("grid-hit")).toHaveCount(initialCount);
+  await expect(page.getByRole("button", { name: "Snare hit at 0.75 seconds" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Snare hit at 0.50 seconds" })).toHaveCount(0);
 
   const originalSigned = await page.request.get(`${API_BASE}/projects/${projectId}/audio/original/url`);
   expect(originalSigned.ok()).toBeTruthy();
   const originalUrl = (await originalSigned.json() as { url: string }).url;
   expect((await page.request.get(originalUrl)).ok()).toBeTruthy();
+  const drumsSigned = await page.request.get(`${API_BASE}/projects/${projectId}/audio/drums/url`);
+  expect(drumsSigned.ok()).toBeTruthy();
+  const drumsUrl = (await drumsSigned.json() as { url: string }).url;
+  expect((await page.request.get(drumsUrl)).ok()).toBeTruthy();
+  const waveformSigned = await page.request.get(`${API_BASE}/projects/${projectId}/waveform/url`);
+  expect(waveformSigned.ok()).toBeTruthy();
+  const waveformUrl = (await waveformSigned.json() as { url: string }).url;
+  expect((await page.request.get(waveformUrl)).ok()).toBeTruthy();
 
   const midi = await requestExport(page, projectId!, "MIDI");
-  expect(midi.subarray(0, 4).toString("ascii")).toBe("MThd");
+  expect(midi.body.subarray(0, 4).toString("ascii")).toBe("MThd");
   const musicXml = await requestExport(page, projectId!, "MUSICXML");
-  expect(musicXml.toString("utf8")).toContain("<score-partwise");
+  expect(musicXml.body.toString("utf8")).toContain("<score-partwise");
   const pdf = await requestExport(page, projectId!, "PDF");
-  expect(pdf.subarray(0, 5).toString("ascii")).toBe("%PDF-");
+  expect(pdf.body.subarray(0, 5).toString("ascii")).toBe("%PDF-");
 
   await page.goto(`/projects/${projectId}/settings`);
   await page.getByRole("button", { name: "Delete project" }).click();
   await expect(page.getByText("Project moved to deleted items.")).toBeVisible();
   expect((await page.request.get(`${API_BASE}/projects/${projectId}`)).status()).toBe(404);
-  expect((await page.request.get(originalUrl)).ok()).toBeFalsy();
+  for (const privateUrl of [originalUrl, drumsUrl, waveformUrl, midi.url, musicXml.url, pdf.url]) {
+    expect((await page.request.get(privateUrl)).ok()).toBeFalsy();
+  }
 });
