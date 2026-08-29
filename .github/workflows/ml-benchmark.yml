@@ -26,7 +26,7 @@ jobs:
           "${{ inputs.manifest }}"
           --json benchmark.json
           --html benchmark.html
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ml-benchmark
           path: |
