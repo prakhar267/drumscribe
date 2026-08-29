@@ -55,9 +55,7 @@ def test_retention_purges_expired_soft_deleted_project_media(
     assert isinstance(storage, LocalPrivateStorage)
     assert any(storage.path_for(key).exists() for key in keys)
 
-    result = client.portal.call(
-        RetentionService(settings, app.state.database, storage).run
-    )
+    result = client.portal.call(RetentionService(settings, app.state.database, storage).run)
     assert result["assets"] == len(keys)
     assert all(not storage.path_for(key).exists() for key in keys)
     assert client.post(f"/api/v1/projects/{project['id']}/restore").status_code == 410
@@ -87,12 +85,15 @@ def test_retention_cleans_abandoned_pending_and_rejected_uploads(
             "rightToUploadConfirmed": True,
         },
     ).json()
-    assert client.put(
-        rejected["uploadUrl"], content=invalid, headers=rejected["requiredHeaders"]
-    ).status_code == 204
-    assert client.post(
-        f"/api/v1/uploads/{rejected['assetId']}/complete", json={}
-    ).status_code == 200
+    assert (
+        client.put(
+            rejected["uploadUrl"], content=invalid, headers=rejected["requiredHeaders"]
+        ).status_code
+        == 204
+    )
+    assert (
+        client.post(f"/api/v1/uploads/{rejected['assetId']}/complete", json={}).status_code == 200
+    )
     started = client.post(
         f"/api/v1/projects/{project['id']}/process",
         json={},
@@ -155,9 +156,7 @@ def test_restore_never_revives_pipeline_deleted_history(client: TestClient, app)
             assets = list(
                 (
                     await db.execute(
-                        select(AudioAsset).where(
-                            AudioAsset.project_id == uuid.UUID(project["id"])
-                        )
+                        select(AudioAsset).where(AudioAsset.project_id == uuid.UUID(project["id"]))
                     )
                 ).scalars()
             )
@@ -166,8 +165,7 @@ def test_restore_never_revives_pipeline_deleted_history(client: TestClient, app)
     assert client.portal is not None
     rows = client.portal.call(statuses)
     assert any(
-        kind == AssetKind.NORMALIZED
-        and status in {AssetStatus.DELETING, AssetStatus.DELETED}
+        kind == AssetKind.NORMALIZED and status in {AssetStatus.DELETING, AssetStatus.DELETED}
         for kind, status in rows
     )
     assert (AssetKind.ORIGINAL, AssetStatus.VERIFIED) in rows
@@ -214,9 +212,7 @@ def test_replacement_upload_scopes_idempotency_and_rebuilds_derived_audio(
     assert AssetStatus.DELETING in stem_statuses
 
 
-def test_worker_redelivery_reruns_the_committed_in_progress_stage(
-    client: TestClient, app
-) -> None:
+def test_worker_redelivery_reruns_the_committed_in_progress_stage(client: TestClient, app) -> None:
     create_session(client)
     project = create_project(client)
     upload_wav(client, project["id"])
@@ -231,9 +227,7 @@ def test_worker_redelivery_reruns_the_committed_in_progress_stage(
         async with app.state.database.session_factory() as db:
             job = await db.get(ProcessingJob, job_id)
             assert job is not None
-            asset = await db.get(
-                AudioAsset, uuid.UUID(str(job.provider_versions["inputAssetId"]))
-            )
+            asset = await db.get(AudioAsset, uuid.UUID(str(job.provider_versions["inputAssetId"])))
             assert asset is not None
             asset.status = AssetStatus.VERIFIED
             asset.codec = "pcm_s16le"

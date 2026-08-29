@@ -42,4 +42,3 @@ def record_product_event(
     )
     db.add(event)
     return event
-

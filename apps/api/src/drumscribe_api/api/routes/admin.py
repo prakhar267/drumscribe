@@ -33,9 +33,7 @@ async def job_diagnostics(
         ).scalars()
     )
     model_runs = list(
-        (
-            await db.execute(select(ModelRun).where(ModelRun.job_id == job.id))
-        ).scalars()
+        (await db.execute(select(ModelRun).where(ModelRun.job_id == job.id))).scalars()
     )
     event_count = int(
         await db.scalar(
@@ -66,4 +64,3 @@ async def job_diagnostics(
         event_count=event_count,
         low_confidence_event_count=low_confidence_count,
     )
-

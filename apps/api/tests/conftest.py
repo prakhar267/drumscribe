@@ -114,4 +114,3 @@ def process_project(client: TestClient, app: Any, project_id: str) -> dict:
     status_response = client.get(f"/api/v1/jobs/{job['id']}")
     assert status_response.status_code == 200, status_response.text
     return status_response.json()
-

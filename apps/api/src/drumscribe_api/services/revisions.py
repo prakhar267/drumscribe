@@ -150,4 +150,3 @@ async def restore_snapshot(
             event.deleted_at = utcnow()
     transcription.version += 1
     return len(restored_ids)
-

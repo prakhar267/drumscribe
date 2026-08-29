@@ -35,9 +35,7 @@ logger = structlog.get_logger(__name__)
 StorageMove = tuple[str, str, str]
 
 
-async def _revert_storage_moves(
-    storage: PrivateStorage, moves: list[StorageMove]
-) -> None:
+async def _revert_storage_moves(storage: PrivateStorage, moves: list[StorageMove]) -> None:
     for old_key, quarantine_key, content_type in reversed(moves):
         try:
             await storage.copy(quarantine_key, old_key, content_type)
@@ -313,9 +311,7 @@ async def duplicate_project(
     )
     for source_asset in assets:
         asset_id = uuid.uuid4()
-        destination_key = (
-            f"users/{principal.user.id}/projects/{duplicate.id}/copies/{asset_id}"
-        )
+        destination_key = f"users/{principal.user.id}/projects/{duplicate.id}/copies/{asset_id}"
         await request.app.state.storage.copy(
             source_asset.storage_key,
             destination_key,

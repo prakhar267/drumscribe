@@ -322,8 +322,8 @@ def quantize_hits(
 
 
 def minimal_musicxml(project: Project, transcription: Transcription) -> bytes:
-    title = (project.title.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
-    xml = f'''<?xml version="1.0" encoding="UTF-8"?>
+    title = project.title.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    xml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <score-partwise version="4.0">
   <work><work-title>{title}</work-title></work>
   <part-list><score-part id="P1"><part-name>Drumset</part-name></score-part></part-list>
@@ -334,7 +334,7 @@ def minimal_musicxml(project: Project, transcription: Transcription) -> bytes:
   <direction><direction-type><metronome><beat-unit>quarter</beat-unit>
   <per-minute>{transcription.tempo_bpm:g}</per-minute></metronome></direction-type></direction>
   <note><rest/><duration>16</duration><type>whole</type></note></measure></part>
-</score-partwise>'''
+</score-partwise>"""
     return xml.encode("utf-8")
 
 
@@ -426,8 +426,7 @@ class PipelineService:
                     )
                     if (
                         project
-                        and self._job_input_asset_id(job, project)
-                        == project.original_asset_id
+                        and self._job_input_asset_id(job, project) == project.original_asset_id
                     ):
                         project.status = ProjectStatus.FAILED
                     await db.commit()
@@ -456,8 +455,7 @@ class PipelineService:
             if (
                 owner is not None
                 and owner.kind == UserKind.ANONYMOUS
-                and audio.duration_seconds
-                > self.settings.anonymous_max_audio_duration_seconds
+                and audio.duration_seconds > self.settings.anonymous_max_audio_duration_seconds
             ):
                 raise APIError(
                     422,
@@ -490,8 +488,10 @@ class PipelineService:
             return
         if stage == JobStage.TRANSCRIBING:
             existing = (
-                await db.execute(select(ModelRun).where(ModelRun.job_id == job.id))
-            ).scalars().first()
+                (await db.execute(select(ModelRun).where(ModelRun.job_id == job.id)))
+                .scalars()
+                .first()
+            )
             if existing is not None:
                 return
             stem = await self._asset(db, project.id, AssetKind.DRUM_STEM)
@@ -602,9 +602,7 @@ class PipelineService:
             transcription = await self._transcription(db, project)
             existing_revision = (
                 await db.execute(
-                    select(1).where(
-                        TranscriptionRevision.transcription_id == transcription.id
-                    )
+                    select(1).where(TranscriptionRevision.transcription_id == transcription.id)
                 )
             ).first()
             if existing_revision is None:
@@ -638,9 +636,7 @@ class PipelineService:
                 )
             except ImportError:
                 score = minimal_musicxml(project, transcription)
-            await self.storage.put_bytes(
-                key, score, "application/vnd.recordare.musicxml+xml"
-            )
+            await self.storage.put_bytes(key, score, "application/vnd.recordare.musicxml+xml")
             score_asset = (
                 await db.execute(
                     select(AudioAsset).where(
@@ -688,9 +684,7 @@ class PipelineService:
         return asset
 
     @staticmethod
-    def _job_input_asset_id(
-        job: ProcessingJob, project: Project
-    ) -> uuid.UUID | None:
+    def _job_input_asset_id(job: ProcessingJob, project: Project) -> uuid.UUID | None:
         raw_id = (job.provider_versions or {}).get("inputAssetId")
         if raw_id:
             try:
@@ -699,18 +693,20 @@ class PipelineService:
                 raise RuntimeError("processing job input checkpoint is invalid") from exc
         return project.original_asset_id
 
-    async def _asset(
-        self, db: AsyncSession, project_id: uuid.UUID, kind: AssetKind
-    ) -> AudioAsset:
+    async def _asset(self, db: AsyncSession, project_id: uuid.UUID, kind: AssetKind) -> AudioAsset:
         asset = (
-            await db.execute(
-                select(AudioAsset).where(
-                    AudioAsset.project_id == project_id,
-                    AudioAsset.kind == kind,
-                    AudioAsset.deleted_at.is_(None),
+            (
+                await db.execute(
+                    select(AudioAsset).where(
+                        AudioAsset.project_id == project_id,
+                        AudioAsset.kind == kind,
+                        AudioAsset.deleted_at.is_(None),
+                    )
                 )
             )
-        ).scalars().first()
+            .scalars()
+            .first()
+        )
         if asset is None:
             raise ObjectNotFoundError(f"{project_id}/{kind.value}")
         return asset
@@ -741,10 +737,9 @@ class PipelineService:
                         output,
                         ffmpeg=ffmpeg,
                     )
-                elif (
-                    source.content_type in {"audio/wav", "audio/x-wav", "audio/wave"}
-                    and (source.codec or "").startswith("pcm_")
-                ):
+                elif source.content_type in {"audio/wav", "audio/x-wav", "audio/wave"} and (
+                    source.codec or ""
+                ).startswith("pcm_"):
                     # A truthful WAV-to-WAV fallback keeps local tests usable when
                     # FFmpeg is absent; compressed inputs are never relabelled.
                     await asyncio.to_thread(shutil.copyfile, input_path, output)
@@ -780,10 +775,7 @@ class PipelineService:
         if existing is not None:
             return existing, "checkpoint/reused"
         input_asset_id = project.original_asset_id or source.id
-        key = (
-            f"users/{project.owner_id}/projects/{project.id}/stems/"
-            f"{input_asset_id}/drums.wav"
-        )
+        key = f"users/{project.owner_id}/projects/{project.id}/stems/{input_asset_id}/drums.wav"
         with tempfile.TemporaryDirectory(prefix="drumscribe-separate-") as directory:
             output = Path(directory) / "drums.wav"
             async with self.storage.materialize(source.storage_key) as input_path:
@@ -813,14 +805,18 @@ class PipelineService:
         self, db: AsyncSession, project_id: uuid.UUID, kind: AssetKind
     ) -> AudioAsset | None:
         return (
-            await db.execute(
-                select(AudioAsset).where(
-                    AudioAsset.project_id == project_id,
-                    AudioAsset.kind == kind,
-                    AudioAsset.deleted_at.is_(None),
+            (
+                await db.execute(
+                    select(AudioAsset).where(
+                        AudioAsset.project_id == project_id,
+                        AudioAsset.kind == kind,
+                        AudioAsset.deleted_at.is_(None),
+                    )
                 )
             )
-        ).scalars().first()
+            .scalars()
+            .first()
+        )
 
     async def _upsert_asset(
         self,
@@ -856,22 +852,26 @@ class PipelineService:
 
     async def _model_run(self, db: AsyncSession, job_id: uuid.UUID) -> ModelRun:
         run = (
-            await db.execute(select(ModelRun).where(ModelRun.job_id == job_id))
-        ).scalars().first()
+            (await db.execute(select(ModelRun).where(ModelRun.job_id == job_id))).scalars().first()
+        )
         if run is None:
             raise RuntimeError("transcription checkpoint missing")
         return run
 
     async def _ensure_waveform(self, db: AsyncSession, project: Project) -> AudioAsset:
         existing = (
-            await db.execute(
-                select(AudioAsset).where(
-                    AudioAsset.project_id == project.id,
-                    AudioAsset.kind == AssetKind.WAVEFORM_PEAKS,
-                    AudioAsset.deleted_at.is_(None),
+            (
+                await db.execute(
+                    select(AudioAsset).where(
+                        AudioAsset.project_id == project.id,
+                        AudioAsset.kind == AssetKind.WAVEFORM_PEAKS,
+                        AudioAsset.deleted_at.is_(None),
+                    )
                 )
             )
-        ).scalars().first()
+            .scalars()
+            .first()
+        )
         if existing is not None:
             return existing
         normalized = await self._asset(db, project.id, AssetKind.NORMALIZED)
@@ -892,10 +892,7 @@ class PipelineService:
                 separators=(",", ":"),
             ).encode()
         input_asset_id = project.original_asset_id or normalized.id
-        key = (
-            f"users/{project.owner_id}/projects/{project.id}/waveform/"
-            f"{input_asset_id}/peaks.json"
-        )
+        key = f"users/{project.owner_id}/projects/{project.id}/waveform/{input_asset_id}/peaks.json"
         await self.storage.put_bytes(key, data, "application/json")
         asset = AudioAsset(
             project_id=project.id,
@@ -910,9 +907,7 @@ class PipelineService:
         await db.flush()
         return asset
 
-    async def _transcription(
-        self, db: AsyncSession, project: Project
-    ) -> Transcription:
+    async def _transcription(self, db: AsyncSession, project: Project) -> Transcription:
         if project.active_transcription_id is None:
             raise RuntimeError("quantization checkpoint missing")
         transcription = await db.get(Transcription, project.active_transcription_id)

@@ -59,9 +59,10 @@ class Settings(BaseSettings):
     max_concurrent_jobs_anonymous: int = 1
     ffprobe_binary: str = "ffprobe"
     ffmpeg_binary: str = "ffmpeg"
-    rate_limit_per_minute: int = 180
-    auth_rate_limit_per_minute: int = 10
+    rate_limit_per_minute: int = Field(default=180, gt=0)
+    auth_rate_limit_per_minute: int = Field(default=10, gt=0)
     enable_rate_limiting: bool = True
+    readiness_timeout_seconds: float = Field(default=2.0, gt=0, le=30)
     anonymous_retention_hours: int = 24
     export_retention_hours: int = 24 * 7
     project_delete_grace_hours: int = 24 * 7

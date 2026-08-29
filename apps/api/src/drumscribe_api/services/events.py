@@ -32,9 +32,7 @@ async def apply_bulk_events(
         )
     locked_transcription = (
         await db.execute(
-            select(Transcription)
-            .where(Transcription.id == transcription.id)
-            .with_for_update()
+            select(Transcription).where(Transcription.id == transcription.id).with_for_update()
         )
     ).scalar_one()
     transcription = locked_transcription
@@ -89,19 +87,22 @@ async def apply_bulk_events(
             db.add(event)
         else:
             confidence_changed = (
-                "confidence" in write.model_fields_set
-                and event.confidence != write.confidence
+                "confidence" in write.model_fields_set and event.confidence != write.confidence
             )
-            materially_changed = event.deleted_at is not None or confidence_changed or any(
-                (
-                    event.instrument != write.instrument,
-                    not isclose(event.onset_seconds, write.onset_seconds, abs_tol=1e-9),
-                    not isclose(event.duration_seconds, write.duration_seconds, abs_tol=1e-9),
-                    event.velocity != write.velocity,
-                    not isclose(event.beat_position, write.beat_position, abs_tol=1e-9),
-                    event.measure_index != write.measure_index,
-                    event.subdivision != write.subdivision,
-                    not isclose(event.quantized_onset, write.quantized_onset, abs_tol=1e-9),
+            materially_changed = (
+                event.deleted_at is not None
+                or confidence_changed
+                or any(
+                    (
+                        event.instrument != write.instrument,
+                        not isclose(event.onset_seconds, write.onset_seconds, abs_tol=1e-9),
+                        not isclose(event.duration_seconds, write.duration_seconds, abs_tol=1e-9),
+                        event.velocity != write.velocity,
+                        not isclose(event.beat_position, write.beat_position, abs_tol=1e-9),
+                        event.measure_index != write.measure_index,
+                        event.subdivision != write.subdivision,
+                        not isclose(event.quantized_onset, write.quantized_onset, abs_tol=1e-9),
+                    )
                 )
             )
             if not materially_changed:

@@ -44,6 +44,22 @@ class HealthResponse(APIModel):
     version: str
 
 
+class LivenessResponse(APIModel):
+    status: Literal["ok"] = "ok"
+    version: str
+
+
+class DependencyHealthResponse(APIModel):
+    status: Literal["ok", "unavailable"]
+    latency_ms: float = Field(ge=0)
+
+
+class ReadinessResponse(APIModel):
+    status: Literal["ready", "unready"]
+    checks: dict[str, DependencyHealthResponse]
+    version: str
+
+
 class UserResponse(APIModel):
     id: uuid.UUID
     email: str | None

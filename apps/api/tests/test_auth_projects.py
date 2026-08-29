@@ -48,9 +48,7 @@ def test_user_a_cannot_read_or_mutate_user_b_project(client: TestClient) -> None
 def test_magic_link_transfers_anonymous_projects(client: TestClient) -> None:
     create_session(client)
     project = create_project(client, title="Keep me through signup")
-    request = client.post(
-        "/api/v1/auth/magic-link/request", json={"email": "Drummer@Example.com"}
-    )
+    request = client.post("/api/v1/auth/magic-link/request", json={"email": "Drummer@Example.com"})
     assert request.status_code == 202
     assert request.json()["accepted"] is True
     token = request.json()["devToken"]
@@ -88,9 +86,10 @@ def test_deleted_account_can_register_the_same_email_again(client: TestClient) -
     first_link = client.post(
         "/api/v1/auth/magic-link/request", json={"email": "returning@example.com"}
     ).json()["devToken"]
-    assert client.post(
-        "/api/v1/auth/magic-link/consume", json={"token": first_link}
-    ).status_code == 200
+    assert (
+        client.post("/api/v1/auth/magic-link/consume", json={"token": first_link}).status_code
+        == 200
+    )
 
     deleted = client.request(
         "DELETE",
@@ -102,8 +101,6 @@ def test_deleted_account_can_register_the_same_email_again(client: TestClient) -
     second_link = client.post(
         "/api/v1/auth/magic-link/request", json={"email": "returning@example.com"}
     ).json()["devToken"]
-    registered = client.post(
-        "/api/v1/auth/magic-link/consume", json={"token": second_link}
-    )
+    registered = client.post("/api/v1/auth/magic-link/consume", json={"token": second_link})
     assert registered.status_code == 200, registered.text
     assert registered.json()["user"]["email"] == "returning@example.com"

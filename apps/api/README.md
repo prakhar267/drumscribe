@@ -34,6 +34,16 @@ Swagger is available at `/docs` outside production. Magic-link request responses
 whether an account exists. A development-only token is returned only when
 `DRUMSCRIBE_DEV_EXPOSE_MAGIC_LINK=true`; production validation forbids that setting.
 
+Operational probes are intentionally separate: `GET /api/v1/health/live` proves only that the
+API process can serve requests, while `GET /api/v1/health/ready` concurrently checks the database,
+queue broker, private storage bucket, and production-provider configuration. Readiness is bounded
+by `DRUMSCRIBE_READINESS_TIMEOUT_SECONDS` per dependency and returns HTTP 503 with per-dependency
+status when any required service is unavailable. The legacy `GET /api/v1/health` endpoint remains
+available for compatibility. Production rate limits use a Redis-backed atomic sliding window
+shared across API replicas; only development/testing use the in-memory implementation. If Redis is
+unavailable, authentication routes fail closed with HTTP 503 while general traffic fails open and
+emits a structured operational error.
+
 Run all checks:
 
 ```bash

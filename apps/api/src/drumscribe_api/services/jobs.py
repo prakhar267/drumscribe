@@ -126,15 +126,19 @@ async def create_or_get_job(
     if existing:
         return existing, False
     active = (
-        await db.execute(
-            select(ProcessingJob)
-            .where(
-                ProcessingJob.project_id == project.id,
-                ProcessingJob.stage.not_in(TERMINAL_JOB_STAGES),
+        (
+            await db.execute(
+                select(ProcessingJob)
+                .where(
+                    ProcessingJob.project_id == project.id,
+                    ProcessingJob.stage.not_in(TERMINAL_JOB_STAGES),
+                )
+                .order_by(ProcessingJob.created_at.desc())
             )
-            .order_by(ProcessingJob.created_at.desc())
         )
-    ).scalars().first()
+        .scalars()
+        .first()
+    )
     if active:
         return active, False
     job = ProcessingJob(
@@ -180,9 +184,7 @@ async def prepare_retry(db: AsyncSession, job: ProcessingJob) -> None:
     await db.flush()
 
 
-async def get_owned_job(
-    db: AsyncSession, job_id: uuid.UUID, owner_id: uuid.UUID
-) -> ProcessingJob:
+async def get_owned_job(db: AsyncSession, job_id: uuid.UUID, owner_id: uuid.UUID) -> ProcessingJob:
     job = (
         await db.execute(
             select(ProcessingJob)

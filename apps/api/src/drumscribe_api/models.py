@@ -238,9 +238,7 @@ class Transcription(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     project: Mapped[Project] = relationship(back_populates="transcriptions")
     events: Mapped[list["DrumEvent"]] = relationship(back_populates="transcription")
-    revisions: Mapped[list["TranscriptionRevision"]] = relationship(
-        back_populates="transcription"
-    )
+    revisions: Mapped[list["TranscriptionRevision"]] = relationship(back_populates="transcription")
 
 
 class DrumEvent(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):

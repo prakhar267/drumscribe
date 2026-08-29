@@ -1,10 +1,11 @@
 import asyncio
 import uuid
 from collections.abc import Awaitable, Callable
-from typing import Protocol
+from typing import Any, Protocol
 
 import structlog
 from celery import Celery  # type: ignore[import-untyped]
+from redis.asyncio import Redis
 
 from .config import Settings
 
@@ -16,6 +17,8 @@ class WorkQueue(Protocol):
 
     async def enqueue_export(self, export_id: uuid.UUID) -> None: ...
 
+    async def healthcheck(self) -> None: ...
+
     async def close(self) -> None: ...
 
 
@@ -25,6 +28,9 @@ class NoopQueue:
 
     async def enqueue_export(self, export_id: uuid.UUID) -> None:
         del export_id
+
+    async def healthcheck(self) -> None:
+        return
 
     async def close(self) -> None:
         return
@@ -58,6 +64,9 @@ class InlineDevelopmentQueue:
     async def enqueue_export(self, export_id: uuid.UUID) -> None:
         self._spawn(self.process_export(export_id))
 
+    async def healthcheck(self) -> None:
+        return
+
     async def close(self) -> None:
         if self.tasks:
             await asyncio.gather(*self.tasks, return_exceptions=True)
@@ -66,18 +75,26 @@ class InlineDevelopmentQueue:
 class CeleryWorkQueue:
     def __init__(self, settings: Settings) -> None:
         self.app = Celery("drumscribe-api-client", broker=settings.redis_url)
+        self.redis: Any = Redis.from_url(
+            settings.redis_url,
+            socket_connect_timeout=2,
+            socket_timeout=2,
+        )
 
     async def enqueue_processing(self, job_id: uuid.UUID) -> None:
-        await asyncio.to_thread(
-            self.app.send_task, "drumscribe.process_job", args=[str(job_id)]
-        )
+        await asyncio.to_thread(self.app.send_task, "drumscribe.process_job", args=[str(job_id)])
 
     async def enqueue_export(self, export_id: uuid.UUID) -> None:
         await asyncio.to_thread(
             self.app.send_task, "drumscribe.generate_export", args=[str(export_id)]
         )
 
+    async def healthcheck(self) -> None:
+        if not await self.redis.ping():
+            raise RuntimeError("queue broker did not acknowledge ping")
+
     async def close(self) -> None:
+        await self.redis.aclose()
         await asyncio.to_thread(self.app.close)
 
 

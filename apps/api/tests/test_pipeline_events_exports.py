@@ -152,9 +152,7 @@ def test_bulk_edit_version_conflict_and_revision_restore(client: TestClient, app
 def test_unchanged_full_chart_upsert_preserves_ai_provenance(client: TestClient, app) -> None:
     project, _ = ready_project(client, app)
     original = client.get(f"/api/v1/projects/{project['id']}/events").json()
-    revision_count = len(
-        client.get(f"/api/v1/projects/{project['id']}/revisions").json()["items"]
-    )
+    revision_count = len(client.get(f"/api/v1/projects/{project['id']}/revisions").json()["items"])
     fields = {
         "id",
         "instrument",
@@ -169,8 +167,7 @@ def test_unchanged_full_chart_upsert_preserves_ai_provenance(client: TestClient,
         "quantizedOnset",
     }
     unchanged = [
-        {key: value for key, value in event.items() if key in fields}
-        for event in original["items"]
+        {key: value for key, value in event.items() if key in fields} for event in original["items"]
     ]
     response = client.patch(
         f"/api/v1/projects/{project['id']}/events/bulk",

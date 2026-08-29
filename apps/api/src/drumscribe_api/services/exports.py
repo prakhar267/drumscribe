@@ -69,9 +69,7 @@ def _music_engine_tempo_map(transcription: Transcription, engine: Any) -> Any:
         kind = item.get("kind")
         if kind == "offset":
             offset_seconds = float(item.get("offsetSeconds", 0))
-        elif kind == "timeSignature" or (
-            "numerator" in item and "denominator" in item
-        ):
+        elif kind == "timeSignature" or ("numerator" in item and "denominator" in item):
             signatures.append(
                 engine.TimeSignature(
                     int(item["numerator"]),
@@ -221,9 +219,7 @@ class ExportService:
                 export.storage_key = key
                 export.status = ExportStatus.READY
                 export.finished_at = utcnow()
-                export.expires_at = utcnow() + timedelta(
-                    hours=self.settings.export_retention_hours
-                )
+                export.expires_at = utcnow() + timedelta(hours=self.settings.export_retention_hours)
                 await db.commit()
             except Exception as exc:
                 await db.rollback()

@@ -24,6 +24,8 @@ from .models import Base
 from .queue import create_queue
 from .services.exports import ExportService
 from .services.pipeline import PipelineService
+from .services.rate_limits import create_rate_limiter
+from .services.readiness import ReadinessService
 from .services.storage import S3PrivateStorage, create_storage
 
 
@@ -49,6 +51,7 @@ def configure_logging(environment: Environment) -> None:
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     app_settings = settings or get_settings()
+    rate_limiter = create_rate_limiter(app_settings)
     configure_logging(app_settings.environment)
     if app_settings.sentry_dsn:
         sentry_sdk.init(
@@ -65,25 +68,26 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             async with database.engine.begin() as connection:
                 await connection.run_sync(Base.metadata.create_all)
         storage = create_storage(app_settings)
-        if (
-            isinstance(storage, S3PrivateStorage)
-            and app_settings.s3_configure_bucket_cors
-        ):
+        if isinstance(storage, S3PrivateStorage) and app_settings.s3_configure_bucket_cors:
             await storage.configure_browser_cors(app_settings.web_origins)
         pipeline = PipelineService(app_settings, database, storage)
         pipeline.music.validate_configuration()
         exports = ExportService(app_settings, database, storage)
         queue = create_queue(app_settings, pipeline.run, exports.run)
+        readiness = ReadinessService(app_settings, database, queue, storage, pipeline)
         app.state.settings = app_settings
         app.state.database = database
         app.state.storage = storage
         app.state.pipeline = pipeline
         app.state.export_service = exports
         app.state.queue = queue
+        app.state.readiness = readiness
+        app.state.rate_limiter = rate_limiter
         try:
             yield
         finally:
             await queue.close()
+            await rate_limiter.close()
             await database.dispose()
 
     app = FastAPI(
@@ -94,14 +98,23 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         redoc_url=None,
         openapi_url="/api/v1/openapi.json",
     )
-    app.add_middleware(PlatformMiddleware, settings=app_settings)
+    app.add_middleware(
+        PlatformMiddleware,
+        settings=app_settings,
+        limiter=rate_limiter,
+    )
     app.add_middleware(
         CORSMiddleware,
         allow_origins=app_settings.web_origins,
         allow_credentials=True,
         allow_methods=["GET", "POST", "PATCH", "DELETE", "PUT", "OPTIONS"],
         allow_headers=["Authorization", "Content-Type", "Idempotency-Key", "X-Request-ID"],
-        expose_headers=["X-Request-ID", "Retry-After"],
+        expose_headers=[
+            "X-Request-ID",
+            "Retry-After",
+            "X-RateLimit-Limit",
+            "X-RateLimit-Remaining",
+        ],
         max_age=600,
     )
     app.add_exception_handler(APIError, api_error_handler)  # type: ignore[arg-type]

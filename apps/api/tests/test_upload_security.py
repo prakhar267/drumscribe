@@ -1,4 +1,3 @@
-
 import asyncio
 import uuid
 from urllib.parse import urlparse
@@ -39,21 +38,15 @@ def test_rights_confirmation_and_mime_contract_are_mandatory(client: TestClient)
         "sizeBytes": 100,
         "rightToUploadConfirmed": True,
     }
-    unsupported = client.post(
-        f"/api/v1/projects/{project['id']}/uploads/presign", json=base
-    )
+    unsupported = client.post(f"/api/v1/projects/{project['id']}/uploads/presign", json=base)
     assert unsupported.status_code == 415
     base["contentType"] = "audio/wav"
     base["rightToUploadConfirmed"] = False
-    no_rights = client.post(
-        f"/api/v1/projects/{project['id']}/uploads/presign", json=base
-    )
+    no_rights = client.post(f"/api/v1/projects/{project['id']}/uploads/presign", json=base)
     assert no_rights.status_code == 422
 
 
-def _run_failed_validation(
-    client: TestClient, app, project_id: str, key: str
-) -> dict:
+def _run_failed_validation(client: TestClient, app, project_id: str, key: str) -> dict:
     started = client.post(
         f"/api/v1/projects/{project_id}/process",
         json={},
@@ -68,9 +61,7 @@ def _run_failed_validation(
     return response.json()
 
 
-def test_invalid_media_bytes_are_rejected_by_background_validation(
-    client: TestClient, app
-) -> None:
+def test_invalid_media_bytes_are_rejected_by_background_validation(client: TestClient, app) -> None:
     create_session(client)
     project = create_project(client)
     invalid = b"not actually a wave file"
@@ -117,9 +108,12 @@ def test_duration_limit_uses_queued_probe_not_client_metadata(
             "rightToUploadConfirmed": True,
         },
     ).json()
-    assert client.put(
-        presign["uploadUrl"], content=audio, headers=presign["requiredHeaders"]
-    ).status_code == 204
+    assert (
+        client.put(
+            presign["uploadUrl"], content=audio, headers=presign["requiredHeaders"]
+        ).status_code
+        == 204
+    )
     response = client.post(f"/api/v1/uploads/{presign['assetId']}/complete", json={})
     assert response.status_code == 200
     assert response.json()["status"] == "UPLOADED"

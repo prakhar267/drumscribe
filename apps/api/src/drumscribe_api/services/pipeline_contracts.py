@@ -72,4 +72,3 @@ class NotationGenerator(Protocol):
     version: str
 
     async def generate_musicxml(self, events: list[QuantizedHit], title: str) -> bytes: ...
-

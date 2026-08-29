@@ -64,9 +64,7 @@ async def api_error_handler(request: Request, exc: APIError) -> JSONResponse:
     )
 
 
-async def validation_error_handler(
-    request: Request, exc: RequestValidationError
-) -> JSONResponse:
+async def validation_error_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
     errors = [
         {
             "location": [str(part) for part in error["loc"]],

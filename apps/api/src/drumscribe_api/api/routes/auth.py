@@ -102,9 +102,7 @@ async def consume_link(
     settings: AppSettings,
     current: OptionalPrincipal,
 ) -> SessionResponse:
-    principal, raw_session_token = await consume_magic_link(
-        db, payload.token, settings, current
-    )
+    principal, raw_session_token = await consume_magic_link(db, payload.token, settings, current)
     record_audit(
         db,
         "account.magic_link_consumed",
@@ -175,9 +173,7 @@ async def delete_account(
     assets = (
         list(
             (
-                await db.execute(
-                    select(AudioAsset).where(AudioAsset.project_id.in_(project_ids))
-                )
+                await db.execute(select(AudioAsset).where(AudioAsset.project_id.in_(project_ids)))
             ).scalars()
         )
         if project_ids

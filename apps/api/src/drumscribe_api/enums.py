@@ -151,4 +151,3 @@ FRIENDLY_JOB_STAGES: dict[JobStage, str] = {
     JobStage.FAILED: "Processing could not be completed",
     JobStage.CANCELLED: "Processing cancelled",
 }
-

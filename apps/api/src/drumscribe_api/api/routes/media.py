@@ -34,14 +34,18 @@ async def signed_audio_url(
             AudioAsset.kind == AssetKind.DRUM_STEM,
         ]
     asset = (
-        await db.execute(
-            select(AudioAsset).where(
-                *conditions,
-                AudioAsset.status == AssetStatus.VERIFIED,
-                AudioAsset.deleted_at.is_(None),
+        (
+            await db.execute(
+                select(AudioAsset).where(
+                    *conditions,
+                    AudioAsset.status == AssetStatus.VERIFIED,
+                    AudioAsset.deleted_at.is_(None),
+                )
             )
         )
-    ).scalars().first()
+        .scalars()
+        .first()
+    )
     if asset is None:
         raise not_found("Audio")
     signed = await request.app.state.storage.presign_get(
@@ -62,15 +66,19 @@ async def signed_waveform_url(
 ) -> SignedURLResponse:
     project = await owned_project(str(project_id), db, principal)
     asset = (
-        await db.execute(
-            select(AudioAsset).where(
-                AudioAsset.project_id == project.id,
-                AudioAsset.kind == AssetKind.WAVEFORM_PEAKS,
-                AudioAsset.status == AssetStatus.VERIFIED,
-                AudioAsset.deleted_at.is_(None),
+        (
+            await db.execute(
+                select(AudioAsset).where(
+                    AudioAsset.project_id == project.id,
+                    AudioAsset.kind == AssetKind.WAVEFORM_PEAKS,
+                    AudioAsset.status == AssetStatus.VERIFIED,
+                    AudioAsset.deleted_at.is_(None),
+                )
             )
         )
-    ).scalars().first()
+        .scalars()
+        .first()
+    )
     if asset is None:
         raise not_found("Waveform")
     signed = await request.app.state.storage.presign_get(

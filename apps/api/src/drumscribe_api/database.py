@@ -1,6 +1,6 @@
 from collections.abc import AsyncIterator
 
-from sqlalchemy import event
+from sqlalchemy import event, text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -32,6 +32,10 @@ class Database:
 
     async def dispose(self) -> None:
         await self.engine.dispose()
+
+    async def healthcheck(self) -> None:
+        async with self.session_factory() as session:
+            await session.execute(text("SELECT 1"))
 
     async def session(self) -> AsyncIterator[AsyncSession]:
         async with self.session_factory() as session:

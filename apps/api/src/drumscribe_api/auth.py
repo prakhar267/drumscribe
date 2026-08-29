@@ -96,9 +96,7 @@ async def resolve_principal(
     return Principal(user=user, session=session)
 
 
-async def create_anonymous_principal(
-    db: AsyncSession, settings: Settings
-) -> tuple[Principal, str]:
+async def create_anonymous_principal(db: AsyncSession, settings: Settings) -> tuple[Principal, str]:
     user = User(kind=UserKind.ANONYMOUS)
     db.add(user)
     await db.flush()
@@ -134,17 +132,21 @@ async def consume_magic_link(
     current: Principal | None,
 ) -> tuple[Principal, str | None]:
     claimed = (
-        await db.execute(
-            update(MagicLink)
-            .where(
-                MagicLink.token_hash == token_hash(raw_token),
-                MagicLink.consumed_at.is_(None),
-                MagicLink.expires_at > utcnow(),
+        (
+            await db.execute(
+                update(MagicLink)
+                .where(
+                    MagicLink.token_hash == token_hash(raw_token),
+                    MagicLink.consumed_at.is_(None),
+                    MagicLink.expires_at > utcnow(),
+                )
+                .values(consumed_at=utcnow())
+                .returning(MagicLink.email)
             )
-            .values(consumed_at=utcnow())
-            .returning(MagicLink.email)
         )
-    ).mappings().one_or_none()
+        .mappings()
+        .one_or_none()
+    )
     if claimed is None:
         raise APIError(400, "MAGIC_LINK_INVALID", "This sign-in link is invalid or expired.")
     link_email = str(claimed["email"])

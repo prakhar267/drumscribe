@@ -62,9 +62,7 @@ async def _run_retention() -> None:
         await database.dispose()
 
 
-async def _mark_processing_retry_exhausted(
-    job_id: uuid.UUID, error: Exception
-) -> None:
+async def _mark_processing_retry_exhausted(job_id: uuid.UUID, error: Exception) -> None:
     database = Database(settings)
     try:
         async with database.session_factory() as db:

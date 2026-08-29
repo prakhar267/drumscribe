@@ -47,9 +47,7 @@ async def presign_upload(
     project = await owned_project(str(project_id), db, principal)
     content_type = validate_upload_contract(payload.content_type, payload.size_bytes, settings)
     asset_id = uuid.uuid4()
-    storage_key = (
-        f"users/{principal.user.id}/projects/{project.id}/originals/{asset_id}"
-    )
+    storage_key = f"users/{principal.user.id}/projects/{project.id}/originals/{asset_id}"
     asset = AudioAsset(
         id=asset_id,
         project_id=project.id,
@@ -158,9 +156,7 @@ async def complete_upload(
     for previous in previous_assets:
         previous.status = AssetStatus.DELETING
         previous.deleted_at = now
-        previous.expires_at = now + timedelta(
-            hours=settings.replaced_upload_retention_hours
-        )
+        previous.expires_at = now + timedelta(hours=settings.replaced_upload_retention_hours)
 
     # Every derived artifact is tied to the previous immutable original. Revoke it
     # immediately and let the retention worker perform idempotent object cleanup.

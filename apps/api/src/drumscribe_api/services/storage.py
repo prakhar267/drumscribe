@@ -39,6 +39,8 @@ class ObjectNotFoundError(Exception):
 
 
 class PrivateStorage(Protocol):
+    async def healthcheck(self) -> None: ...
+
     async def presign_put(
         self, key: str, content_type: str, size_bytes: int, expires_in: int
     ) -> PresignedRequest: ...
@@ -82,6 +84,13 @@ class LocalPrivateStorage:
         if self.root not in path.parents:
             raise ValueError("object key escapes storage root")
         return path
+
+    async def healthcheck(self) -> None:
+        def check() -> None:
+            if not self.root.is_dir() or not os.access(self.root, os.R_OK | os.W_OK):
+                raise RuntimeError("local private storage is unavailable")
+
+        await asyncio.to_thread(check)
 
     def _signature(
         self,
@@ -133,9 +142,7 @@ class LocalPrivateStorage:
                 "size": size_bytes,
             }
         )
-        url = (
-            f"{self.public_api_url}/api/v1/storage/local/{self.encode_key(key)}?{query}"
-        )
+        url = f"{self.public_api_url}/api/v1/storage/local/{self.encode_key(key)}?{query}"
         return PresignedRequest(
             url=url,
             expires_at_epoch=expires,
@@ -146,9 +153,7 @@ class LocalPrivateStorage:
         expires = int(time.time()) + expires_in
         signature = self._signature("GET", key, expires)
         query = urlencode({"expires": expires, "signature": signature})
-        url = (
-            f"{self.public_api_url}/api/v1/storage/local/{self.encode_key(key)}?{query}"
-        )
+        url = f"{self.public_api_url}/api/v1/storage/local/{self.encode_key(key)}?{query}"
         return PresignedRequest(url=url, expires_at_epoch=expires, required_headers={})
 
     async def write_stream(
@@ -242,13 +247,12 @@ class S3PrivateStorage:
         }
         # Server-side operations use the private service address; URLs handed to browsers
         # must be signed with the separately configured browser-reachable endpoint.
-        self.client: Any = boto3.client(
-            "s3", endpoint_url=settings.s3_endpoint_url, **credentials
-        )
+        self.client: Any = boto3.client("s3", endpoint_url=settings.s3_endpoint_url, **credentials)
         public_endpoint = settings.s3_public_endpoint_url or settings.s3_endpoint_url
-        self.signing_client: Any = boto3.client(
-            "s3", endpoint_url=public_endpoint, **credentials
-        )
+        self.signing_client: Any = boto3.client("s3", endpoint_url=public_endpoint, **credentials)
+
+    async def healthcheck(self) -> None:
+        await asyncio.to_thread(self.client.head_bucket, Bucket=self.bucket)
 
     @staticmethod
     def browser_cors_configuration(origins: list[str]) -> dict[str, Any]:

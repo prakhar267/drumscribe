@@ -13,9 +13,7 @@ from .storage import PrivateStorage
 class RetentionService:
     """Idempotent object cleanup driven by durable database lifecycle markers."""
 
-    def __init__(
-        self, settings: Settings, database: Database, storage: PrivateStorage
-    ) -> None:
+    def __init__(self, settings: Settings, database: Database, storage: PrivateStorage) -> None:
         self.settings = settings
         self.database = database
         self.storage = storage
@@ -66,9 +64,7 @@ class RetentionService:
                                     Session.revoked_at.is_(None),
                                     func.coalesce(Session.last_seen_at, Session.created_at)
                                     >= now
-                                    - timedelta(
-                                        hours=self.settings.anonymous_retention_hours
-                                    ),
+                                    - timedelta(hours=self.settings.anonymous_retention_hours),
                                 )
                             ),
                             ~exists(
@@ -77,9 +73,7 @@ class RetentionService:
                                     Project.deleted_at.is_(None),
                                     Project.updated_at
                                     >= now
-                                    - timedelta(
-                                        hours=self.settings.anonymous_retention_hours
-                                    ),
+                                    - timedelta(hours=self.settings.anonymous_retention_hours),
                                 )
                             ),
                         )

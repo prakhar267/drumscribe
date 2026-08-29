@@ -163,9 +163,7 @@ class AudioProbe:
 
         return await asyncio.to_thread(read)
 
-    async def _ffprobe(
-        self, path: Path
-    ) -> tuple[str, float, int | None, int | None] | None:
+    async def _ffprobe(self, path: Path) -> tuple[str, float, int | None, int | None] | None:
         try:
             process = await asyncio.create_subprocess_exec(
                 self.settings.ffprobe_binary,
