@@ -1,0 +1,937 @@
+import asyncio
+import importlib
+import inspect
+import json
+import math
+import shutil
+import socket
+import tempfile
+import time
+import uuid
+from collections.abc import Iterable
+from pathlib import Path
+from typing import Any
+
+import structlog
+from botocore.exceptions import (  # type: ignore[import-untyped]
+    ConnectionClosedError,
+    ConnectTimeoutError,
+    EndpointConnectionError,
+    ReadTimeoutError,
+)
+from sqlalchemy import select
+from sqlalchemy.exc import OperationalError
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from ..config import Settings
+from ..database import Database
+from ..enums import (
+    TERMINAL_JOB_STAGES,
+    AssetKind,
+    AssetStatus,
+    Environment,
+    EventSource,
+    ExportFormat,
+    Instrument,
+    JobErrorCode,
+    JobStage,
+    ProjectStatus,
+    RevisionKind,
+    UserKind,
+)
+from ..errors import APIError
+from ..models import (
+    AudioAsset,
+    DrumEvent,
+    ModelRun,
+    ProcessingJob,
+    Project,
+    Transcription,
+    TranscriptionRevision,
+    User,
+)
+from ..security import utcnow
+from .audio import AudioProbe
+from .exports import generate_export_bytes
+from .jobs import STAGE_ORDER, transition_job
+from .pipeline_contracts import RawDrumHit
+from .revisions import create_revision
+from .storage import ObjectNotFoundError, PrivateStorage
+
+logger = structlog.get_logger(__name__)
+
+TRANSIENT_PIPELINE_ERRORS: tuple[type[Exception], ...] = (
+    ConnectionError,
+    TimeoutError,
+    ConnectTimeoutError,
+    ConnectionClosedError,
+    EndpointConnectionError,
+    ReadTimeoutError,
+    OperationalError,
+)
+
+
+RAW_INSTRUMENT_MAP: dict[str, Instrument] = {
+    "kick": Instrument.KICK,
+    "bass_drum": Instrument.KICK,
+    "bd": Instrument.KICK,
+    "snare": Instrument.SNARE,
+    "sd": Instrument.SNARE,
+    "cross_stick": Instrument.CROSS_STICK,
+    "closed_hihat": Instrument.CLOSED_HIHAT,
+    "closed_hi_hat": Instrument.CLOSED_HIHAT,
+    "hihat": Instrument.CLOSED_HIHAT,
+    "hh": Instrument.CLOSED_HIHAT,
+    "open_hihat": Instrument.OPEN_HIHAT,
+    "open_hi_hat": Instrument.OPEN_HIHAT,
+    "pedal_hihat": Instrument.PEDAL_HIHAT,
+    "ride": Instrument.RIDE,
+    "ride_bell": Instrument.RIDE_BELL,
+    "crash": Instrument.CRASH,
+    "high_tom": Instrument.HIGH_TOM,
+    "mid_tom": Instrument.MID_TOM,
+    "low_tom": Instrument.LOW_TOM,
+    "floor_tom": Instrument.FLOOR_TOM,
+}
+
+
+def canonical_instrument(value: object) -> Instrument:
+    if isinstance(value, Instrument):
+        return value
+    raw = getattr(value, "value", value)
+    normalized = str(raw).strip().casefold().replace("-", "_").replace(" ", "_")
+    try:
+        return Instrument(normalized.upper())
+    except ValueError:
+        mapped = RAW_INSTRUMENT_MAP.get(normalized)
+        if mapped is None:
+            raise ValueError(f"Unsupported drum instrument class: {raw!r}") from None
+        return mapped
+
+
+class MusicEngineAdapter:
+    """Narrow boundary around the independently versioned `drumscribe_music` package."""
+
+    def __init__(self, settings: Settings) -> None:
+        self.settings = settings
+
+    def validate_configuration(self) -> None:
+        if self.settings.pipeline_provider == "development":
+            return
+        engine = self._engine()
+        for provider in (
+            self._transcription_provider(engine),
+            self._separation_provider(engine),
+            self._beat_provider(engine),
+        ):
+            engine.require_production_safe(
+                provider,
+                production=self.settings.environment == Environment.PRODUCTION,
+            )
+
+    @staticmethod
+    def _engine() -> Any:
+        try:
+            return importlib.import_module("drumscribe_music")
+        except ImportError as exc:
+            raise RuntimeError("The configured music engine is unavailable.") from exc
+
+    @staticmethod
+    def _provider(engine: Any, provider_name: str, aliases: dict[str, str]) -> Any:
+        normalized = provider_name.casefold()
+        class_name = aliases.get(normalized, provider_name)
+        provider_class = getattr(engine, class_name, None)
+        if provider_class is None:
+            raise RuntimeError(f"Configured provider {provider_name!r} is not installed.")
+        try:
+            return provider_class()
+        except (TypeError, ValueError) as exc:
+            raise RuntimeError(f"Configured provider {provider_name!r} is not ready.") from exc
+
+    def _transcription_provider(self, engine: Any) -> Any:
+        class_name = {
+            "mock": "MockDrumTranscriptionProvider",
+            "research": "ResearchDrumTranscriptionProvider",
+            "commercial": "CommercialDrumTranscriptionProvider",
+        }
+        return self._provider(engine, self.settings.music_transcription_provider, class_name)
+
+    def _separation_provider(self, engine: Any) -> Any:
+        class_name = {
+            "passthrough": "PassthroughSourceSeparationProvider",
+            "demucs": "DemucsAdapter",
+        }
+        return self._provider(engine, self.settings.source_separation_provider, class_name)
+
+    def _beat_provider(self, engine: Any) -> Any:
+        class_name = {
+            "mock": "MockBeatTrackingProvider",
+            "research": "ResearchBeatTrackingProvider",
+        }
+        return self._provider(engine, self.settings.beat_tracking_provider, class_name)
+
+    async def separate(self, source: Path, destination: Path) -> str:
+        if self.settings.pipeline_provider == "development":
+            await asyncio.to_thread(shutil.copyfile, source, destination)
+            return "passthrough-development/1"
+        engine = self._engine()
+        provider = self._separation_provider(engine)
+        engine.require_production_safe(
+            provider,
+            production=self.settings.environment == Environment.PRODUCTION,
+        )
+        result = provider.separate_drums(source, destination)
+        if inspect.isawaitable(result):
+            await result
+        return str(getattr(provider, "provider_id", provider.__class__.__name__))
+
+    async def track_beats(self, audio_path: Path) -> dict[str, Any]:
+        engine = self._engine()
+        provider = (
+            engine.MockBeatTrackingProvider()
+            if self.settings.pipeline_provider == "development"
+            else self._beat_provider(engine)
+        )
+        engine.require_production_safe(
+            provider,
+            production=self.settings.environment == Environment.PRODUCTION,
+        )
+        result = provider.track(audio_path)
+        if inspect.isawaitable(result):
+            result = await result
+        first_tempo = result.changes[0]
+        first_signature = result.time_signatures[0]
+        return {
+            "tempoBpm": float(first_tempo.bpm),
+            "timeSignatureNumerator": int(first_signature.numerator),
+            "timeSignatureDenominator": int(first_signature.denominator),
+            "confidence": min(float(first_tempo.confidence), float(first_signature.confidence)),
+            "tempoMap": [
+                {
+                    "kind": "tempo",
+                    "startBeat": str(change.start_beat),
+                    "bpm": float(change.bpm),
+                    "confidence": float(change.confidence),
+                }
+                for change in result.changes
+            ],
+            "timeSignatures": [
+                {
+                    "kind": "timeSignature",
+                    "startBeat": str(signature.start_beat),
+                    "numerator": signature.numerator,
+                    "denominator": signature.denominator,
+                    "confidence": float(signature.confidence),
+                }
+                for signature in result.time_signatures
+            ],
+            "offsetSeconds": float(result.offset_seconds),
+            "provider": str(getattr(provider, "provider_id", provider.__class__.__name__)),
+        }
+
+    async def transcribe(self, audio_path: Path, duration: float) -> tuple[list[RawDrumHit], str]:
+        if self.settings.pipeline_provider == "development":
+            return development_hits(duration), "deterministic-development/1"
+        try:
+            engine = self._engine()
+            provider = self._transcription_provider(engine)
+            engine.require_production_safe(
+                provider,
+                production=self.settings.environment == Environment.PRODUCTION,
+            )
+        except RuntimeError as exc:
+            raise APIError(
+                500,
+                JobErrorCode.INTERNAL_ERROR.value,
+                "The configured music engine is unavailable.",
+            ) from exc
+        result = provider.transcribe(audio_path)
+        if inspect.isawaitable(result):
+            result = await result
+        hits: list[RawDrumHit] = []
+        for item in result:
+            instrument = getattr(item, "instrument", getattr(item, "instrument_class", "hihat"))
+            hits.append(
+                RawDrumHit(
+                    instrument=canonical_instrument(instrument),
+                    onset_seconds=float(getattr(item, "onset_seconds", getattr(item, "onset", 0))),
+                    velocity=max(1, min(127, int(getattr(item, "velocity", 100)))),
+                    confidence=max(0, min(1, float(getattr(item, "confidence", 0.5)))),
+                )
+            )
+        version = str(getattr(provider, "version", getattr(engine, "__version__", "unknown")))
+        return hits, f"{self.settings.music_transcription_provider.casefold()}/{version}"
+
+
+def development_hits(duration: float) -> list[RawDrumHit]:
+    """A deterministic, musically useful 120 BPM rock draft for local product work."""
+    hits: list[RawDrumHit] = []
+    eighth = 0.25
+    steps = max(1, math.ceil(duration / eighth))
+    for index in range(steps):
+        onset = index * eighth
+        if onset >= duration:
+            break
+        hits.append(
+            RawDrumHit(
+                Instrument.CLOSED_HIHAT,
+                onset,
+                82 if index % 2 else 94,
+                0.91 if index % 8 < 6 else 0.72,
+            )
+        )
+        beat = index % 8
+        if beat in {0, 4}:
+            hits.append(RawDrumHit(Instrument.KICK, onset, 112, 0.96))
+        if beat in {2, 6}:
+            hits.append(RawDrumHit(Instrument.SNARE, onset, 116, 0.95))
+        if index % 32 == 0:
+            hits.append(RawDrumHit(Instrument.CRASH, onset, 108, 0.86))
+    return hits
+
+
+def quantize_hits(
+    hits: Iterable[RawDrumHit],
+    bpm: float = 120.0,
+    numerator: int = 4,
+    denominator: int = 4,
+) -> list[dict[str, Any]]:
+    quarter = 60.0 / bpm
+    sixteenth = quarter / 4
+    quarter_beats_per_measure = numerator * 4 / denominator
+    measure_duration = quarter * quarter_beats_per_measure
+    output: list[dict[str, Any]] = []
+    for hit in hits:
+        quantized = round(hit.onset_seconds / sixteenth) * sixteenth
+        output.append(
+            {
+                "instrument": hit.instrument,
+                "onset_seconds": hit.onset_seconds,
+                "duration_seconds": 0.08,
+                "velocity": hit.velocity,
+                "confidence": hit.confidence,
+                "source": EventSource.AI,
+                "beat_position": (quantized % measure_duration) / quarter,
+                "measure_index": int(quantized // measure_duration),
+                "subdivision": "1/16",
+                "quantized_onset": quantized,
+                "manually_edited": False,
+            }
+        )
+    return output
+
+
+def minimal_musicxml(project: Project, transcription: Transcription) -> bytes:
+    title = (project.title.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
+    xml = f'''<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0">
+  <work><work-title>{title}</work-title></work>
+  <part-list><score-part id="P1"><part-name>Drumset</part-name></score-part></part-list>
+  <part id="P1"><measure number="1"><attributes><divisions>4</divisions>
+  <time><beats>{transcription.time_signature_numerator}</beats>
+  <beat-type>{transcription.time_signature_denominator}</beat-type></time>
+  <clef><sign>percussion</sign><line>2</line></clef></attributes>
+  <direction><direction-type><metronome><beat-unit>quarter</beat-unit>
+  <per-minute>{transcription.tempo_bpm:g}</per-minute></metronome></direction-type></direction>
+  <note><rest/><duration>16</duration><type>whole</type></note></measure></part>
+</score-partwise>'''
+    return xml.encode("utf-8")
+
+
+class PipelineService:
+    def __init__(
+        self,
+        settings: Settings,
+        database: Database,
+        storage: PrivateStorage,
+    ) -> None:
+        self.settings = settings
+        self.database = database
+        self.storage = storage
+        self.audio_probe = AudioProbe(settings)
+        self.music = MusicEngineAdapter(settings)
+
+    async def run(self, job_id: uuid.UUID) -> None:
+        async with self.database.session_factory() as db:
+            job = (
+                await db.execute(select(ProcessingJob).where(ProcessingJob.id == job_id))
+            ).scalar_one_or_none()
+            if job is None or job.stage in TERMINAL_JOB_STAGES:
+                return
+            project = await db.get(Project, job.project_id)
+            if project is None or project.deleted_at is not None:
+                return
+            try:
+                while job.stage not in TERMINAL_JOB_STAGES:
+                    if job.cancel_requested_at is not None:
+                        await transition_job(
+                            db, job, JobStage.CANCELLED, worker=socket.gethostname()
+                        )
+                        project.status = ProjectStatus.CANCELLED
+                        await db.commit()
+                        return
+                    # `stage` is the durable in-progress checkpoint. Commit it before
+                    # work begins so an acks-late redelivery reruns, rather than skips,
+                    # an interrupted stage.
+                    if job.stage == JobStage.RECEIVED:
+                        await transition_job(
+                            db, job, JobStage.VALIDATING, worker=socket.gethostname()
+                        )
+                        await db.commit()
+                    current_stage = job.stage
+                    started = time.monotonic()
+                    await self._run_stage(db, job, project, current_stage)
+                    timings = dict(job.stage_timings or {})
+                    timings[current_stage.value] = round(time.monotonic() - started, 4)
+                    job.stage_timings = timings
+                    next_stage = STAGE_ORDER[STAGE_ORDER.index(current_stage) + 1]
+                    await transition_job(db, job, next_stage, worker=socket.gethostname())
+                    if next_stage == JobStage.READY:
+                        project.status = ProjectStatus.READY
+                    await db.commit()
+                    if next_stage == JobStage.READY:
+                        return
+            except Exception as exc:
+                await db.rollback()
+                if isinstance(exc, TRANSIENT_PIPELINE_ERRORS):
+                    logger.warning(
+                        "pipeline_transient_failure",
+                        job_id=str(job_id),
+                        stage=job.stage.value,
+                        error_type=type(exc).__name__,
+                    )
+                    raise
+                job = await db.get(ProcessingJob, job_id)
+                project = await db.get(Project, job.project_id) if job else None
+                if job and job.stage not in TERMINAL_JOB_STAGES:
+                    error_code = self._error_code(exc, job.stage)
+                    if job.stage == JobStage.VALIDATING and project is not None:
+                        input_asset_id = self._job_input_asset_id(job, project)
+                        failed_asset = (
+                            await db.get(AudioAsset, input_asset_id)
+                            if input_asset_id is not None
+                            else None
+                        )
+                        if failed_asset is not None and failed_asset.deleted_at is None:
+                            failed_asset.status = AssetStatus.REJECTED
+                            failed_asset.deleted_at = utcnow()
+                            failed_asset.expires_at = utcnow()
+                    await transition_job(
+                        db,
+                        job,
+                        JobStage.FAILED,
+                        worker=socket.gethostname(),
+                        error_code=error_code,
+                        error_detail=f"{type(exc).__name__}: {str(exc)[:1000]}",
+                    )
+                    if (
+                        project
+                        and self._job_input_asset_id(job, project)
+                        == project.original_asset_id
+                    ):
+                        project.status = ProjectStatus.FAILED
+                    await db.commit()
+                logger.exception("pipeline_failed", job_id=str(job_id))
+                raise
+
+    async def _run_stage(
+        self,
+        db: AsyncSession,
+        job: ProcessingJob,
+        project: Project,
+        stage: JobStage,
+    ) -> None:
+        if stage == JobStage.VALIDATING:
+            asset = await self._original_asset(db, project, job)
+            metadata = await self.storage.head(asset.storage_key)
+            if metadata.size_bytes > self.settings.max_upload_bytes:
+                raise APIError(413, JobErrorCode.AUDIO_TOO_LARGE.value, "Audio is too large.")
+            async with self.storage.materialize(asset.storage_key) as path:
+                audio = await self.audio_probe.inspect(
+                    path,
+                    declared_content_type=asset.content_type or "application/octet-stream",
+                    size_bytes=metadata.size_bytes,
+                )
+            owner = await db.get(User, project.owner_id)
+            if (
+                owner is not None
+                and owner.kind == UserKind.ANONYMOUS
+                and audio.duration_seconds
+                > self.settings.anonymous_max_audio_duration_seconds
+            ):
+                raise APIError(
+                    422,
+                    JobErrorCode.AUDIO_TOO_LONG.value,
+                    (
+                        "Anonymous trials currently support up to "
+                        f"{self.settings.anonymous_max_audio_duration_seconds:g} seconds. "
+                        "Sign in to process a full recording."
+                    ),
+                )
+            asset.status = AssetStatus.VERIFIED
+            asset.expires_at = None
+            asset.size_bytes = audio.size_bytes
+            asset.duration_seconds = audio.duration_seconds
+            asset.codec = audio.codec
+            asset.sample_rate = audio.sample_rate
+            asset.channels = audio.channels
+            project.duration_seconds = audio.duration_seconds
+            return
+        if stage == JobStage.NORMALIZING:
+            source = await self._original_asset(db, project, job)
+            await self._ensure_normalized(db, project, source, job)
+            return
+        if stage == JobStage.SEPARATING_DRUMS:
+            source = await self._asset(db, project.id, AssetKind.NORMALIZED)
+            _, provider_version = await self._ensure_drum_stem(db, project, source)
+            versions = dict(job.provider_versions or {})
+            versions["separation"] = provider_version
+            job.provider_versions = versions
+            return
+        if stage == JobStage.TRANSCRIBING:
+            existing = (
+                await db.execute(select(ModelRun).where(ModelRun.job_id == job.id))
+            ).scalars().first()
+            if existing is not None:
+                return
+            stem = await self._asset(db, project.id, AssetKind.DRUM_STEM)
+            async with self.storage.materialize(stem.storage_key) as path:
+                hits, provider_version = await self.music.transcribe(
+                    path, project.duration_seconds or 8.0
+                )
+            raw_hit_rows = [
+                {
+                    "instrument": hit.instrument.value,
+                    "onsetSeconds": hit.onset_seconds,
+                    "velocity": hit.velocity,
+                    "confidence": hit.confidence,
+                }
+                for hit in hits
+            ]
+            run = ModelRun(
+                job_id=job.id,
+                provider=(
+                    "development"
+                    if self.settings.pipeline_provider == "development"
+                    else "music_engine"
+                ),
+                model_name=self.settings.music_transcription_provider,
+                model_version=provider_version,
+                parameters={"canonicalClasses": [item.value for item in Instrument]},
+                summary={"rawHits": raw_hit_rows, "rawHitCount": len(raw_hit_rows)},
+                hardware_metadata={"worker": socket.gethostname()},
+            )
+            db.add(run)
+            versions = dict(job.provider_versions or {})
+            versions["transcription"] = provider_version
+            job.provider_versions = versions
+            return
+        if stage == JobStage.DETECTING_BEATS:
+            run = await self._model_run(db, job.id)
+            stem = await self._asset(db, project.id, AssetKind.DRUM_STEM)
+            async with self.storage.materialize(stem.storage_key) as path:
+                beat_analysis = await self.music.track_beats(path)
+            summary = dict(run.summary)
+            summary["beatAnalysis"] = beat_analysis
+            run.summary = summary
+            versions = dict(job.provider_versions or {})
+            versions["beatTracking"] = beat_analysis["provider"]
+            job.provider_versions = versions
+            return
+        if stage == JobStage.QUANTIZING:
+            existing_transcription = (
+                await db.execute(select(Transcription).where(Transcription.source_job_id == job.id))
+            ).scalar_one_or_none()
+            if existing_transcription is not None:
+                project.active_transcription_id = existing_transcription.id
+                return
+            run = await self._model_run(db, job.id)
+            checkpoint_hits = [
+                RawDrumHit(
+                    instrument=canonical_instrument(raw["instrument"]),
+                    onset_seconds=float(raw["onsetSeconds"]),
+                    velocity=int(raw["velocity"]),
+                    confidence=float(raw["confidence"]),
+                )
+                for raw in run.summary.get("rawHits", [])
+            ]
+            checkpoint_analysis = run.summary.get("beatAnalysis")
+            if not isinstance(checkpoint_analysis, dict):
+                raise RuntimeError("beat-tracking checkpoint missing")
+            bpm = float(checkpoint_analysis["tempoBpm"])
+            numerator = int(checkpoint_analysis["timeSignatureNumerator"])
+            denominator = int(checkpoint_analysis["timeSignatureDenominator"])
+            quantized = quantize_hits(checkpoint_hits, bpm, numerator, denominator)
+            low_confidence = sum(1 for item in quantized if (item["confidence"] or 0) < 0.75)
+            transcription = Transcription(
+                project_id=project.id,
+                source_job_id=job.id,
+                tempo_bpm=bpm,
+                time_signature_numerator=numerator,
+                time_signature_denominator=denominator,
+                tempo_map=[
+                    *list(checkpoint_analysis.get("tempoMap", [])),
+                    *list(checkpoint_analysis.get("timeSignatures", [])),
+                    {
+                        "kind": "offset",
+                        "offsetSeconds": float(checkpoint_analysis.get("offsetSeconds", 0)),
+                    },
+                ],
+                quality_summary={
+                    "message": "Your chart is ready. A few sections may need review.",
+                    "eventCount": len(quantized),
+                    "lowConfidenceCount": low_confidence,
+                    "aiOutputIsApproximate": True,
+                },
+            )
+            db.add(transcription)
+            await db.flush()
+            for item in quantized:
+                db.add(
+                    DrumEvent(
+                        transcription_id=transcription.id,
+                        project_id=project.id,
+                        **item,
+                    )
+                )
+            project.active_transcription_id = transcription.id
+            project.edit_version = transcription.version
+            await db.flush()
+            return
+        if stage == JobStage.GENERATING_SCORE:
+            transcription = await self._transcription(db, project)
+            existing_revision = (
+                await db.execute(
+                    select(1).where(
+                        TranscriptionRevision.transcription_id == transcription.id
+                    )
+                )
+            ).first()
+            if existing_revision is None:
+                await create_revision(
+                    db,
+                    transcription,
+                    kind=RevisionKind.AI_ORIGINAL,
+                    label="Original AI transcription",
+                    created_by_user_id=None,
+                )
+            input_asset_id = self._job_input_asset_id(job, project)
+            key = (
+                f"users/{project.owner_id}/projects/{project.id}/score/"
+                f"{input_asset_id}/current.musicxml"
+            )
+            score_events = list(
+                (
+                    await db.execute(
+                        select(DrumEvent)
+                        .where(
+                            DrumEvent.transcription_id == transcription.id,
+                            DrumEvent.deleted_at.is_(None),
+                        )
+                        .order_by(DrumEvent.quantized_onset, DrumEvent.id)
+                    )
+                ).scalars()
+            )
+            try:
+                score = generate_export_bytes(
+                    ExportFormat.MUSICXML, score_events, transcription, project
+                )
+            except ImportError:
+                score = minimal_musicxml(project, transcription)
+            await self.storage.put_bytes(
+                key, score, "application/vnd.recordare.musicxml+xml"
+            )
+            score_asset = (
+                await db.execute(
+                    select(AudioAsset).where(
+                        AudioAsset.project_id == project.id,
+                        AudioAsset.kind == AssetKind.SCORE_SOURCE,
+                        AudioAsset.deleted_at.is_(None),
+                    )
+                )
+            ).scalar_one_or_none()
+            if score_asset is None:
+                db.add(
+                    AudioAsset(
+                        project_id=project.id,
+                        kind=AssetKind.SCORE_SOURCE,
+                        status=AssetStatus.VERIFIED,
+                        storage_key=key,
+                        content_type="application/vnd.recordare.musicxml+xml",
+                        size_bytes=len(score),
+                    )
+                )
+            return
+        if stage == JobStage.FINALIZING:
+            await self._transcription(db, project)
+            await self._ensure_waveform(db, project)
+            normalized = await self._asset(db, project.id, AssetKind.NORMALIZED)
+            normalized.status = AssetStatus.DELETING
+            normalized.deleted_at = utcnow()
+            normalized.expires_at = utcnow()
+            project.status = ProjectStatus.PROCESSING
+            return
+
+    async def _original_asset(
+        self, db: AsyncSession, project: Project, job: ProcessingJob
+    ) -> AudioAsset:
+        asset_id = self._job_input_asset_id(job, project)
+        if asset_id is None:
+            raise APIError(409, "UPLOAD_REQUIRED", "Upload audio before processing.")
+        asset = await db.get(AudioAsset, asset_id)
+        if asset is None or asset.deleted_at is not None:
+            raise APIError(
+                409,
+                "UPLOAD_REPLACED",
+                "The audio for this job was replaced. Start a new processing job.",
+            )
+        return asset
+
+    @staticmethod
+    def _job_input_asset_id(
+        job: ProcessingJob, project: Project
+    ) -> uuid.UUID | None:
+        raw_id = (job.provider_versions or {}).get("inputAssetId")
+        if raw_id:
+            try:
+                return uuid.UUID(str(raw_id))
+            except ValueError as exc:
+                raise RuntimeError("processing job input checkpoint is invalid") from exc
+        return project.original_asset_id
+
+    async def _asset(
+        self, db: AsyncSession, project_id: uuid.UUID, kind: AssetKind
+    ) -> AudioAsset:
+        asset = (
+            await db.execute(
+                select(AudioAsset).where(
+                    AudioAsset.project_id == project_id,
+                    AudioAsset.kind == kind,
+                    AudioAsset.deleted_at.is_(None),
+                )
+            )
+        ).scalars().first()
+        if asset is None:
+            raise ObjectNotFoundError(f"{project_id}/{kind.value}")
+        return asset
+
+    async def _ensure_normalized(
+        self,
+        db: AsyncSession,
+        project: Project,
+        source: AudioAsset,
+        job: ProcessingJob,
+    ) -> AudioAsset:
+        existing = await self._active_asset(db, project.id, AssetKind.NORMALIZED)
+        if existing is not None:
+            return existing
+        key = (
+            f"users/{project.owner_id}/projects/{project.id}/working/"
+            f"{source.id}/{job.id}/normalized.wav"
+        )
+        with tempfile.TemporaryDirectory(prefix="drumscribe-normalize-") as directory:
+            output = Path(directory) / "normalized.wav"
+            async with self.storage.materialize(source.storage_key) as input_path:
+                ffmpeg = shutil.which(self.settings.ffmpeg_binary)
+                if ffmpeg:
+                    engine = self.music._engine()
+                    await asyncio.to_thread(
+                        engine.normalize_audio,
+                        input_path,
+                        output,
+                        ffmpeg=ffmpeg,
+                    )
+                elif (
+                    source.content_type in {"audio/wav", "audio/x-wav", "audio/wave"}
+                    and (source.codec or "").startswith("pcm_")
+                ):
+                    # A truthful WAV-to-WAV fallback keeps local tests usable when
+                    # FFmpeg is absent; compressed inputs are never relabelled.
+                    await asyncio.to_thread(shutil.copyfile, input_path, output)
+                else:
+                    raise RuntimeError("FFmpeg is required to normalize compressed audio.")
+            output_size = (await asyncio.to_thread(output.stat)).st_size
+            metadata = await self.audio_probe.inspect(
+                output,
+                declared_content_type="audio/wav",
+                size_bytes=output_size,
+            )
+            await self.storage.put_file(key, output, "audio/wav")
+        return await self._upsert_asset(
+            db,
+            project,
+            kind=AssetKind.NORMALIZED,
+            key=key,
+            content_type=metadata.content_type,
+            size_bytes=metadata.size_bytes,
+            duration_seconds=metadata.duration_seconds,
+            codec=metadata.codec,
+            sample_rate=metadata.sample_rate,
+            channels=metadata.channels,
+        )
+
+    async def _ensure_drum_stem(
+        self,
+        db: AsyncSession,
+        project: Project,
+        source: AudioAsset,
+    ) -> tuple[AudioAsset, str]:
+        existing = await self._active_asset(db, project.id, AssetKind.DRUM_STEM)
+        if existing is not None:
+            return existing, "checkpoint/reused"
+        input_asset_id = project.original_asset_id or source.id
+        key = (
+            f"users/{project.owner_id}/projects/{project.id}/stems/"
+            f"{input_asset_id}/drums.wav"
+        )
+        with tempfile.TemporaryDirectory(prefix="drumscribe-separate-") as directory:
+            output = Path(directory) / "drums.wav"
+            async with self.storage.materialize(source.storage_key) as input_path:
+                provider_version = await self.music.separate(input_path, output)
+            output_size = (await asyncio.to_thread(output.stat)).st_size
+            metadata = await self.audio_probe.inspect(
+                output,
+                declared_content_type="audio/wav",
+                size_bytes=output_size,
+            )
+            await self.storage.put_file(key, output, "audio/wav")
+        asset = await self._upsert_asset(
+            db,
+            project,
+            kind=AssetKind.DRUM_STEM,
+            key=key,
+            content_type=metadata.content_type,
+            size_bytes=metadata.size_bytes,
+            duration_seconds=metadata.duration_seconds,
+            codec=metadata.codec,
+            sample_rate=metadata.sample_rate,
+            channels=metadata.channels,
+        )
+        return asset, provider_version
+
+    async def _active_asset(
+        self, db: AsyncSession, project_id: uuid.UUID, kind: AssetKind
+    ) -> AudioAsset | None:
+        return (
+            await db.execute(
+                select(AudioAsset).where(
+                    AudioAsset.project_id == project_id,
+                    AudioAsset.kind == kind,
+                    AudioAsset.deleted_at.is_(None),
+                )
+            )
+        ).scalars().first()
+
+    async def _upsert_asset(
+        self,
+        db: AsyncSession,
+        project: Project,
+        *,
+        kind: AssetKind,
+        key: str,
+        content_type: str,
+        size_bytes: int,
+        duration_seconds: float,
+        codec: str,
+        sample_rate: int | None,
+        channels: int | None,
+    ) -> AudioAsset:
+        asset = (
+            await db.execute(select(AudioAsset).where(AudioAsset.storage_key == key))
+        ).scalar_one_or_none()
+        if asset is None:
+            asset = AudioAsset(project_id=project.id, kind=kind, storage_key=key)
+            db.add(asset)
+        asset.status = AssetStatus.VERIFIED
+        asset.deleted_at = None
+        asset.expires_at = None
+        asset.content_type = content_type
+        asset.size_bytes = size_bytes
+        asset.duration_seconds = duration_seconds
+        asset.codec = codec
+        asset.sample_rate = sample_rate
+        asset.channels = channels
+        await db.flush()
+        return asset
+
+    async def _model_run(self, db: AsyncSession, job_id: uuid.UUID) -> ModelRun:
+        run = (
+            await db.execute(select(ModelRun).where(ModelRun.job_id == job_id))
+        ).scalars().first()
+        if run is None:
+            raise RuntimeError("transcription checkpoint missing")
+        return run
+
+    async def _ensure_waveform(self, db: AsyncSession, project: Project) -> AudioAsset:
+        existing = (
+            await db.execute(
+                select(AudioAsset).where(
+                    AudioAsset.project_id == project.id,
+                    AudioAsset.kind == AssetKind.WAVEFORM_PEAKS,
+                    AudioAsset.deleted_at.is_(None),
+                )
+            )
+        ).scalars().first()
+        if existing is not None:
+            return existing
+        normalized = await self._asset(db, project.id, AssetKind.NORMALIZED)
+        try:
+            engine = importlib.import_module("drumscribe_music")
+            async with self.storage.materialize(normalized.storage_key) as path:
+                peaks = await asyncio.to_thread(engine.generate_waveform_peaks, path, bins=2_000)
+                data = engine.waveform_peaks_json(peaks)
+        except (ImportError, OSError, ValueError, RuntimeError):
+            # Non-WAV development inputs still get a valid, explicit empty envelope.
+            data = json.dumps(
+                {
+                    "durationSeconds": project.duration_seconds or 0,
+                    "channels": normalized.channels,
+                    "sampleRate": normalized.sample_rate,
+                    "peaks": [],
+                },
+                separators=(",", ":"),
+            ).encode()
+        input_asset_id = project.original_asset_id or normalized.id
+        key = (
+            f"users/{project.owner_id}/projects/{project.id}/waveform/"
+            f"{input_asset_id}/peaks.json"
+        )
+        await self.storage.put_bytes(key, data, "application/json")
+        asset = AudioAsset(
+            project_id=project.id,
+            kind=AssetKind.WAVEFORM_PEAKS,
+            status=AssetStatus.VERIFIED,
+            storage_key=key,
+            content_type="application/json",
+            size_bytes=len(data),
+            duration_seconds=project.duration_seconds,
+        )
+        db.add(asset)
+        await db.flush()
+        return asset
+
+    async def _transcription(
+        self, db: AsyncSession, project: Project
+    ) -> Transcription:
+        if project.active_transcription_id is None:
+            raise RuntimeError("quantization checkpoint missing")
+        transcription = await db.get(Transcription, project.active_transcription_id)
+        if transcription is None:
+            raise RuntimeError("active transcription missing")
+        return transcription
+
+    @staticmethod
+    def _error_code(exc: Exception, stage: JobStage) -> JobErrorCode:
+        if isinstance(exc, APIError):
+            try:
+                return JobErrorCode(exc.code)
+            except ValueError:
+                return JobErrorCode.INTERNAL_ERROR
+        return {
+            JobStage.VALIDATING: JobErrorCode.INVALID_AUDIO,
+            JobStage.SEPARATING_DRUMS: JobErrorCode.SEPARATION_FAILED,
+            JobStage.TRANSCRIBING: JobErrorCode.TRANSCRIPTION_FAILED,
+            JobStage.DETECTING_BEATS: JobErrorCode.BEAT_TRACKING_FAILED,
+            JobStage.QUANTIZING: JobErrorCode.BEAT_TRACKING_FAILED,
+            JobStage.GENERATING_SCORE: JobErrorCode.SCORE_GENERATION_FAILED,
+        }.get(stage, JobErrorCode.INTERNAL_ERROR)
