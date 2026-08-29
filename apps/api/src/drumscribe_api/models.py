@@ -170,6 +170,10 @@ class ProcessingJob(UUIDPrimaryKeyMixin, TimestampMixin, Base):
             name="job_progress",
         ),
         CheckConstraint("retry_count >= 0", name="job_retry_count"),
+        CheckConstraint(
+            "total_provider_cost IS NULL OR total_provider_cost >= 0",
+            name="job_provider_cost",
+        ),
     )
 
     project_id: Mapped[uuid.UUID] = mapped_column(
@@ -184,6 +188,9 @@ class ProcessingJob(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     cancel_requested_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     worker: Mapped[str | None] = mapped_column(String(255))
     provider_versions: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    provider_metadata: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    total_provider_cost: Mapped[float | None] = mapped_column(Float)
+    provider_cost_currency: Mapped[str | None] = mapped_column(String(32))
     stage_timings: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     error_code: Mapped[JobErrorCode | None] = mapped_column(enum_column(JobErrorCode))
     error_detail: Mapped[str | None] = mapped_column(Text)
@@ -195,17 +202,28 @@ class ProcessingJob(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
 class ModelRun(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "model_runs"
+    __table_args__ = (
+        CheckConstraint("cost_amount IS NULL OR cost_amount >= 0", name="model_run_cost"),
+    )
 
     job_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("processing_jobs.id", ondelete="CASCADE"), index=True
     )
     provider: Mapped[str] = mapped_column(String(128))
+    provider_category: Mapped[str] = mapped_column(String(64), default="TEST_FIXTURE")
+    provider_request_id: Mapped[str | None] = mapped_column(String(255))
     model_name: Mapped[str] = mapped_column(String(128))
     model_version: Mapped[str] = mapped_column(String(128))
     model_hash: Mapped[str | None] = mapped_column(String(128))
     parameters: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     duration_seconds: Mapped[float | None] = mapped_column(Float)
     hardware_metadata: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    raw_provider_metadata: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    error_category: Mapped[str | None] = mapped_column(String(64))
+    cost_amount: Mapped[float | None] = mapped_column(Float)
+    cost_currency: Mapped[str | None] = mapped_column(String(32))
+    retention_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    contract_reference: Mapped[str | None] = mapped_column(String(255))
     summary: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
 
     job: Mapped[ProcessingJob] = relationship(back_populates="model_runs")

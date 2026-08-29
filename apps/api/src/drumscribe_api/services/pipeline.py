@@ -9,8 +9,9 @@ import tempfile
 import time
 import uuid
 from collections.abc import Iterable
+from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import structlog
 from botocore.exceptions import (  # type: ignore[import-untyped]
@@ -52,9 +53,24 @@ from ..models import (
 )
 from ..security import utcnow
 from .audio import AudioProbe
+from .commercial_providers import (
+    AudioShakeSourceSeparationProvider,
+    CommercialHTTPConfig,
+    CommercialProviderError,
+    KlangioBeatTrackingProvider,
+    KlangioDrumTranscriptionProvider,
+    MusicAISourceSeparationProvider,
+)
 from .exports import generate_export_bytes
 from .jobs import STAGE_ORDER, transition_job
-from .pipeline_contracts import RawDrumHit
+from .pipeline_contracts import (
+    BeatTrackingResult,
+    DrumTranscriptionResult,
+    ProviderCategory,
+    ProviderRunMetadata,
+    RawDrumHit,
+    SeparatedAudioResult,
+)
 from .revisions import create_revision
 from .storage import ObjectNotFoundError, PrivateStorage
 
@@ -124,9 +140,15 @@ class MusicEngineAdapter:
             self._separation_provider(engine),
             self._beat_provider(engine),
         ):
+            category = getattr(provider, "category", None)
+            if category is ProviderCategory.PRODUCTION_COMMERCIAL:
+                if not self.settings.commercial_provider_license_confirmed:
+                    raise RuntimeError(
+                        "commercial providers require explicit license and contract approval"
+                    )
+                continue
             engine.require_production_safe(
-                provider,
-                production=self.settings.environment == Environment.PRODUCTION,
+                provider, production=self.settings.environment == Environment.PRODUCTION
             )
 
     @staticmethod
@@ -149,14 +171,35 @@ class MusicEngineAdapter:
             raise RuntimeError(f"Configured provider {provider_name!r} is not ready.") from exc
 
     def _transcription_provider(self, engine: Any) -> Any:
+        if self.settings.music_transcription_provider.casefold() == "klangio_drums":
+            return KlangioDrumTranscriptionProvider(self._klangio_config())
         class_name = {
             "mock": "MockDrumTranscriptionProvider",
             "research": "ResearchDrumTranscriptionProvider",
-            "commercial": "CommercialDrumTranscriptionProvider",
         }
         return self._provider(engine, self.settings.music_transcription_provider, class_name)
 
     def _separation_provider(self, engine: Any) -> Any:
+        selected = self.settings.source_separation_provider.casefold()
+        if selected == "audioshake":
+            return AudioShakeSourceSeparationProvider(
+                self._commercial_config(
+                    api_key=self.settings.audioshake_api_key,
+                    contract_reference=self.settings.audioshake_contract_reference,
+                    base_url=self.settings.audioshake_api_url,
+                ),
+                model=self.settings.audioshake_separation_model,
+            )
+        if selected == "music_ai":
+            return MusicAISourceSeparationProvider(
+                self._commercial_config(
+                    api_key=self.settings.music_ai_api_key,
+                    contract_reference=self.settings.music_ai_contract_reference,
+                    base_url=self.settings.music_ai_api_url,
+                ),
+                workflow=self.settings.music_ai_separation_workflow or "",
+                result_key=self.settings.music_ai_drum_result_key,
+            )
         class_name = {
             "passthrough": "PassthroughSourceSeparationProvider",
             "demucs": "DemucsAdapter",
@@ -164,26 +207,68 @@ class MusicEngineAdapter:
         return self._provider(engine, self.settings.source_separation_provider, class_name)
 
     def _beat_provider(self, engine: Any) -> Any:
+        if self.settings.beat_tracking_provider.casefold() == "klangio":
+            return KlangioBeatTrackingProvider(self._klangio_config())
         class_name = {
             "mock": "MockBeatTrackingProvider",
             "research": "ResearchBeatTrackingProvider",
         }
         return self._provider(engine, self.settings.beat_tracking_provider, class_name)
 
-    async def separate(self, source: Path, destination: Path) -> str:
+    def _klangio_config(self) -> CommercialHTTPConfig:
+        return self._commercial_config(
+            api_key=self.settings.klangio_api_key,
+            contract_reference=self.settings.klangio_contract_reference,
+            base_url=self.settings.klangio_api_url,
+        )
+
+    def _commercial_config(
+        self,
+        *,
+        api_key: Any,
+        contract_reference: str | None,
+        base_url: str,
+    ) -> CommercialHTTPConfig:
+        return CommercialHTTPConfig(
+            api_key=api_key.get_secret_value() if api_key else "",
+            contract_reference=contract_reference or "",
+            base_url=base_url,
+            timeout_seconds=self.settings.provider_timeout_seconds,
+            poll_interval_seconds=self.settings.provider_poll_interval_seconds,
+        )
+
+    async def separate(self, source: Path, destination: Path) -> ProviderRunMetadata:
         if self.settings.pipeline_provider == "development":
+            started = time.monotonic()
             await asyncio.to_thread(shutil.copyfile, source, destination)
-            return "passthrough-development/1"
+            return ProviderRunMetadata(
+                provider="passthrough-development",
+                category=ProviderCategory.TEST_FIXTURE,
+                model_version="1",
+                request_id=None,
+                processing_ms=round((time.monotonic() - started) * 1000),
+                raw_metadata={"audioDerived": False, "operation": "byte-for-byte copy"},
+            )
         engine = self._engine()
         provider = self._separation_provider(engine)
+        if getattr(provider, "category", None) is ProviderCategory.PRODUCTION_COMMERCIAL:
+            result = await provider.separate_drums(source, destination)
+            return cast(SeparatedAudioResult, result).metadata
         engine.require_production_safe(
             provider,
             production=self.settings.environment == Environment.PRODUCTION,
         )
+        started = time.monotonic()
         result = provider.separate_drums(source, destination)
         if inspect.isawaitable(result):
             await result
-        return str(getattr(provider, "provider_id", provider.__class__.__name__))
+        return ProviderRunMetadata(
+            provider=str(getattr(provider, "provider_id", provider.__class__.__name__)),
+            category=ProviderCategory.DEVELOPMENT_RESEARCH,
+            model_version=str(getattr(provider, "version", "unknown")),
+            request_id=None,
+            processing_ms=round((time.monotonic() - started) * 1000),
+        )
 
     async def track_beats(self, audio_path: Path) -> dict[str, Any]:
         engine = self._engine()
@@ -192,15 +277,32 @@ class MusicEngineAdapter:
             if self.settings.pipeline_provider == "development"
             else self._beat_provider(engine)
         )
+        if getattr(provider, "category", None) is ProviderCategory.PRODUCTION_COMMERCIAL:
+            tracked = await provider.track(audio_path)
+            return self._commercial_beat_payload(tracked)
         engine.require_production_safe(
-            provider,
-            production=self.settings.environment == Environment.PRODUCTION,
+            provider, production=self.settings.environment == Environment.PRODUCTION
         )
+        started = time.monotonic()
         result = provider.track(audio_path)
         if inspect.isawaitable(result):
             result = await result
         first_tempo = result.changes[0]
         first_signature = result.time_signatures[0]
+        provider_id = str(getattr(provider, "provider_id", provider.__class__.__name__))
+        metadata = ProviderRunMetadata(
+            provider=provider_id,
+            category=(
+                ProviderCategory.TEST_FIXTURE
+                if self.settings.pipeline_provider == "development"
+                else ProviderCategory.DEVELOPMENT_RESEARCH
+            ),
+            model_version=str(getattr(provider, "version", "unknown")),
+            request_id=None,
+            processing_ms=round((time.monotonic() - started) * 1000),
+            confidence=min(float(first_tempo.confidence), float(first_signature.confidence)),
+            raw_metadata={"audioDerived": self.settings.pipeline_provider != "development"},
+        )
         return {
             "tempoBpm": float(first_tempo.bpm),
             "timeSignatureNumerator": int(first_signature.numerator),
@@ -226,18 +328,75 @@ class MusicEngineAdapter:
                 for signature in result.time_signatures
             ],
             "offsetSeconds": float(result.offset_seconds),
-            "provider": str(getattr(provider, "provider_id", provider.__class__.__name__)),
+            "beats": [],
+            "provider": provider_id,
+            "providerMetadata": metadata.as_dict(),
         }
 
-    async def transcribe(self, audio_path: Path, duration: float) -> tuple[list[RawDrumHit], str]:
+    @staticmethod
+    def _commercial_beat_payload(result: BeatTrackingResult) -> dict[str, Any]:
+        first = result.segments[0]
+        return {
+            "tempoBpm": first.bpm,
+            "timeSignatureNumerator": first.time_signature_numerator,
+            "timeSignatureDenominator": first.time_signature_denominator,
+            "confidence": result.metadata.confidence,
+            "tempoMap": [
+                {
+                    "kind": "tempo",
+                    "startSeconds": segment.start_seconds,
+                    "bpm": segment.bpm,
+                    "startMeasure": segment.start_measure,
+                    "confidence": result.metadata.confidence,
+                }
+                for segment in result.segments
+            ],
+            "timeSignatures": [
+                {
+                    "kind": "timeSignature",
+                    "startSeconds": segment.start_seconds,
+                    "startMeasure": segment.start_measure,
+                    "numerator": segment.time_signature_numerator,
+                    "denominator": segment.time_signature_denominator,
+                    "confidence": result.metadata.confidence,
+                }
+                for segment in result.segments
+            ],
+            "offsetSeconds": result.bar_one_seconds,
+            "beats": [
+                {
+                    "timeSeconds": beat.time_seconds,
+                    "beatInMeasure": beat.beat_in_measure,
+                    "measureIndex": beat.measure_index,
+                    "isDownbeat": beat.is_downbeat,
+                    "confidence": beat.confidence,
+                }
+                for beat in result.beats
+            ],
+            "provider": result.metadata.provider,
+            "providerMetadata": result.metadata.as_dict(),
+        }
+
+    async def transcribe(self, audio_path: Path, duration: float) -> DrumTranscriptionResult:
         if self.settings.pipeline_provider == "development":
-            return development_hits(duration), "deterministic-development/1"
+            return DrumTranscriptionResult(
+                hits=tuple(development_hits(duration)),
+                metadata=ProviderRunMetadata(
+                    provider="deterministic-development",
+                    category=ProviderCategory.TEST_FIXTURE,
+                    model_version="1",
+                    request_id=None,
+                    processing_ms=0,
+                    raw_metadata={"audioDerived": False, "durationDerived": True},
+                ),
+            )
         try:
             engine = self._engine()
             provider = self._transcription_provider(engine)
+            if getattr(provider, "category", None) is ProviderCategory.PRODUCTION_COMMERCIAL:
+                return cast(DrumTranscriptionResult, await provider.transcribe(audio_path))
             engine.require_production_safe(
-                provider,
-                production=self.settings.environment == Environment.PRODUCTION,
+                provider, production=self.settings.environment == Environment.PRODUCTION
             )
         except RuntimeError as exc:
             raise APIError(
@@ -245,6 +404,7 @@ class MusicEngineAdapter:
                 JobErrorCode.INTERNAL_ERROR.value,
                 "The configured music engine is unavailable.",
             ) from exc
+        started = time.monotonic()
         result = provider.transcribe(audio_path)
         if inspect.isawaitable(result):
             result = await result
@@ -260,7 +420,16 @@ class MusicEngineAdapter:
                 )
             )
         version = str(getattr(provider, "version", getattr(engine, "__version__", "unknown")))
-        return hits, f"{self.settings.music_transcription_provider.casefold()}/{version}"
+        return DrumTranscriptionResult(
+            hits=tuple(hits),
+            metadata=ProviderRunMetadata(
+                provider=str(getattr(provider, "provider_id", provider.__class__.__name__)),
+                category=ProviderCategory.DEVELOPMENT_RESEARCH,
+                model_version=version,
+                request_id=None,
+                processing_ms=round((time.monotonic() - started) * 1000),
+            ),
+        )
 
 
 def development_hits(duration: float) -> list[RawDrumHit]:
@@ -351,6 +520,41 @@ class PipelineService:
         self.audio_probe = AudioProbe(settings)
         self.music = MusicEngineAdapter(settings)
 
+    @staticmethod
+    def _provider_retention_datetime(metadata: ProviderRunMetadata) -> datetime | None:
+        if not metadata.retention_expires_at:
+            return None
+        try:
+            return datetime.fromisoformat(metadata.retention_expires_at.replace("Z", "+00:00"))
+        except ValueError:
+            return None
+
+    @staticmethod
+    def _record_provider_metadata(
+        job: ProcessingJob, stage: str, metadata: ProviderRunMetadata
+    ) -> None:
+        PipelineService._record_provider_metadata_dict(job, stage, metadata.as_dict())
+
+    @staticmethod
+    def _record_provider_metadata_dict(
+        job: ProcessingJob, stage: str, metadata: dict[str, Any]
+    ) -> None:
+        runs = dict(job.provider_metadata or {})
+        runs[stage] = metadata
+        job.provider_metadata = runs
+        cost = metadata.get("cost")
+        if not isinstance(cost, dict) or not isinstance(cost.get("amount"), int | float):
+            return
+        currency = str(cost.get("currency") or "units")
+        if job.provider_cost_currency not in {None, currency}:
+            job.total_provider_cost = None
+            job.provider_cost_currency = "mixed"
+            return
+        job.provider_cost_currency = currency
+        job.total_provider_cost = round(
+            float(job.total_provider_cost or 0) + float(cost["amount"]), 8
+        )
+
     async def run(self, job_id: uuid.UUID) -> None:
         async with self.database.session_factory() as db:
             job = (
@@ -405,6 +609,19 @@ class PipelineService:
                 project = await db.get(Project, job.project_id) if job else None
                 if job and job.stage not in TERMINAL_JOB_STAGES:
                     error_code = self._error_code(exc, job.stage)
+                    if isinstance(exc, CommercialProviderError):
+                        self._record_provider_metadata(
+                            job,
+                            job.stage.value,
+                            ProviderRunMetadata(
+                                provider=self._configured_provider_for_stage(job.stage),
+                                category=ProviderCategory.PRODUCTION_COMMERCIAL,
+                                model_version="unknown",
+                                request_id=exc.request_id,
+                                processing_ms=0,
+                                error_category=exc.category,
+                            ),
+                        )
                     if job.stage == JobStage.VALIDATING and project is not None:
                         input_asset_id = self._job_input_asset_id(job, project)
                         failed_asset = (
@@ -432,6 +649,15 @@ class PipelineService:
                     await db.commit()
                 logger.exception("pipeline_failed", job_id=str(job_id))
                 raise
+
+    def _configured_provider_for_stage(self, stage: JobStage) -> str:
+        if stage == JobStage.SEPARATING_DRUMS:
+            return self.settings.source_separation_provider
+        if stage == JobStage.TRANSCRIBING:
+            return self.settings.music_transcription_provider
+        if stage == JobStage.DETECTING_BEATS:
+            return self.settings.beat_tracking_provider
+        return "pipeline"
 
     async def _run_stage(
         self,
@@ -481,10 +707,16 @@ class PipelineService:
             return
         if stage == JobStage.SEPARATING_DRUMS:
             source = await self._asset(db, project.id, AssetKind.NORMALIZED)
-            _, provider_version = await self._ensure_drum_stem(db, project, source)
+            _, provider_metadata = await self._ensure_drum_stem(db, project, source)
             versions = dict(job.provider_versions or {})
-            versions["separation"] = provider_version
+            versions["separation"] = (
+                f"{provider_metadata.provider}/{provider_metadata.model_version}"
+                if provider_metadata is not None
+                else "checkpoint/reused"
+            )
             job.provider_versions = versions
+            if provider_metadata is not None:
+                self._record_provider_metadata(job, "separation", provider_metadata)
             return
         if stage == JobStage.TRANSCRIBING:
             existing = (
@@ -496,9 +728,11 @@ class PipelineService:
                 return
             stem = await self._asset(db, project.id, AssetKind.DRUM_STEM)
             async with self.storage.materialize(stem.storage_key) as path:
-                hits, provider_version = await self.music.transcribe(
+                transcription_result = await self.music.transcribe(
                     path, project.duration_seconds or 8.0
                 )
+            hits = transcription_result.hits
+            provider_metadata = transcription_result.metadata
             raw_hit_rows = [
                 {
                     "instrument": hit.instrument.value,
@@ -510,21 +744,33 @@ class PipelineService:
             ]
             run = ModelRun(
                 job_id=job.id,
-                provider=(
-                    "development"
-                    if self.settings.pipeline_provider == "development"
-                    else "music_engine"
-                ),
+                provider=provider_metadata.provider,
+                provider_category=provider_metadata.category.value,
+                provider_request_id=provider_metadata.request_id,
                 model_name=self.settings.music_transcription_provider,
-                model_version=provider_version,
+                model_version=provider_metadata.model_version,
                 parameters={"canonicalClasses": [item.value for item in Instrument]},
+                duration_seconds=provider_metadata.processing_ms / 1000,
                 summary={"rawHits": raw_hit_rows, "rawHitCount": len(raw_hit_rows)},
                 hardware_metadata={"worker": socket.gethostname()},
+                raw_provider_metadata=provider_metadata.raw_metadata,
+                error_category=(
+                    provider_metadata.error_category.value
+                    if provider_metadata.error_category
+                    else None
+                ),
+                cost_amount=provider_metadata.cost_amount,
+                cost_currency=provider_metadata.cost_currency,
+                retention_expires_at=self._provider_retention_datetime(provider_metadata),
+                contract_reference=provider_metadata.contract_reference,
             )
             db.add(run)
             versions = dict(job.provider_versions or {})
-            versions["transcription"] = provider_version
+            versions["transcription"] = (
+                f"{provider_metadata.provider}/{provider_metadata.model_version}"
+            )
             job.provider_versions = versions
+            self._record_provider_metadata(job, "transcription", provider_metadata)
             return
         if stage == JobStage.DETECTING_BEATS:
             run = await self._model_run(db, job.id)
@@ -535,8 +781,16 @@ class PipelineService:
             summary["beatAnalysis"] = beat_analysis
             run.summary = summary
             versions = dict(job.provider_versions or {})
-            versions["beatTracking"] = beat_analysis["provider"]
+            beat_metadata_payload = beat_analysis.get("providerMetadata")
+            versions["beatTracking"] = (
+                f"{beat_analysis['provider']}/"
+                f"{beat_metadata_payload.get('modelVersion', 'unknown')}"
+                if isinstance(beat_metadata_payload, dict)
+                else str(beat_analysis["provider"])
+            )
             job.provider_versions = versions
+            if isinstance(beat_metadata_payload, dict):
+                self._record_provider_metadata_dict(job, "beatTracking", beat_metadata_payload)
             return
         if stage == JobStage.QUANTIZING:
             existing_transcription = (
@@ -572,6 +826,11 @@ class PipelineService:
                 tempo_map=[
                     *list(checkpoint_analysis.get("tempoMap", [])),
                     *list(checkpoint_analysis.get("timeSignatures", [])),
+                    *[
+                        {"kind": "beat", **item}
+                        for item in checkpoint_analysis.get("beats", [])
+                        if isinstance(item, dict)
+                    ],
                     {
                         "kind": "offset",
                         "offsetSeconds": float(checkpoint_analysis.get("offsetSeconds", 0)),
@@ -582,6 +841,11 @@ class PipelineService:
                     "eventCount": len(quantized),
                     "lowConfidenceCount": low_confidence,
                     "aiOutputIsApproximate": True,
+                    "providerCategories": {
+                        stage_name: metadata.get("category")
+                        for stage_name, metadata in (job.provider_metadata or {}).items()
+                        if isinstance(metadata, dict)
+                    },
                 },
             )
             db.add(transcription)
@@ -770,16 +1034,16 @@ class PipelineService:
         db: AsyncSession,
         project: Project,
         source: AudioAsset,
-    ) -> tuple[AudioAsset, str]:
+    ) -> tuple[AudioAsset, ProviderRunMetadata | None]:
         existing = await self._active_asset(db, project.id, AssetKind.DRUM_STEM)
         if existing is not None:
-            return existing, "checkpoint/reused"
+            return existing, None
         input_asset_id = project.original_asset_id or source.id
         key = f"users/{project.owner_id}/projects/{project.id}/stems/{input_asset_id}/drums.wav"
         with tempfile.TemporaryDirectory(prefix="drumscribe-separate-") as directory:
             output = Path(directory) / "drums.wav"
             async with self.storage.materialize(source.storage_key) as input_path:
-                provider_version = await self.music.separate(input_path, output)
+                provider_metadata = await self.music.separate(input_path, output)
             output_size = (await asyncio.to_thread(output.stat)).st_size
             metadata = await self.audio_probe.inspect(
                 output,
@@ -799,7 +1063,7 @@ class PipelineService:
             sample_rate=metadata.sample_rate,
             channels=metadata.channels,
         )
-        return asset, provider_version
+        return asset, provider_metadata
 
     async def _active_asset(
         self, db: AsyncSession, project_id: uuid.UUID, kind: AssetKind

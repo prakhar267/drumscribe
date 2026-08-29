@@ -316,18 +316,29 @@ class DeleteResponse(APIModel):
 
 class AdminModelRun(APIModel):
     provider: str
+    provider_category: str
+    provider_request_id: str | None
     model_name: str
     model_version: str
     model_hash: str | None
     duration_seconds: float | None
     parameters: dict[str, Any]
     hardware_metadata: dict[str, Any]
+    raw_provider_metadata: dict[str, Any]
+    error_category: str | None
+    cost_amount: float | None
+    cost_currency: str | None
+    retention_expires_at: datetime | None
+    contract_reference: str | None
     summary: dict[str, Any]
 
 
 class AdminJobDiagnostics(APIModel):
     job: JobResponse
     provider_versions: dict[str, Any]
+    provider_metadata: dict[str, Any]
+    total_provider_cost: float | None
+    provider_cost_currency: str | None
     stage_timings: dict[str, Any]
     technical_error_detail: str | None
     assets: list[AssetResponse]

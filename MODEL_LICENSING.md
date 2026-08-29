@@ -13,7 +13,9 @@ rights. `require_production_safe()` rejects unresolved and non-commercial provid
 |---|---|---|---|---|---|---|---|
 | DrumScribe spectral research provider | This repository | Project code | None | None | Not production-enabled | Preserve notices for optional NumPy/SciPy/librosa dependencies | Local development and benchmarking only; heuristics are not represented as a trained AI model |
 | DrumScribe mock providers | This repository | Project code | None | Synthetic only | Yes, as test infrastructure | Must never be described as real transcription or separation | Tests and deterministic local workflows |
-| Future commercial transcription adapter | No vendor selected | Contract-dependent | Contract-dependent | Contract-dependent | No, until a signed commercial right and DPA are recorded | Record contract reference, retention, regions, subprocessors, and model-improvement terms | Configuration refuses activation without explicit confirmation; no network adapter is shipped |
+| AudioShake source-separation adapter | AudioShake Tasks API | Proprietary service | Provider-hosted | Provider statement says licensed data; contract controls | No, until account contract/DPA approval is recorded | Record credits, retention, regions, subprocessors, output rights, and model-improvement terms | Adapter and mocked contract tests ship; production refuses missing key/contract/approval |
+| Music AI source-separation adapter | Music AI workflow API | Proprietary service | Provider-hosted | Contract-dependent | No, until exact workflow and contract/DPA approval are recorded | Record workflow slug/version, per-minute price, retention, subprocessors, output rights, and training use | Adapter and mocked contract tests ship; production refuses missing key/workflow/contract/approval |
+| Klangio drum-transcription and beat adapters | Klangio Transcription API 0.2 | Proprietary service | Provider-hosted | Contract-dependent | No, until drum-model API access and commercial contract/DPA approval are recorded | Record API build/model, deletion date, regions, output rights, subprocessors, and training use | Current OpenAPI exposes `model=drums` and beat tracking; adapters and mocked contract tests ship; production refuses missing key/contract/approval |
 
 ## Evaluated research/source-separation components
 
@@ -54,8 +56,9 @@ this file and in the deploy configuration:
 5. Written legal/product approval, contract reference where applicable, regions,
    retention, subprocessors, and whether customer audio may be used for provider training.
 
-No current automatic drum transcription or source-separation model is approved by
-this register for commercial production. The deterministic mock can exercise the
-pipeline, and the spectral heuristic can support local research, but neither should
-be used to make a production-quality transcription claim.
-
+No commercial provider is approved by this register yet because credentials,
+account-specific product access, executed contracts/DPA, retention/training terms,
+and a rights-cleared live benchmark have not been supplied. The implemented adapters
+therefore remain fail-closed. The deterministic mock can exercise the pipeline, and
+the spectral heuristic can support local research, but neither may be used to make a
+production-quality transcription claim.

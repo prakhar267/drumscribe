@@ -47,6 +47,7 @@ packages = ["src/drumscribe_api"]
 addopts = "-q --strict-markers --disable-warnings"
 asyncio_mode = "auto"
 testpaths = ["tests"]
+markers = ["live_ml: opt-in tests that call paid commercial ML providers"]
 
 [tool.ruff]
 line-length = 100

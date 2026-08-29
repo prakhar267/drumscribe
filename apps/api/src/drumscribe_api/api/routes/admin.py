@@ -57,6 +57,9 @@ async def job_diagnostics(
     return AdminJobDiagnostics(
         job=job_response(job),
         provider_versions=job.provider_versions,
+        provider_metadata=job.provider_metadata,
+        total_provider_cost=job.total_provider_cost,
+        provider_cost_currency=job.provider_cost_currency,
         stage_timings=job.stage_timings,
         technical_error_detail=job.error_detail,
         assets=[AssetResponse.model_validate(asset) for asset in assets],

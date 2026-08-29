@@ -26,6 +26,25 @@ class Settings(BaseSettings):
     source_separation_provider: str = "passthrough"
     music_transcription_provider: str = "mock"
     beat_tracking_provider: str = "mock"
+    commercial_provider_license_confirmed: bool = False
+    commercial_provider_approval_reference: str | None = None
+    provider_timeout_seconds: float = Field(default=600, gt=0, le=3600)
+    provider_poll_interval_seconds: float = Field(default=2, ge=0, le=30)
+
+    audioshake_api_url: str = "https://api.audioshake.ai"
+    audioshake_api_key: SecretStr | None = None
+    audioshake_contract_reference: str | None = None
+    audioshake_separation_model: str = "drums"
+
+    music_ai_api_url: str = "https://api.music.ai/v1"
+    music_ai_api_key: SecretStr | None = None
+    music_ai_contract_reference: str | None = None
+    music_ai_separation_workflow: str | None = None
+    music_ai_drum_result_key: str = "drums"
+
+    klangio_api_url: str = "https://api.klang.io"
+    klangio_api_key: SecretStr | None = None
+    klangio_contract_reference: str | None = None
 
     storage_backend: Literal["s3", "local"] = "local"
     local_storage_path: Path = Path(".local-storage")
@@ -97,16 +116,40 @@ class Settings(BaseSettings):
                 raise ValueError("production requires the Celery queue backend")
             if self.pipeline_provider != "music_engine":
                 raise ValueError("production cannot enable the deterministic development pipeline")
-            if self.music_transcription_provider.casefold() in {"mock", "research"}:
+            if not self.commercial_provider_license_confirmed:
+                raise ValueError("production providers require explicit commercial approval")
+            if not self.commercial_provider_approval_reference:
+                raise ValueError("production providers require an approval reference")
+            if self.music_transcription_provider.casefold() != "klangio_drums":
                 raise ValueError(
-                    "production requires a commercially approved transcription provider"
+                    "production requires the commercially approved Klangio drum adapter"
                 )
-            if self.source_separation_provider.casefold() in {"passthrough", "demucs"}:
+            if self.source_separation_provider.casefold() not in {"audioshake", "music_ai"}:
                 raise ValueError(
                     "production requires a commercially approved source-separation provider"
                 )
-            if self.beat_tracking_provider.casefold() in {"mock", "research"}:
-                raise ValueError("production requires a commercially approved beat tracker")
+            if self.beat_tracking_provider.casefold() != "klangio":
+                raise ValueError(
+                    "production requires the commercially approved Klangio beat adapter"
+                )
+            if not self.klangio_api_key or not self.klangio_contract_reference:
+                raise ValueError(
+                    "production Klangio credentials and contract reference are missing"
+                )
+            if self.source_separation_provider.casefold() == "audioshake" and (
+                not self.audioshake_api_key or not self.audioshake_contract_reference
+            ):
+                raise ValueError(
+                    "production AudioShake credentials and contract reference are missing"
+                )
+            if self.source_separation_provider.casefold() == "music_ai" and (
+                not self.music_ai_api_key
+                or not self.music_ai_contract_reference
+                or not self.music_ai_separation_workflow
+            ):
+                raise ValueError(
+                    "production Music AI credentials, workflow and contract reference are missing"
+                )
             if not self.cookie_secure:
                 raise ValueError("production session cookies must be secure")
             if self.dev_expose_magic_link:
