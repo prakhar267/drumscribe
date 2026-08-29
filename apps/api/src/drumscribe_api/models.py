@@ -239,6 +239,7 @@ class Transcription(UUIDPrimaryKeyMixin, TimestampMixin, Base):
             name="time_signature_denominator",
         ),
         CheckConstraint("version >= 1", name="transcription_version"),
+        CheckConstraint("timing_version >= 1", name="transcription_timing_version"),
     )
 
     project_id: Mapped[uuid.UUID] = mapped_column(
@@ -251,6 +252,8 @@ class Transcription(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     time_signature_numerator: Mapped[int] = mapped_column(Integer, default=4)
     time_signature_denominator: Mapped[int] = mapped_column(Integer, default=4)
     tempo_map: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
+    timing_ai_baseline: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
+    timing_version: Mapped[int] = mapped_column(Integer, default=1)
     quality_summary: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     version: Mapped[int] = mapped_column(Integer, default=1)
 

@@ -9,13 +9,14 @@ import { Brand } from "@/components/brand";
 import { useTransport } from "@/components/transport-provider";
 import { api } from "@/lib/api/client";
 import { createDemoEvents, demoProject, demoProjects, demoWaveform } from "@/lib/demo-data";
-import { EDITOR_ROWS, type DrumEvent, type DrumProject, type Instrument, type SnapValue } from "@/lib/domain";
+import { EDITOR_ROWS, type DrumEvent, type DrumProject, type Instrument, type SnapValue, type TimingMap } from "@/lib/domain";
 import { createEvent, diffDrumEvents, gridStepSeconds, lowConfidenceEvents, moveEvent } from "@/lib/music";
 import { DrumGrid } from "@/components/editor/drum-grid";
 import { ExportModal } from "@/components/editor/export-modal";
 import { NoteInspector } from "@/components/editor/note-inspector";
 import { ShortcutsModal } from "@/components/editor/shortcuts-modal";
 import { TransportBar } from "@/components/editor/transport-bar";
+import { TimingEditor } from "@/components/editor/timing-editor";
 import { useEditorHistory } from "@/components/editor/use-editor-history";
 import { Waveform } from "@/components/editor/waveform";
 
@@ -25,6 +26,7 @@ const NotationView = dynamic(() => import("@/components/editor/notation-view"), 
 });
 
 type SaveState = "saved" | "editing" | "saving" | "error";
+type EditorMode = "edit" | "timing" | "review";
 
 function nextId() {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
@@ -48,6 +50,11 @@ export function EditorClient({ projectId }: { projectId: string }) {
   const [saveState, setSaveState] = useState<SaveState>("saved");
   const [exportOpen, setExportOpen] = useState(searchParams.get("export") === "1");
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [mode, setMode] = useState<EditorMode>(
+    searchParams.get("mode") === "timing" ? "timing" : searchParams.get("mode") === "review" ? "review" : "edit",
+  );
+  const [timing, setTiming] = useState<TimingMap | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const revisionRef = useRef(1);
   const clipboardRef = useRef<DrumEvent[]>([]);
   const hydratedRef = useRef(false);
@@ -113,9 +120,11 @@ export function EditorClient({ projectId }: { projectId: string }) {
         audioRefreshTimer = window.setTimeout(() => void refreshAudio(bpm, beatsPerMeasure, true), Number.isFinite(refreshIn) ? refreshIn : 8 * 60_000);
       } catch { /* Playback keeps its current buffered source and retries on the next page load. */ }
     };
-    void api.getProject(projectId).then((result) => {
+    void Promise.all([api.getProject(projectId), api.getTiming(projectId)]).then(([result, timingResult]) => {
       if (!active) return;
+      setLoadError(null);
       setProject(result.project);
+      setTiming(timingResult);
       const hydratedEvents = result.events.map((event) => ({ ...event, projectId }));
       savedEventsRef.current = hydratedEvents.map((event) => ({ ...event }));
       latestEventsRef.current = hydratedEvents;
@@ -127,6 +136,9 @@ export function EditorClient({ projectId }: { projectId: string }) {
       setSaveState("saved");
       void refreshAudio(result.project.bpm, result.project.beatsPerMeasure, false);
       void api.getWaveformPeaks(projectId).then((peaks) => { if (peaks) setWaveform(peaks); }).catch(() => undefined);
+    }).catch((error: unknown) => {
+      if (!active) return;
+      setLoadError(error instanceof Error ? error.message : "This project could not be opened.");
     });
     return () => { active = false; if (audioRefreshTimer) window.clearTimeout(audioRefreshTimer); };
   }, [loadAudioSources, projectId, replace]);
@@ -208,6 +220,28 @@ export function EditorClient({ projectId }: { projectId: string }) {
     setSelectedIds(new Set(copies.map((event) => event.id)));
   }, [apply, project.bpm, selected, snap]);
 
+  const applyTiming = useCallback(async (nextTiming: TimingMap) => {
+    const refreshed = await api.getProject(projectId);
+    const hydratedEvents = refreshed.events.map((event) => ({ ...event, projectId }));
+    setTiming(nextTiming);
+    setProject(refreshed.project);
+    savedEventsRef.current = hydratedEvents.map((event) => ({ ...event }));
+    latestEventsRef.current = hydratedEvents;
+    replace(hydratedEvents);
+    revisionRef.current = refreshed.revision;
+    setSelectedIds(new Set());
+    setSaveState("saved");
+    const sources = await api.getAudioSources(projectId);
+    if (sources) {
+      loadAudioSources({
+        ...sources,
+        bpm: refreshed.project.bpm,
+        beatsPerMeasure: refreshed.project.beatsPerMeasure,
+        preservePosition: true,
+      });
+    }
+  }, [loadAudioSources, projectId, replace]);
+
   useEffect(() => {
     const keydown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
@@ -237,11 +271,28 @@ export function EditorClient({ projectId }: { projectId: string }) {
 
   const saveLabel = saveState === "saved" ? "All changes saved" : saveState === "saving" ? "Saving…" : saveState === "error" ? "Save failed · retry" : "Unsaved changes";
 
+  if (loadError) {
+    return (
+      <div className="editor-load-error" role="alert">
+        <Brand />
+        <span>Project unavailable</span>
+        <h1>This transcription could not be opened.</h1>
+        <p>{loadError}</p>
+        <div><Link className="button button-primary" href="/projects">Back to projects</Link><button className="button" type="button" onClick={() => window.location.reload()}>Try again</button></div>
+      </div>
+    );
+  }
+
   return (
     <div className="editor-shell" data-testid="editor">
       <header className="editor-toolbar">
         <div className="editor-brand"><Brand compact /><Link href="/projects" className="editor-back">Projects</Link><span className="toolbar-divider" /><label className="sr-only" htmlFor="project-title">Project title</label><input id="project-title" className="project-title-input" value={project.title} onChange={(event) => setProject({ ...project, title: event.target.value })} /></div>
         <div className="editor-history">
+          <nav className="editor-mode-switch" aria-label="Editor mode">
+            <button className={mode === "edit" ? "is-active" : ""} type="button" onClick={() => setMode("edit")}>Edit</button>
+            <button className={mode === "timing" ? "is-active" : ""} type="button" onClick={() => setMode("timing")}>Timing</button>
+            <button className={mode === "review" ? "is-active" : ""} type="button" onClick={() => setMode("review")}>Review <span>{uncertain.length}</span></button>
+          </nav>
           <button className="icon-button" type="button" aria-label="Undo" disabled={!canUndo} onClick={undo} data-testid="undo"><Undo2 /></button>
           <button className="icon-button" type="button" aria-label="Redo" disabled={!canRedo} onClick={redo} data-testid="redo"><Redo2 /></button>
           <button className={`save-status save-${saveState}`} type="button" disabled={saveState !== "error"} onClick={() => void flushPendingChanges().catch(() => undefined)} title={saveState === "error" ? "Retry saving changes" : saveLabel}>{saveState === "saved" ? <Check /> : <Cloud />}{saveLabel}</button>
@@ -256,7 +307,11 @@ export function EditorClient({ projectId }: { projectId: string }) {
 
       <div className="mobile-editor-notice">Editing is optimized for desktop and tablet. Mobile keeps playback, notation and review controls available.</div>
 
-      <div className="editor-workspace">
+      {mode === "timing" && timing ? (
+        <TimingEditor key={`${project.id}-${timing.timingVersion}`} project={project} timing={timing} peaks={waveform} currentTime={transport.currentTime} onSeek={transport.seek} onApplied={applyTiming} />
+      ) : mode === "timing" ? (
+        <div className="timing-loading">Loading timing map…</div>
+      ) : <div className={`editor-workspace mode-${mode}`}>
         <div className="editor-main">
           <NotationView project={project} events={events} selectedIds={selectedIds} currentTime={transport.currentTime} onSelect={selectOne} />
           <Waveform project={project} currentTime={transport.currentTime} loop={transport.loop} peaks={waveform} onSeek={transport.seek} onLoopChange={transport.setLoop} />
@@ -264,14 +319,14 @@ export function EditorClient({ projectId }: { projectId: string }) {
             <div className="grid-tools-group"><Grid3X3 /><strong>Drum grid</strong><span>{events.length} hits</span></div>
             <div className="grid-tools-group">
               <label>Snap <select value={snap} onChange={(event) => setSnap(event.target.value as SnapValue)} data-testid="snap-select"><option value="off">Off</option><option value="quarter">1/4</option><option value="eighth">1/8</option><option value="sixteenth">1/16</option><option value="thirty-second">1/32</option><option value="triplet">Triplet · beta</option></select></label>
-              <button className={`icon-button${confidenceOverlay ? " is-active" : ""}`} type="button" onClick={() => setConfidenceOverlay((value) => !value)} aria-label="Toggle confidence overlay">{confidenceOverlay ? <Eye /> : <EyeOff />}</button>
+              <button className={`icon-button${confidenceOverlay || mode === "review" ? " is-active" : ""}`} type="button" onClick={() => setConfidenceOverlay((value) => !value)} aria-label="Toggle confidence overlay">{confidenceOverlay || mode === "review" ? <Eye /> : <EyeOff />}</button>
               <div className="zoom-control"><button type="button" onClick={() => setZoom((value) => Math.max(1, value - .25))} aria-label="Zoom out"><Minus /></button><span>{Math.round(zoom * 100)}%</span><button type="button" onClick={() => setZoom((value) => Math.min(4, value + .25))} aria-label="Zoom in"><Plus /></button></div>
             </div>
           </div>
-          <DrumGrid events={events} duration={project.durationSeconds} bpm={project.bpm} beatsPerMeasure={project.beatsPerMeasure} selectedIds={selectedIds} snap={snap} zoom={zoom} confidenceOverlay={confidenceOverlay} onAdd={addAt} onSelect={setSelectedIds} onMove={moveSelected} />
+          <DrumGrid events={events} duration={project.durationSeconds} bpm={project.bpm} beatsPerMeasure={project.beatsPerMeasure} selectedIds={selectedIds} snap={snap} zoom={zoom} confidenceOverlay={confidenceOverlay || mode === "review"} onAdd={addAt} onSelect={setSelectedIds} onMove={moveSelected} />
         </div>
         <NoteInspector selected={selected} uncertainCount={uncertain.length} onChange={changeSelected} onReviewNext={reviewNext} onDelete={deleteSelected} />
-      </div>
+      </div>}
       <TransportBar />
       {exportOpen && <ExportModal project={project} events={events} beforeExport={flushPendingChanges} onClose={() => setExportOpen(false)} />}
       {shortcutsOpen && <ShortcutsModal onClose={() => setShortcutsOpen(false)} />}

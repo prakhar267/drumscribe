@@ -270,6 +270,93 @@ class BulkEventsResponse(APIModel):
     revision_id: uuid.UUID | None
 
 
+class TempoSegmentWrite(APIModel):
+    start_seconds: float = Field(ge=0)
+    bpm: float = Field(ge=20, le=400)
+    time_signature_numerator: int = Field(ge=1, le=32)
+    time_signature_denominator: Literal[1, 2, 4, 8, 16, 32]
+    start_measure: int = Field(ge=0)
+
+
+class BeatWrite(APIModel):
+    time_seconds: float = Field(ge=0)
+    beat_in_measure: int = Field(ge=1, le=32)
+    measure_index: int = Field(ge=0)
+    is_downbeat: bool
+    confidence: float | None = Field(default=None, ge=0, le=1)
+
+
+class TimingUpdateRequest(APIModel):
+    expected_version: int = Field(ge=1)
+    bar_one_seconds: float = Field(ge=0)
+    segments: list[TempoSegmentWrite] = Field(min_length=1, max_length=512)
+    beats: list[BeatWrite] = Field(min_length=2, max_length=50_000)
+    requantize: Literal["none", "all", "selected"] = "all"
+    measure_start: int | None = Field(default=None, ge=0)
+    measure_end: int | None = Field(default=None, ge=0)
+    preserve_manual_edits: bool = True
+
+    @model_validator(mode="after")
+    def validate_timing(self) -> "TimingUpdateRequest":
+        if self.requantize == "selected" and (
+            self.measure_start is None or self.measure_end is None
+        ):
+            raise ValueError("selected requantization requires measureStart and measureEnd")
+        if (
+            self.measure_start is not None
+            and self.measure_end is not None
+            and self.measure_end < self.measure_start
+        ):
+            raise ValueError("measureEnd must be greater than or equal to measureStart")
+        segment_starts = [item.start_seconds for item in self.segments]
+        if segment_starts != sorted(set(segment_starts)):
+            raise ValueError("tempo segments must be ordered with unique start times")
+        if self.segments[0].start_measure != 0:
+            raise ValueError("the first tempo segment must start at measure zero")
+        beat_times = [item.time_seconds for item in self.beats]
+        if beat_times != sorted(set(beat_times)):
+            raise ValueError("beats must be ordered with unique times")
+        downbeats = [item for item in self.beats if item.is_downbeat]
+        if not downbeats:
+            raise ValueError("at least one downbeat is required")
+        if abs(downbeats[0].time_seconds - self.bar_one_seconds) > 0.05:
+            raise ValueError("barOneSeconds must match the first downbeat")
+        return self
+
+
+class TimingResetRequest(APIModel):
+    expected_version: int = Field(ge=1)
+    requantize: Literal["none", "all", "selected"] = "all"
+    measure_start: int | None = Field(default=None, ge=0)
+    measure_end: int | None = Field(default=None, ge=0)
+    preserve_manual_edits: bool = True
+
+    @model_validator(mode="after")
+    def validate_measure_range(self) -> "TimingResetRequest":
+        if self.requantize == "selected" and (
+            self.measure_start is None or self.measure_end is None
+        ):
+            raise ValueError("selected requantization requires measureStart and measureEnd")
+        if (
+            self.measure_start is not None
+            and self.measure_end is not None
+            and self.measure_end < self.measure_start
+        ):
+            raise ValueError("measureEnd must be greater than or equal to measureStart")
+        return self
+
+
+class TimingResponse(APIModel):
+    timing_version: int
+    transcription_version: int
+    bar_one_seconds: float
+    segments: list[TempoSegmentWrite]
+    beats: list[BeatWrite]
+    source: Literal["AI", "MANUAL"]
+    requantized_event_count: int = 0
+    revision_id: uuid.UUID | None = None
+
+
 class RevisionResponse(APIModel):
     id: uuid.UUID
     sequence: int

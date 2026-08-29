@@ -120,6 +120,35 @@ export interface TempoPoint {
   beatsPerMeasure: number;
 }
 
+export interface TimingSegment {
+  startSeconds: number;
+  bpm: number;
+  timeSignatureNumerator: number;
+  timeSignatureDenominator: number;
+  startMeasure: number;
+}
+
+export interface TimingBeat {
+  timeSeconds: number;
+  beatInMeasure: number;
+  measureIndex: number;
+  isDownbeat: boolean;
+  confidence: number | null;
+}
+
+export interface TimingMap {
+  timingVersion: number;
+  transcriptionVersion: number;
+  barOneSeconds: number;
+  segments: TimingSegment[];
+  beats: TimingBeat[];
+  source: "AI" | "MANUAL";
+  requantizedEventCount: number;
+  revisionId: string | null;
+}
+
+export type RequantizeMode = "none" | "all" | "selected";
+
 export const PROCESSING_STAGES = [
   { key: "VALIDATING", label: "Preparing audio", weight: 8 },
   { key: "NORMALIZING", label: "Balancing the recording", weight: 9 },

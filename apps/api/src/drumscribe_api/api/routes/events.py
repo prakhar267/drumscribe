@@ -5,7 +5,7 @@ from sqlalchemy import select
 
 from ...dependencies import CurrentPrincipal, DBSession, active_transcription, owned_project
 from ...enums import RevisionKind
-from ...errors import not_found
+from ...errors import APIError, not_found
 from ...models import DrumEvent, TranscriptionRevision
 from ...schemas import (
     BulkEventsRequest,
@@ -15,12 +15,140 @@ from ...schemas import (
     RevisionListResponse,
     RevisionResponse,
     RevisionRestoreResponse,
+    TimingResetRequest,
+    TimingResponse,
+    TimingUpdateRequest,
 )
 from ...services.audit import record_audit, record_product_event
 from ...services.events import apply_bulk_events
 from ...services.revisions import create_revision, current_snapshot, restore_snapshot
+from ...services.timing import TimingState, apply_timing, parse_timing, response_for
 
 router = APIRouter(prefix="/projects/{project_id}", tags=["transcription"])
+
+
+@router.get("/timing", response_model=TimingResponse)
+async def get_timing(
+    project_id: uuid.UUID,
+    db: DBSession,
+    principal: CurrentPrincipal,
+) -> TimingResponse:
+    project = await owned_project(str(project_id), db, principal)
+    transcription = await active_transcription(db, project)
+    state = parse_timing(transcription, project.duration_seconds or 0)
+    return response_for(transcription, state)
+
+
+@router.patch("/timing", response_model=TimingResponse)
+async def update_timing(
+    project_id: uuid.UUID,
+    payload: TimingUpdateRequest,
+    request: Request,
+    db: DBSession,
+    principal: CurrentPrincipal,
+) -> TimingResponse:
+    project = await owned_project(str(project_id), db, principal)
+    transcription = await active_transcription(db, project)
+    state = TimingState(
+        bar_one_seconds=payload.bar_one_seconds,
+        segments=tuple(payload.segments),
+        beats=tuple(payload.beats),
+        source="MANUAL",
+    )
+    count, revision_id = await apply_timing(
+        db,
+        project=project,
+        transcription=transcription,
+        state=state,
+        expected_version=payload.expected_version,
+        requantize=payload.requantize,
+        measure_start=payload.measure_start,
+        measure_end=payload.measure_end,
+        preserve_manual_edits=payload.preserve_manual_edits,
+        user_id=principal.user.id,
+        revision_label="Timing correction",
+    )
+    record_audit(
+        db,
+        "transcription.timing_updated",
+        user_id=principal.user.id,
+        project_id=project.id,
+        request_id=getattr(request.state, "request_id", None),
+        metadata={
+            "requantizedEventCount": count,
+            "segmentCount": len(state.segments),
+            "beatCount": len(state.beats),
+            "preservedManualEdits": payload.preserve_manual_edits,
+        },
+    )
+    record_product_event(
+        db,
+        "timing_corrected",
+        user_id=principal.user.id,
+        project_id=project.id,
+        properties={
+            "requantizedEvents": count,
+            "segments": len(state.segments),
+            "beats": len(state.beats),
+        },
+    )
+    await db.commit()
+    return response_for(
+        transcription,
+        state,
+        requantized_event_count=count,
+        revision_id=revision_id,
+    )
+
+
+@router.post("/timing/reset", response_model=TimingResponse)
+async def reset_timing(
+    project_id: uuid.UUID,
+    payload: TimingResetRequest,
+    request: Request,
+    db: DBSession,
+    principal: CurrentPrincipal,
+) -> TimingResponse:
+    project = await owned_project(str(project_id), db, principal)
+    transcription = await active_transcription(db, project)
+    baseline = transcription.timing_ai_baseline or transcription.tempo_map
+    if not baseline:
+        raise APIError(409, "AI_TIMING_UNAVAILABLE", "No AI timing baseline is available.")
+    parsed = parse_timing(transcription, project.duration_seconds or 0, list(baseline))
+    state = TimingState(
+        bar_one_seconds=parsed.bar_one_seconds,
+        segments=parsed.segments,
+        beats=parsed.beats,
+        source="AI",
+    )
+    count, revision_id = await apply_timing(
+        db,
+        project=project,
+        transcription=transcription,
+        state=state,
+        expected_version=payload.expected_version,
+        requantize=payload.requantize,
+        measure_start=payload.measure_start,
+        measure_end=payload.measure_end,
+        preserve_manual_edits=payload.preserve_manual_edits,
+        user_id=principal.user.id,
+        revision_label="Reset to AI timing",
+    )
+    record_audit(
+        db,
+        "transcription.timing_reset",
+        user_id=principal.user.id,
+        project_id=project.id,
+        request_id=getattr(request.state, "request_id", None),
+        metadata={"requantizedEventCount": count},
+    )
+    await db.commit()
+    return response_for(
+        transcription,
+        state,
+        requantized_event_count=count,
+        revision_id=revision_id,
+    )
 
 
 @router.get("/events", response_model=EventsResponse)

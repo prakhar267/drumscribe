@@ -56,4 +56,44 @@ describe("versioned API client", () => {
     expect(body).toMatchObject({ deleteIds: [deletedId], expectedVersion: 4 });
     expect(body.upserts).toHaveLength(1);
   });
+
+  it("does not turn an unknown project 404 into the demo editor", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockImplementation(() => Promise.resolve(json({ detail: "Project not found" }, 404))));
+    await expect(api.getProject("not-a-real-project")).rejects.toThrow("Project not found");
+  });
+
+  it("persists canonical timing and selective requantization options", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(json({
+      timingVersion: 3,
+      transcriptionVersion: 8,
+      barOneSeconds: 0.2,
+      segments: [],
+      beats: [],
+      source: "MANUAL",
+      requantizedEventCount: 4,
+      revisionId: "revision-id",
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+    await api.updateTiming("project-id", {
+      expectedVersion: 2,
+      barOneSeconds: 0.2,
+      segments: [{ startSeconds: 0.2, bpm: 118, timeSignatureNumerator: 6, timeSignatureDenominator: 8, startMeasure: 0 }],
+      beats: [
+        { timeSeconds: 0.2, beatInMeasure: 1, measureIndex: 0, isDownbeat: true, confidence: null },
+        { timeSeconds: 0.45, beatInMeasure: 2, measureIndex: 0, isDownbeat: false, confidence: null },
+      ],
+      requantize: "selected",
+      measureStart: 4,
+      measureEnd: 7,
+      preserveManualEdits: true,
+    });
+    const body = JSON.parse(String(fetchMock.mock.calls[0][1]?.body));
+    expect(body).toMatchObject({
+      expectedVersion: 2,
+      requantize: "selected",
+      measureStart: 4,
+      measureEnd: 7,
+      preserveManualEdits: true,
+    });
+  });
 });

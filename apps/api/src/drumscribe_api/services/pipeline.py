@@ -817,25 +817,27 @@ class PipelineService:
             denominator = int(checkpoint_analysis["timeSignatureDenominator"])
             quantized = quantize_hits(checkpoint_hits, bpm, numerator, denominator)
             low_confidence = sum(1 for item in quantized if (item["confidence"] or 0) < 0.75)
+            timing_map = [
+                *list(checkpoint_analysis.get("tempoMap", [])),
+                *list(checkpoint_analysis.get("timeSignatures", [])),
+                *[
+                    {"kind": "beat", **item}
+                    for item in checkpoint_analysis.get("beats", [])
+                    if isinstance(item, dict)
+                ],
+                {
+                    "kind": "offset",
+                    "offsetSeconds": float(checkpoint_analysis.get("offsetSeconds", 0)),
+                },
+            ]
             transcription = Transcription(
                 project_id=project.id,
                 source_job_id=job.id,
                 tempo_bpm=bpm,
                 time_signature_numerator=numerator,
                 time_signature_denominator=denominator,
-                tempo_map=[
-                    *list(checkpoint_analysis.get("tempoMap", [])),
-                    *list(checkpoint_analysis.get("timeSignatures", [])),
-                    *[
-                        {"kind": "beat", **item}
-                        for item in checkpoint_analysis.get("beats", [])
-                        if isinstance(item, dict)
-                    ],
-                    {
-                        "kind": "offset",
-                        "offsetSeconds": float(checkpoint_analysis.get("offsetSeconds", 0)),
-                    },
-                ],
+                tempo_map=timing_map,
+                timing_ai_baseline=timing_map,
                 quality_summary={
                     "message": "Your chart is ready. A few sections may need review.",
                     "eventCount": len(quantized),

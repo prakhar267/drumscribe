@@ -1,5 +1,5 @@
 import { createDemoEvents, demoProject, demoProjects } from "@/lib/demo-data";
-import type { DrumEvent, DrumProject, Instrument, JobStatus, ProcessingStage } from "@/lib/domain";
+import type { DrumEvent, DrumProject, Instrument, JobStatus, ProcessingStage, RequantizeMode, TimingBeat, TimingMap, TimingSegment } from "@/lib/domain";
 
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api/v1").replace(/\/$/, "");
 const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE !== "false";
@@ -29,6 +29,9 @@ export interface AdminJobDiagnostics {
     finishedAt: string | null;
   };
   providerVersions: Record<string, unknown>;
+  providerMetadata: Record<string, unknown>;
+  totalProviderCost: number | null;
+  providerCostCurrency: string | null;
   stageTimings: Record<string, unknown>;
   technicalErrorDetail: string | null;
   assets: Array<{
@@ -141,7 +144,38 @@ async function request<T>(path: string, init?: RequestInit, retryAuth = true): P
 }
 
 function isDemoUnavailable(error: unknown) {
-  return error instanceof TypeError || (error instanceof ApiError && error.status === 404);
+  return error instanceof TypeError;
+}
+
+function demoTiming(project: DrumProject): TimingMap {
+  const beatDuration = 60 / project.bpm;
+  const beats: TimingBeat[] = [];
+  for (let time = 0, index = 0; time <= project.durationSeconds + beatDuration; time += beatDuration, index += 1) {
+    const beatInMeasure = index % project.beatsPerMeasure + 1;
+    beats.push({
+      timeSeconds: Number(time.toFixed(6)),
+      beatInMeasure,
+      measureIndex: Math.floor(index / project.beatsPerMeasure),
+      isDownbeat: beatInMeasure === 1,
+      confidence: null,
+    });
+  }
+  return {
+    timingVersion: 1,
+    transcriptionVersion: 1,
+    barOneSeconds: 0,
+    segments: [{
+      startSeconds: 0,
+      bpm: project.bpm,
+      timeSignatureNumerator: project.beatsPerMeasure,
+      timeSignatureDenominator: 4,
+      startMeasure: 0,
+    }],
+    beats,
+    source: "AI",
+    requantizedEventCount: 0,
+    revisionId: null,
+  };
 }
 
 function readDemoEvents() {
@@ -297,6 +331,57 @@ export const api = {
       }),
     });
     return { revision: response.version, savedAt: new Date().toISOString() };
+  },
+
+  async getTiming(projectId: string): Promise<TimingMap> {
+    if (DEMO_MODE && demoProjects.some((project) => project.id === projectId)) {
+      return demoTiming(readDemoProject(projectId));
+    }
+    return request<TimingMap>(`/projects/${encodeURIComponent(projectId)}/timing`);
+  },
+
+  async updateTiming(projectId: string, input: {
+    expectedVersion: number;
+    barOneSeconds: number;
+    segments: TimingSegment[];
+    beats: TimingBeat[];
+    requantize: RequantizeMode;
+    measureStart?: number;
+    measureEnd?: number;
+    preserveManualEdits: boolean;
+  }): Promise<TimingMap> {
+    if (DEMO_MODE && demoProjects.some((project) => project.id === projectId)) {
+      return {
+        timingVersion: input.expectedVersion + 1,
+        transcriptionVersion: input.expectedVersion + 1,
+        barOneSeconds: input.barOneSeconds,
+        segments: input.segments,
+        beats: input.beats,
+        source: "MANUAL",
+        requantizedEventCount: 0,
+        revisionId: null,
+      };
+    }
+    return request<TimingMap>(`/projects/${encodeURIComponent(projectId)}/timing`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    });
+  },
+
+  async resetTiming(projectId: string, input: {
+    expectedVersion: number;
+    requantize: RequantizeMode;
+    measureStart?: number;
+    measureEnd?: number;
+    preserveManualEdits: boolean;
+  }): Promise<TimingMap> {
+    if (DEMO_MODE && demoProjects.some((project) => project.id === projectId)) {
+      return demoTiming(readDemoProject(projectId));
+    }
+    return request<TimingMap>(`/projects/${encodeURIComponent(projectId)}/timing/reset`, {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
   },
 
   async createAndProcessUpload(input: { file: File; title?: string; rightsConfirmed: true }) {

@@ -412,6 +412,8 @@ async def duplicate_project(
             time_signature_numerator=source_transcription.time_signature_numerator,
             time_signature_denominator=source_transcription.time_signature_denominator,
             tempo_map=source_transcription.tempo_map,
+            timing_ai_baseline=source_transcription.timing_ai_baseline,
+            timing_version=source_transcription.timing_version,
             quality_summary=source_transcription.quality_summary,
             version=source_transcription.version,
         )
