@@ -1,14 +1,18 @@
 "use client";
 
-import { memo, useRef, useState } from "react";
+import { CheckCircle2, Copy, Crosshair, Repeat2, TimerReset, Trash2 } from "lucide-react";
+import { memo, useEffect, useRef, useState } from "react";
 import { EDITOR_ROWS, INSTRUMENT_LABELS, type DrumEvent, type Instrument, type SnapValue } from "@/lib/domain";
 import { snapSeconds } from "@/lib/music";
 
 const ROW_HEIGHT = 30;
 
 interface Point { x: number; y: number }
+type GridContext =
+  | { kind: "hit"; x: number; y: number; item: DrumEvent; ids: Set<string> }
+  | { kind: "measure"; x: number; y: number; measureIndex: number; ids: Set<string> };
 
-export const DrumGrid = memo(function DrumGrid({ events, duration, bpm, beatsPerMeasure, selectedIds, snap, zoom, confidenceOverlay, onAdd, onSelect, onMove }: {
+export const DrumGrid = memo(function DrumGrid({ events, duration, bpm, beatsPerMeasure, selectedIds, snap, zoom, confidenceOverlay, onAdd, onSelect, onMove, onDuplicate, onDeleteIds, onChangeInstrument, onQuantize, onMarkCorrect, onLoopMeasure, onOpenTiming }: {
   events: DrumEvent[];
   duration: number;
   bpm: number;
@@ -20,13 +24,33 @@ export const DrumGrid = memo(function DrumGrid({ events, duration, bpm, beatsPer
   onAdd: (time: number, instrument: Instrument) => void;
   onSelect: (ids: Set<string>) => void;
   onMove: (ids: Set<string>, deltaTime: number, deltaRows: number) => void;
+  onDuplicate: (events: DrumEvent[]) => void;
+  onDeleteIds: (ids: Set<string>) => void;
+  onChangeInstrument: (ids: Set<string>, instrument: Instrument) => void;
+  onQuantize: (ids: Set<string>) => void;
+  onMarkCorrect: (ids: Set<string>) => void;
+  onLoopMeasure: (measureIndex: number) => void;
+  onOpenTiming: (measureIndex: number) => void;
 }) {
   const gridRef = useRef<HTMLDivElement>(null);
   const labelTrackRef = useRef<HTMLDivElement>(null);
   const [marquee, setMarquee] = useState<{ start: Point; end: Point } | null>(null);
   const [drag, setDrag] = useState<{ start: Point; ids: Set<string>; dx: number; dy: number } | null>(null);
+  const [context, setContext] = useState<GridContext | null>(null);
   const measureDuration = beatsPerMeasure * 60 / bpm;
   const measureCount = Math.ceil(duration / measureDuration);
+
+  useEffect(() => {
+    if (!context) return;
+    const close = () => setContext(null);
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") close(); };
+    window.addEventListener("pointerdown", close, { once: true });
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      window.removeEventListener("pointerdown", close);
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [context]);
 
   const pointFromEvent = (event: React.PointerEvent) => {
     const rect = gridRef.current!.getBoundingClientRect();
@@ -95,6 +119,31 @@ export const DrumGrid = memo(function DrumGrid({ events, duration, bpm, beatsPer
     setDrag(null);
   };
 
+  const menuPosition = (clientX: number, clientY: number) => ({
+    x: Math.max(8, Math.min(window.innerWidth - 196, clientX)),
+    y: Math.max(8, Math.min(window.innerHeight - 238, clientY)),
+  });
+
+  const openHitMenu = (event: React.MouseEvent<HTMLButtonElement>, item: DrumEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const ids = selectedIds.has(item.id) ? new Set(selectedIds) : new Set([item.id]);
+    onSelect(ids);
+    const position = menuPosition(event.clientX, event.clientY);
+    setContext({ kind: "hit", ...position, item, ids });
+  };
+
+  const openMeasureMenu = (event: React.MouseEvent<HTMLDivElement>) => {
+    if ((event.target as Element).closest(".grid-hit")) return;
+    event.preventDefault();
+    const rect = event.currentTarget.getBoundingClientRect();
+    const time = Math.max(0, Math.min(duration, (event.clientX - rect.left) / rect.width * duration));
+    const measureIndex = Math.max(0, Math.min(measureCount - 1, Math.floor(time / measureDuration)));
+    const ids = new Set(events.filter((item) => item.measureIndex === measureIndex).map((item) => item.id));
+    const position = menuPosition(event.clientX, event.clientY);
+    setContext({ kind: "measure", ...position, measureIndex, ids });
+  };
+
   const marqueeStyle = marquee ? {
     left: Math.min(marquee.start.x, marquee.end.x),
     top: Math.min(marquee.start.y, marquee.end.y),
@@ -120,6 +169,7 @@ export const DrumGrid = memo(function DrumGrid({ events, duration, bpm, beatsPer
           onPointerDown={backgroundDown}
           onPointerMove={backgroundMove}
           onPointerUp={backgroundUp}
+          onContextMenu={openMeasureMenu}
           data-testid="drum-grid"
         >
           {events.filter((item) => EDITOR_ROWS.includes(item.instrument)).map((item) => {
@@ -139,6 +189,7 @@ export const DrumGrid = memo(function DrumGrid({ events, duration, bpm, beatsPer
                 onPointerDown={(event) => hitDown(event, item)}
                 onPointerMove={hitMove}
                 onPointerUp={hitUp}
+                onContextMenu={(event) => openHitMenu(event, item)}
                 aria-label={`${INSTRUMENT_LABELS[item.instrument]} hit at ${item.quantizedOnset.toFixed(2)} seconds`}
                 data-testid="grid-hit"
               />
@@ -147,6 +198,23 @@ export const DrumGrid = memo(function DrumGrid({ events, duration, bpm, beatsPer
           {marquee && <div className="grid-marquee" style={marqueeStyle} />}
         </div>
       </div>
+      {context && (
+        <div className="grid-context-menu" role="menu" style={{ left: context.x, top: context.y }} onPointerDown={(event) => event.stopPropagation()} onContextMenu={(event) => event.preventDefault()}>
+          <div className="grid-context-title">{context.kind === "hit" ? `${INSTRUMENT_LABELS[context.item.instrument]} · ${context.ids.size} selected` : `Measure ${context.measureIndex + 1}`}</div>
+          {context.kind === "hit" ? <>
+            <label>Instrument<select value={context.item.instrument} onChange={(event) => { onChangeInstrument(context.ids, event.target.value as Instrument); setContext(null); }}>{EDITOR_ROWS.map((instrument) => <option value={instrument} key={instrument}>{INSTRUMENT_LABELS[instrument]}</option>)}</select></label>
+            <button type="button" role="menuitem" onClick={() => { onDuplicate(events.filter((item) => context.ids.has(item.id))); setContext(null); }}><Copy /> Duplicate</button>
+            <button type="button" role="menuitem" onClick={() => { onQuantize(context.ids); setContext(null); }}><TimerReset /> Quantize to snap</button>
+            <button type="button" role="menuitem" onClick={() => { onMarkCorrect(context.ids); setContext(null); }}><CheckCircle2 /> Mark correct</button>
+            <button className="is-danger" type="button" role="menuitem" onClick={() => { onDeleteIds(context.ids); setContext(null); }}><Trash2 /> Delete</button>
+          </> : <>
+            <button type="button" role="menuitem" onClick={() => { onLoopMeasure(context.measureIndex); setContext(null); }}><Repeat2 /> Loop measure</button>
+            <button type="button" role="menuitem" disabled={!context.ids.size} onClick={() => { onQuantize(context.ids); setContext(null); }}><TimerReset /> Requantize measure</button>
+            <button type="button" role="menuitem" disabled={!context.ids.size} onClick={() => { onSelect(context.ids); setContext(null); }}><Crosshair /> Select measure hits</button>
+            <button type="button" role="menuitem" onClick={() => { onOpenTiming(context.measureIndex); setContext(null); }}><TimerReset /> Open in Timing</button>
+          </>}
+        </div>
+      )}
     </section>
   );
 });

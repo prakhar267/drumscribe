@@ -16,8 +16,22 @@ export function ProjectsDashboard() {
   const [sort, setSort] = useState<SortMode>("recent");
   const [menu, setMenu] = useState<string | null>(null);
   const [deleted, setDeleted] = useState<DrumProject | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => { void api.listProjects().then(setProjects); }, []);
+  useEffect(() => { void api.listProjects().then(setProjects).finally(() => setLoading(false)); }, []);
+
+  useEffect(() => {
+    const closeMenu = (event: PointerEvent) => {
+      if (!(event.target instanceof Element) || !event.target.closest("[data-project-menu]")) setMenu(null);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setMenu(null); };
+    document.addEventListener("pointerdown", closeMenu);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeMenu);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, []);
 
   const visible = useMemo(() => {
     const filtered = projects.filter((project) => project.title.toLowerCase().includes(query.toLowerCase()));
@@ -57,7 +71,7 @@ export function ProjectsDashboard() {
         <div className="search-field"><Search aria-hidden="true" /><label className="sr-only" htmlFor="project-search">Search projects</label><input className="text-input" id="project-search" type="search" placeholder="Search projects" value={query} onChange={(event) => setQuery(event.target.value)} /></div>
         <label className="field-label">Sort <select className="select-input" value={sort} onChange={(event) => setSort(event.target.value as SortMode)} style={{ width: 140, marginLeft: 8 }}><option value="recent">Recent</option><option value="oldest">Oldest</option><option value="name">Name</option></select></label>
       </div>
-      {visible.length ? (
+      {loading ? <div className="empty-state" role="status"><h2>Loading your projects…</h2><p className="muted">Fetching your private music library.</p></div> : visible.length ? (
         <div className="project-grid" data-testid="project-grid">
           {visible.map((project, projectIndex) => (
             <article className="project-card" key={project.id}>
@@ -70,10 +84,10 @@ export function ProjectsDashboard() {
                 <div className="project-card-meta"><span>{formatTime(project.durationSeconds)} · {project.bpm} BPM</span><span>{new Date(project.updatedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span></div>
                 <div className="project-card-actions">
                   {project.reviewCount ? <span className="pill">{project.reviewCount} to review</span> : <span className="pill pill-lime">Reviewed</span>}
-                  <div style={{ position: "relative" }}>
+                  <div style={{ position: "relative" }} data-project-menu>
                     <button className="icon-button" type="button" aria-label={`Actions for ${project.title}`} aria-expanded={menu === project.id} onClick={() => setMenu(menu === project.id ? null : project.id)}><MoreHorizontal /></button>
                     {menu === project.id && (
-                      <div style={{ position: "absolute", zIndex: 4, right: 0, bottom: 44, width: 150, padding: 6, border: "1px solid var(--line-strong)", borderRadius: 9, background: "#20252e", boxShadow: "var(--shadow)" }}>
+                      <div className="project-action-menu">
                         <button className="menu-action" type="button" onClick={() => void rename(project)}>Rename</button>
                         <button className="menu-action" type="button" onClick={() => void duplicate(project)}>Duplicate</button>
                         <Link className="menu-action" href={`/projects/${project.id}?export=1`}><Download size={13} /> Export</Link>

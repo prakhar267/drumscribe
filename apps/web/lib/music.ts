@@ -39,7 +39,7 @@ export function positionFromSeconds(time: number, bpm: number, beatsPerMeasure =
 
 export function moveEvent(
   event: DrumEvent,
-  changes: Partial<Pick<DrumEvent, "instrument" | "onsetSeconds" | "quantizedOnset" | "velocity">>,
+  changes: Partial<Pick<DrumEvent, "instrument" | "onsetSeconds" | "quantizedOnset" | "velocity" | "subdivision">>,
   bpm: number,
 ): DrumEvent {
   const quantizedOnset = changes.quantizedOnset ?? changes.onsetSeconds ?? event.quantizedOnset;
@@ -279,7 +279,14 @@ function measureNotesMarkup(events: DrumEvent[], measureTicks: number) {
 
 export function eventsToMusicXml(
   events: DrumEvent[],
-  options: { title: string; bpm: number; beatsPerMeasure?: number; durationSeconds?: number },
+  options: {
+    title: string;
+    bpm: number;
+    beatsPerMeasure?: number;
+    durationSeconds?: number;
+    firstMeasureNumber?: number;
+    systemBreakEvery?: number;
+  },
 ) {
   const beatsPerMeasure = Math.max(1, Math.round(options.beatsPerMeasure ?? 4));
   const bpm = Math.max(1, options.bpm);
@@ -299,10 +306,13 @@ export function eventsToMusicXml(
     : 1;
   const count = Math.max(eventMeasureCount, durationMeasureCount);
   const measureXml = Array.from({ length: count }, (_, measureIndex) => {
+    const systemBreak = options.systemBreakEvery && measureIndex > 0 && measureIndex % options.systemBreakEvery === 0
+      ? '<print new-system="yes"/>'
+      : "";
     const attributes = measureIndex === 0
       ? `<attributes><divisions>${MUSIC_XML_DIVISIONS}</divisions><time><beats>${beatsPerMeasure}</beats><beat-type>4</beat-type></time><staves>1</staves><clef><sign>percussion</sign><line>2</line></clef></attributes><direction placement="above"><direction-type><metronome parentheses="no"><beat-unit>quarter</beat-unit><per-minute>${bpm}</per-minute></metronome></direction-type><sound tempo="${bpm}"/></direction>`
       : "";
-    return `<measure number="${measureIndex + 1}">${attributes}${measureNotesMarkup(measures.get(measureIndex) ?? [], measureTicks)}</measure>`;
+    return `<measure number="${(options.firstMeasureNumber ?? 1) + measureIndex}">${systemBreak}${attributes}${measureNotesMarkup(measures.get(measureIndex) ?? [], measureTicks)}</measure>`;
   }).join("");
   const scoreInstruments = INSTRUMENTS.map((instrument) => `<score-instrument id="P1-I${GM_PERCUSSION_MAP[instrument]}"><instrument-name>${escapeXml(INSTRUMENT_LABELS[instrument])}</instrument-name></score-instrument>`).join("");
   const midiInstruments = INSTRUMENTS.map((instrument) => `<midi-instrument id="P1-I${GM_PERCUSSION_MAP[instrument]}"><midi-channel>10</midi-channel><midi-unpitched>${GM_PERCUSSION_MAP[instrument]}</midi-unpitched><volume>80</volume><pan>0</pan></midi-instrument>`).join("");

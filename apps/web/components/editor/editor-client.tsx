@@ -3,14 +3,14 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Check, Cloud, Download, Eye, EyeOff, Grid3X3, HelpCircle, Minus, Plus, Redo2, Settings, Undo2 } from "lucide-react";
+import { Check, ChevronDown, CirclePlay, Cloud, Download, Eye, EyeOff, Grid3X3, HelpCircle, Minus, PanelBottomClose, PanelBottomOpen, Plus, Redo2, Settings, Undo2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Brand } from "@/components/brand";
 import { useTransport } from "@/components/transport-provider";
 import { api } from "@/lib/api/client";
 import { createDemoEvents, demoProject, demoProjects, demoWaveform } from "@/lib/demo-data";
 import { EDITOR_ROWS, type DrumEvent, type DrumProject, type Instrument, type SnapValue, type TimingMap } from "@/lib/domain";
-import { createEvent, diffDrumEvents, gridStepSeconds, lowConfidenceEvents, moveEvent } from "@/lib/music";
+import { createEvent, diffDrumEvents, gridStepSeconds, lowConfidenceEvents, moveEvent, snapSeconds } from "@/lib/music";
 import { DrumGrid } from "@/components/editor/drum-grid";
 import { ExportModal } from "@/components/editor/export-modal";
 import { NoteInspector } from "@/components/editor/note-inspector";
@@ -44,8 +44,9 @@ export function EditorClient({ projectId }: { projectId: string }) {
   const { events, apply, replace, undo, redo, canUndo, canRedo } = useEditorHistory(createDemoEvents().map((event) => ({ ...event, projectId })));
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [snap, setSnap] = useState<SnapValue>("sixteenth");
-  const [zoom, setZoom] = useState(1.7);
+  const [zoom, setZoom] = useState(2.25);
   const [confidenceOverlay, setConfidenceOverlay] = useState(false);
+  const [gridCollapsed, setGridCollapsed] = useState(false);
   const [waveform, setWaveform] = useState<number[] | null>(() => demoProjects.some((item) => item.id === projectId) ? demoWaveform : null);
   const [saveState, setSaveState] = useState<SaveState>("saved");
   const [exportOpen, setExportOpen] = useState(searchParams.get("export") === "1");
@@ -194,11 +195,13 @@ export function EditorClient({ projectId }: { projectId: string }) {
     setSelectedIds(new Set([item.id]));
   }, [apply, project.bpm, project.id, snap]);
 
-  const deleteSelected = useCallback(() => {
-    if (!selectedIds.size) return;
-    apply((currentEvents) => currentEvents.filter((event) => !selectedIds.has(event.id)));
+  const deleteIds = useCallback((ids: Set<string>) => {
+    if (!ids.size) return;
+    apply((currentEvents) => currentEvents.filter((event) => !ids.has(event.id)));
     setSelectedIds(new Set());
-  }, [apply, selectedIds]);
+  }, [apply]);
+
+  const deleteSelected = useCallback(() => deleteIds(selectedIds), [deleteIds, selectedIds]);
 
   const moveSelected = useCallback((ids: Set<string>, deltaTime: number, deltaRows: number) => {
     apply((currentEvents) => currentEvents.map((event) => {
@@ -213,9 +216,42 @@ export function EditorClient({ projectId }: { projectId: string }) {
     }));
   }, [apply, project.bpm, project.durationSeconds]);
 
-  const changeSelected = useCallback((changes: Partial<Pick<DrumEvent, "instrument" | "velocity">>) => {
+  const changeSelected = useCallback((changes: Partial<Pick<DrumEvent, "instrument" | "velocity" | "subdivision">>) => {
     apply((currentEvents) => currentEvents.map((event) => selectedIds.has(event.id) ? moveEvent(event, changes, project.bpm) : event));
   }, [apply, project.bpm, selectedIds]);
+
+  const changeInstrumentFor = useCallback((ids: Set<string>, instrument: Instrument) => {
+    apply((currentEvents) => currentEvents.map((event) => ids.has(event.id) ? moveEvent(event, { instrument }, project.bpm) : event));
+    setSelectedIds(new Set(ids));
+  }, [apply, project.bpm]);
+
+  const quantizeIds = useCallback((ids: Set<string>) => {
+    apply((currentEvents) => currentEvents.map((event) => {
+      if (!ids.has(event.id)) return event;
+      const quantizedOnset = snapSeconds(event.onsetSeconds, project.bpm, snap);
+      return moveEvent(event, { quantizedOnset }, project.bpm);
+    }));
+    setSelectedIds(new Set(ids));
+  }, [apply, project.bpm, snap]);
+
+  const markCorrect = useCallback((ids: Set<string>) => {
+    const updatedAt = new Date().toISOString();
+    apply((currentEvents) => currentEvents.map((event) => ids.has(event.id) ? { ...event, confidence: 1, manuallyEdited: true, updatedAt } : event));
+    setSelectedIds(new Set(ids));
+  }, [apply]);
+
+  const loopMeasure = useCallback((measureIndex: number) => {
+    const measureDuration = project.beatsPerMeasure * 60 / project.bpm;
+    const start = measureIndex * measureDuration;
+    transport.setLoop({ enabled: true, start, end: Math.min(project.durationSeconds, start + measureDuration) });
+    transport.seek(start);
+  }, [project.beatsPerMeasure, project.bpm, project.durationSeconds, transport]);
+
+  const openMeasureTiming = useCallback((measureIndex: number) => {
+    const measureDuration = project.beatsPerMeasure * 60 / project.bpm;
+    transport.seek(measureIndex * measureDuration);
+    setMode("timing");
+  }, [project.beatsPerMeasure, project.bpm, transport]);
 
   const reviewNext = useCallback(() => {
     if (!uncertain.length) return;
@@ -299,20 +335,26 @@ export function EditorClient({ projectId }: { projectId: string }) {
   return (
     <div className="editor-shell" data-testid="editor">
       <header className="editor-toolbar">
-        <div className="editor-brand"><Brand compact /><Link href="/projects" className="editor-back">Projects</Link><span className="toolbar-divider" /><label className="sr-only" htmlFor="project-title">Project title</label><input id="project-title" className="project-title-input" value={project.title} onChange={(event) => setProject({ ...project, title: event.target.value })} /></div>
+        <div className="editor-brand">
+          <Brand compact />
+          <label className="sr-only" htmlFor="project-title">Project title</label>
+          <input id="project-title" className="project-title-input" value={project.title} onChange={(event) => setProject({ ...project, title: event.target.value })} />
+          <Link href="/projects" className="project-menu" aria-label="Back to projects"><ChevronDown /></Link>
+          <span className="toolbar-divider" />
+          <button className="icon-button" type="button" aria-label="Undo" disabled={!canUndo} onClick={undo} data-testid="undo"><Undo2 /></button>
+          <button className="icon-button" type="button" aria-label="Redo" disabled={!canRedo} onClick={redo} data-testid="redo"><Redo2 /></button>
+          <button className={`save-status save-${saveState}`} type="button" disabled={saveState !== "error"} onClick={() => void flushPendingChanges().catch(() => undefined)} title={saveState === "error" ? "Retry saving changes" : saveLabel}>{saveState === "saved" ? <Check /> : <Cloud />}<span>{saveState === "saved" ? "Saved" : saveLabel}</span></button>
+        </div>
         <div className="editor-history">
           <nav className="editor-mode-switch" aria-label="Editor mode">
             <button className={mode === "edit" ? "is-active" : ""} type="button" onClick={() => setMode("edit")}>Edit</button>
             <button className={mode === "timing" ? "is-active" : ""} type="button" onClick={() => setMode("timing")}>Timing</button>
             <button className={mode === "review" ? "is-active" : ""} type="button" onClick={() => setMode("review")}>Review <span>{uncertain.length}</span></button>
           </nav>
-          <button className="icon-button" type="button" aria-label="Undo" disabled={!canUndo} onClick={undo} data-testid="undo"><Undo2 /></button>
-          <button className="icon-button" type="button" aria-label="Redo" disabled={!canRedo} onClick={redo} data-testid="redo"><Redo2 /></button>
-          <button className={`save-status save-${saveState}`} type="button" disabled={saveState !== "error"} onClick={() => void flushPendingChanges().catch(() => undefined)} title={saveState === "error" ? "Retry saving changes" : saveLabel}>{saveState === "saved" ? <Check /> : <Cloud />}{saveLabel}</button>
         </div>
         <div className="editor-actions">
           <button className="icon-button" type="button" aria-label="Keyboard shortcuts" onClick={() => setShortcutsOpen(true)}><HelpCircle /></button>
-          <Link className="button button-small" href={`/projects/${project.id}/practice`}>Practice</Link>
+          <Link className="button button-small editor-practice-button" href={`/projects/${project.id}/practice`}><CirclePlay /> Practice</Link>
           <button className="button button-primary button-small" type="button" onClick={() => setExportOpen(true)} data-testid="open-export"><Download size={15} /> Export</button>
           <Link className="icon-button" href={`/projects/${project.id}/settings`} aria-label="Project settings"><Settings /></Link>
         </div>
@@ -325,20 +367,20 @@ export function EditorClient({ projectId }: { projectId: string }) {
       ) : mode === "timing" ? (
         <div className="timing-loading">Loading timing map…</div>
       ) : <div className={`editor-workspace mode-${mode}`}>
-        <div className="editor-main">
-          <NotationView project={project} events={events} selectedIds={selectedIds} currentTime={transport.currentTime} onSelect={selectOne} />
+        <div className={`editor-main${gridCollapsed ? " is-grid-collapsed" : ""}`}>
           <Waveform project={project} currentTime={transport.currentTime} loop={transport.loop} peaks={waveform} onSeek={transport.seek} onLoopChange={transport.setLoop} />
+          <NotationView project={project} events={events} selectedIds={selectedIds} currentTime={transport.currentTime} onSelect={selectOne} onSeek={transport.seek} />
           <div className="grid-tools">
-            <div className="grid-tools-group"><Grid3X3 /><strong>Drum grid</strong><span>{events.length} hits</span></div>
+            <div className="grid-tools-group"><Grid3X3 /><strong>Instrument lanes</strong><span>{events.length} hits</span><button className="grid-visibility" type="button" onClick={() => setGridCollapsed((value) => !value)}>{gridCollapsed ? "Show" : "Hide"} {gridCollapsed ? <PanelBottomOpen /> : <PanelBottomClose />}</button></div>
             <div className="grid-tools-group">
               <label>Snap <select value={snap} onChange={(event) => setSnap(event.target.value as SnapValue)} data-testid="snap-select"><option value="off">Off</option><option value="quarter">1/4</option><option value="eighth">1/8</option><option value="sixteenth">1/16</option><option value="thirty-second">1/32</option><option value="triplet">Triplet · beta</option></select></label>
               <button className={`icon-button${confidenceOverlay || mode === "review" ? " is-active" : ""}`} type="button" onClick={() => setConfidenceOverlay((value) => !value)} aria-label="Toggle confidence overlay">{confidenceOverlay || mode === "review" ? <Eye /> : <EyeOff />}</button>
               <div className="zoom-control"><button type="button" onClick={() => setZoom((value) => Math.max(1, value - .25))} aria-label="Zoom out"><Minus /></button><span>{Math.round(zoom * 100)}%</span><button type="button" onClick={() => setZoom((value) => Math.min(4, value + .25))} aria-label="Zoom in"><Plus /></button></div>
             </div>
           </div>
-          <DrumGrid events={events} duration={project.durationSeconds} bpm={project.bpm} beatsPerMeasure={project.beatsPerMeasure} selectedIds={selectedIds} snap={snap} zoom={zoom} confidenceOverlay={confidenceOverlay || mode === "review"} onAdd={addAt} onSelect={setSelectedIds} onMove={moveSelected} />
+          {!gridCollapsed && <DrumGrid events={events} duration={project.durationSeconds} bpm={project.bpm} beatsPerMeasure={project.beatsPerMeasure} selectedIds={selectedIds} snap={snap} zoom={zoom} confidenceOverlay={confidenceOverlay || mode === "review"} onAdd={addAt} onSelect={setSelectedIds} onMove={moveSelected} onDuplicate={duplicate} onDeleteIds={deleteIds} onChangeInstrument={changeInstrumentFor} onQuantize={quantizeIds} onMarkCorrect={markCorrect} onLoopMeasure={loopMeasure} onOpenTiming={openMeasureTiming} />}
         </div>
-        <NoteInspector selected={selected} uncertainCount={uncertain.length} onChange={changeSelected} onReviewNext={reviewNext} onDelete={deleteSelected} />
+        <NoteInspector key={selected[0]?.id ?? mode} selected={selected} uncertainCount={uncertain.length} reviewMode={mode === "review"} onChange={changeSelected} onReviewNext={reviewNext} onDelete={deleteSelected} onClose={() => setSelectedIds(new Set())} />
       </div>}
       <TransportBar />
       {exportOpen && <ExportModal project={project} events={events} beforeExport={flushPendingChanges} onClose={() => setExportOpen(false)} />}

@@ -65,11 +65,11 @@ This plan continues the existing architecture. It does not rebuild the applicati
 ### P1.3 Product/editor architecture
 
 - [x] Add explicit Edit, Timing, Review and Practice modes.
-- [ ] Make notation readable, paginated/chunked and primary; preserve event selection and current-measure highlighting.
+- [x] Make notation readable, paginated/chunked and primary; preserve event selection and current-measure highlighting.
 - [x] Build the Timing timeline and actions from P0.4.
 - [ ] Build dedicated Review navigation, accept/delete/reassign/listen-around-note actions.
-- [ ] Add contextual note and measure menus.
-- [ ] Make the inspector contextual/collapsible and the transport/mixer denser and clearer.
+- [x] Add contextual note and measure menus.
+- [x] Make the inspector contextual/collapsible and the transport/mixer denser and clearer.
 - [x] Add useful error/not-found states and remove broad demo fallback on API 404s.
 
 ### P1.4 Production environment
@@ -91,11 +91,11 @@ This plan continues the existing architecture. It does not rebuild the applicati
 
 ## P2 — important polish
 
-- [ ] Redesign the homepage around the live synchronized product proof and remove clipped/unsupported claims.
+- [x] Redesign the homepage around the live synchronized product proof and remove clipped/unsupported claims.
 - [ ] Refine upload, processing, library, auth, settings and admin hierarchy using documented tokens/components.
-- [ ] Add polished editor modes, compact mixer mutes, snapping preview and clearer bar/beat/hit states.
+- [x] Add polished editor modes, compact mixer mutes, snapping controls and clearer bar/beat/hit states.
 - [ ] Add Practice speed presets, arbitrary speed and loop-count-based auto speed progression.
-- [ ] Complete mobile practice/review/basic-correction flows and tablet layouts.
+- [x] Complete mobile practice/review/basic-correction flows and tablet layouts.
 - [ ] Verify visible focus, keyboard menus/dialogs, non-color states, reduced motion and supplementary notation text.
 - [ ] Benchmark 30-second, 3-, 6- and 12-minute projects and thousands of events; optimize only measured bottlenecks.
 - [ ] Run Chromium, Firefox and WebKit desktop/tablet/mobile coverage, including Safari audio constraints.
@@ -114,7 +114,7 @@ This plan continues the existing architecture. It does not rebuild the applicati
 
 - [x] `docs/COMPLETION_AUDIT.md`
 - [x] `docs/FINAL_IMPLEMENTATION_PLAN.md`
-- [ ] `docs/DESIGN_SYSTEM.md`
+- [x] `docs/DESIGN_SYSTEM.md`
 - [x] `PROVIDER_INTEGRATIONS.md`
 - [x] `OPERATIONS.md`
 - [x] `INCIDENT_RESPONSE.md`

@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronDown, ChevronLeft, ChevronRight, Repeat2 } from "lucide-react";
 import { useRef, useState } from "react";
 import type { DrumProject } from "@/lib/domain";
 
@@ -36,10 +37,22 @@ export function Waveform({ project, currentTime, loop, peaks, onSeek, onLoopChan
     dragStart.current = null;
     setPreview(null);
   };
+  const measureDuration = project.beatsPerMeasure * 60 / project.bpm;
+  const activeMeasure = Math.max(0, Math.floor(currentTime / measureDuration));
+  const measureCount = Math.max(1, Math.ceil(project.durationSeconds / measureDuration));
+  const rangeStart = Math.max(0, Math.min(measureCount - 1, activeMeasure - activeMeasure % 4));
+  const rangeEnd = Math.min(measureCount, rangeStart + 4);
   return (
     <section className="editor-waveform-panel" aria-label="Audio waveform">
+      <div className="waveform-toolbar">
+        <button className="waveform-range" type="button" title="Visible measure range">Measure {rangeStart + 1}–{rangeEnd} <ChevronDown /></button>
+        <button className={`waveform-loop-button${loop.enabled ? " is-active" : ""}`} type="button" aria-pressed={loop.enabled} onClick={() => onLoopChange({ ...loop, enabled: !loop.enabled })}><Repeat2 /> Loop</button>
+        <span className="waveform-spacer" />
+        <button className="waveform-nav" type="button" aria-label="Previous measure" onClick={() => onSeek(Math.max(0, currentTime - measureDuration))}><ChevronLeft /></button>
+        <button className="waveform-nav" type="button" aria-label="Next measure" onClick={() => onSeek(Math.min(project.durationSeconds, currentTime + measureDuration))}><ChevronRight /></button>
+      </div>
       <div className="waveform-ruler">
-        {Array.from({ length: 7 }, (_, index) => <span key={index} style={{ left: `${index / 6 * 100}%` }}>{index * 2 + 1}</span>)}
+        {Array.from({ length: 7 }, (_, index) => <span key={index} style={{ left: `${index / 6 * 100}%` }}>{Math.min(measureCount, index * 2 + 1)}</span>)}
         <em>Click to seek · drag to set a loop</em>
       </div>
       <div className="editor-waveform" onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} data-testid="editor-waveform">

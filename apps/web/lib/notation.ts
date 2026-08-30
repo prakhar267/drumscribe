@@ -77,16 +77,20 @@ export async function engraveMusicXml(musicXml: string, measureCount: number) {
   try {
     toolkit.setOptions({
       adjustPageHeight: true,
-      breaks: "none",
+      breaks: "encoded",
       footer: "none",
       header: "none",
-      pageHeight: 1200,
+      mnumInterval: 1,
+      minLastJustification: 0,
+      pageHeight: 3200,
       pageMarginBottom: 50,
       pageMarginLeft: 90,
       pageMarginRight: 60,
       pageMarginTop: 80,
-      pageWidth: Math.min(120_000, Math.max(2_400, measureCount * 440)),
-      scale: 42,
+      pageWidth: Math.min(4_800, Math.max(3_600, measureCount * 500)),
+      scale: 100,
+      spacingStaff: 12,
+      spacingSystem: 24,
       svgViewBox: true,
     });
     if (!toolkit.loadData(musicXml)) throw new Error("The score could not be loaded.");

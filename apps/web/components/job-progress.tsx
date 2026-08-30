@@ -4,13 +4,17 @@ import Link from "next/link";
 import { Check, ExternalLink, RotateCcw, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/api/client";
-import { demoProject } from "@/lib/demo-data";
+import { demoProject, demoWaveform } from "@/lib/demo-data";
 import { PROCESSING_STAGES } from "@/lib/domain";
+import { formatTime } from "@/lib/file-validation";
 
 export function JobProgress({ jobId }: { jobId: string }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [ready, setReady] = useState(false);
-  const [projectId, setProjectId] = useState(demoProject.id);
+  const [projectId, setProjectId] = useState(jobId === "demo-job" ? demoProject.id : "");
+  const [projectTitle, setProjectTitle] = useState(jobId === "demo-job" ? demoProject.title : "Your recording");
+  const [projectDuration, setProjectDuration] = useState<number | null>(jobId === "demo-job" ? demoProject.durationSeconds : null);
+  const [projectPeaks, setProjectPeaks] = useState<number[]>(jobId === "demo-job" ? demoWaveform : []);
   const [reportedProgress, setReportedProgress] = useState<number | null>(null);
   const [terminal, setTerminal] = useState<"FAILED" | "CANCELLED" | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -33,6 +37,21 @@ export function JobProgress({ jobId }: { jobId: string }) {
     }, 650);
     return () => window.clearInterval(timer);
   }, [jobId]);
+
+  useEffect(() => {
+    if (jobId === "demo-job" || !projectId) return;
+    let active = true;
+    void Promise.all([
+      api.getProject(projectId),
+      api.getWaveformPeaks(projectId).catch(() => null),
+    ]).then(([result, peaks]) => {
+      if (!active) return;
+      setProjectTitle(result.project.title);
+      setProjectDuration(result.project.durationSeconds);
+      if (peaks?.length) setProjectPeaks(peaks);
+    }).catch(() => undefined);
+    return () => { active = false; };
+  }, [jobId, projectId]);
 
   useEffect(() => {
     if (jobId === "demo-job") return;
@@ -67,6 +86,10 @@ export function JobProgress({ jobId }: { jobId: string }) {
     const complete = PROCESSING_STAGES.slice(0, activeIndex).reduce((sum, stage) => sum + stage.weight, 0);
     return Math.min(96, complete + PROCESSING_STAGES[activeIndex].weight * 0.55);
   }, [activeIndex, ready, reportedProgress]);
+  const visiblePeaks = useMemo(() => Array.from({ length: 48 }, (_, index) => {
+    if (!projectPeaks.length) return 0.12;
+    return projectPeaks[Math.min(projectPeaks.length - 1, Math.floor(index / 48 * projectPeaks.length))];
+  }), [projectPeaks]);
 
   const retry = async () => {
     setActionPending(true);
@@ -104,9 +127,13 @@ export function JobProgress({ jobId }: { jobId: string }) {
         <div className="processing-number"><strong>{Math.round(progress)}</strong><span>Approximate progress</span></div>
       </div>
       <div className="processing-content">
-        <p className="eyebrow">{jobId === "demo-job" ? "Neon Room Groove" : "Drum transcription"}</p>
+        <p className="eyebrow">{projectTitle}</p>
         <h1>{ready ? "Your chart is ready." : terminal === "FAILED" ? "We couldn’t finish this chart." : terminal === "CANCELLED" ? "Processing cancelled." : PROCESSING_STAGES[activeIndex].label}</h1>
         <p>{ready ? "We found a few sections that may need review. Your original timing is preserved, and every generated hit remains editable." : terminal ? statusMessage ?? (terminal === "FAILED" ? "No project data was made public. You can retry the processing job safely." : "Your uploaded project remains private and can be restarted.") : cancelRequested ? statusMessage : "You can safely close this page. Processing continues in the background and the project will be waiting in your library."}</p>
+        <div className="processing-track" aria-label="Recording being processed">
+          <div><strong>{projectTitle}</strong><span>{projectDuration === null ? "Reading recording metadata…" : `${formatTime(projectDuration)} · Private upload`}</span></div>
+          <div className="processing-waveform" aria-hidden="true">{visiblePeaks.map((peak, index) => <i key={index} style={{ height: `${Math.max(.08, peak) * 100}%` }} />)}</div>
+        </div>
         {pollIssue && <p className="form-error" role="alert">{pollIssue}</p>}
         <div className="stage-list" aria-label="Processing stages">
           {PROCESSING_STAGES.map((stage, index) => (

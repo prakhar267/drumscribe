@@ -149,3 +149,15 @@ These paths are acceptable only for test fixtures and clearly labelled offline d
 ## Completion verdict
 
 The repository is a substantial, well-tested product platform and editor. It is not launchable as an AI transcription product because the core audio intelligence is still fake in the only credential-free execution path, no commercial provider is implemented, no real quality baseline exists, and timing correction is absent. Production must continue to fail closed until those gates are satisfied.
+
+## Post-audit completion update
+
+The findings above preserve the takeover baseline. Subsequent implementation has closed the repository-owned gaps without rewriting that historical evidence:
+
+- Production-commercial separation, transcription and beat/downbeat provider adapters now implement authenticated request/poll/result boundaries, metadata normalization, idempotency, timeouts and opt-in live contract tests. Production startup rejects fixture, development and unapproved providers and has no silent fallback.
+- Canonical beats, downbeats, tempo segments, bar-one offset, timing edits and selective requantization now persist through the API and editor while preserving raw onsets and deliberate manual corrections.
+- The ML workspace now provides validated manifests, canonicalization, leakage-safe splits, deterministic augmentation, feature caching, configuration-driven training, checkpoints/resume/early stopping, experiment lineage, benchmark reports and licensing gates.
+- The score-first product redesign now provides readable paginated notation, Edit/Timing/Review/Practice modes, contextual note and measure actions, a compact expandable inspector, synchronized waveform/grid/transport, responsive review/basic correction, a first-fold live homepage proof and contextual processing/library states.
+- The requested provider, operations, incident-response, retention, launch, design-system and implementation-plan documents, plus local/hosted CI parity, are now present.
+
+The remaining launch gates are external or evidence-dependent: approved provider credentials and contracts, rights-cleared real-song benchmark material with measured results, production cloud/domain/database/queue/storage/email/monitoring configuration, legal approval, staging security/restore/browser acceptance and resolution of the GitHub Actions billing/spending-limit block. The credential-free development journey remains explicitly labelled synthetic; it is not evidence of transcription quality.

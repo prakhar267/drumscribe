@@ -19,17 +19,17 @@ export type Instrument = (typeof INSTRUMENTS)[number];
 export const EDITOR_ROWS: Instrument[] = [
   "CRASH",
   "RIDE",
-  "RIDE_BELL",
   "OPEN_HIHAT",
   "CLOSED_HIHAT",
+  "SNARE",
+  "KICK",
+  "RIDE_BELL",
   "PEDAL_HIHAT",
   "HIGH_TOM",
   "MID_TOM",
   "LOW_TOM",
   "FLOOR_TOM",
   "CROSS_STICK",
-  "SNARE",
-  "KICK",
 ];
 
 export const INSTRUMENT_LABELS: Record<Instrument, string> = {
