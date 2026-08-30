@@ -46,7 +46,7 @@ class TrainingConfig:
     resume_checkpoint: str | None = None
     resume_learning_rate: float | None = None
     device: str = "auto"
-    architecture: Literal["crnn", "spectral_moe"] = "crnn"
+    architecture: Literal["crnn", "spectral_moe", "oaf_cnn"] = "crnn"
     moe_experts: int = 8
     moe_top_k: int = 2
     lr_decay_patience: int = 2
@@ -79,8 +79,8 @@ class TrainingConfig:
             raise TrainingError("dropout must be between zero and one")
         if self.device not in {"auto", "cpu", "cuda", "mps"}:
             raise TrainingError("device must be auto, cpu, cuda, or mps")
-        if self.architecture not in {"crnn", "spectral_moe"}:
-            raise TrainingError("architecture must be crnn or spectral_moe")
+        if self.architecture not in {"crnn", "spectral_moe", "oaf_cnn"}:
+            raise TrainingError("architecture must be crnn, spectral_moe, or oaf_cnn")
         if self.moe_experts < 2 or not 1 <= self.moe_top_k <= self.moe_experts:
             raise TrainingError("MoE expert count or top-k routing is invalid")
         if self.lr_decay_patience < 1 or not 0 < self.lr_decay_factor < 1:
@@ -190,8 +190,58 @@ def build_model(config: TrainingConfig, *, mel_bands: int, class_count: int):
             output = self.output_norm(contextual + routed)
             return self.onset_head(output), self.velocity_head(output)
 
+    class OaFStyleDrumOnsetNetwork(nn.Module):
+        """Frequency-aware onset network inspired by the public OaF architecture.
+
+        This is a clean-room PyTorch implementation trained only on DrumScribe's
+        licensed corpus. It does not load or redistribute upstream model weights.
+        """
+
+        def __init__(self) -> None:
+            super().__init__()
+            self.spectral_encoder = nn.Sequential(
+                nn.Conv2d(1, 16, kernel_size=3, padding=1),
+                nn.BatchNorm2d(16),
+                nn.ReLU(),
+                nn.Conv2d(16, 16, kernel_size=3, padding=1),
+                nn.BatchNorm2d(16),
+                nn.ReLU(),
+                nn.MaxPool2d(kernel_size=(1, 2)),
+                nn.Dropout(config.dropout),
+                nn.Conv2d(16, 32, kernel_size=3, padding=1),
+                nn.BatchNorm2d(32),
+                nn.ReLU(),
+                nn.MaxPool2d(kernel_size=(1, 2)),
+                nn.Dropout(config.dropout),
+            )
+            pooled_bands = mel_bands // 4
+            self.spectral_projection = nn.Sequential(
+                nn.Linear(32 * pooled_bands, 256),
+                nn.ReLU(),
+                nn.Dropout(max(config.dropout, 0.5)),
+            )
+            self.temporal = nn.LSTM(
+                256,
+                config.hidden_size,
+                batch_first=True,
+                bidirectional=True,
+            )
+            width = config.hidden_size * 2
+            self.onset_head = nn.Linear(width, class_count)
+            self.velocity_head = nn.Sequential(nn.Linear(width, class_count), nn.Sigmoid())
+
+        def forward(self, features):
+            encoded = self.spectral_encoder(features.unsqueeze(1))
+            batch, channels, frames, bands = encoded.shape
+            encoded = encoded.permute(0, 2, 1, 3).reshape(batch, frames, channels * bands)
+            projected = self.spectral_projection(encoded)
+            contextual, _ = self.temporal(projected)
+            return self.onset_head(contextual), self.velocity_head(contextual)
+
     if config.architecture == "spectral_moe":
         return SpectralMoEDrumOnsetNetwork()
+    if config.architecture == "oaf_cnn":
+        return OaFStyleDrumOnsetNetwork()
     return DrumOnsetNetwork()
 
 
@@ -230,7 +280,7 @@ def experiment_metadata(
 
 
 def run_training(config: TrainingConfig) -> Path:
-    """Train a CRNN onset/velocity model and emit versioned reproducibility metadata."""
+    """Train a configured onset/velocity model and emit reproducibility metadata."""
     try:
         import torch
         import torch.nn.functional as functional
@@ -613,12 +663,15 @@ def _validation_metrics(
             continue
         candidates: list[tuple[float, float, int]] = []
         for peak_distance in _peak_distance_candidates():
+            peak_tracks = _calibration_peak_tracks(
+                evaluated,
+                class_index=index,
+                peak_distance_frames=int(peak_distance),
+            )
             for threshold in _threshold_candidates():
-                score = _evaluated_class_f1(
-                    evaluated,
-                    class_index=index,
+                score = _calibration_peak_f1(
+                    peak_tracks,
                     threshold=float(threshold),
-                    peak_distance_frames=int(peak_distance),
                     tolerance_frames=tolerance_frames,
                 )
                 candidates.append((score, float(threshold), int(peak_distance)))
@@ -688,6 +741,47 @@ def _evaluated_class_f1(
             predictions,
             tolerance=tolerance_frames,
         )
+        true_positive += tp
+        false_positive += fp
+        false_negative += fn
+    denominator = 2 * true_positive + false_positive + false_negative
+    return 2 * true_positive / denominator if denominator else 0.0
+
+
+def _calibration_peak_tracks(
+    evaluated: list[tuple[np.ndarray, np.ndarray]],
+    *,
+    class_index: int,
+    peak_distance_frames: int,
+) -> list[tuple[list[int], list[tuple[int, float]]]]:
+    """Cache threshold-independent local maxima for one calibration distance."""
+    tracks = []
+    for probabilities, targets in evaluated:
+        class_probabilities = probabilities[:, class_index]
+        frames = _peak_frames(
+            class_probabilities,
+            threshold=-math.inf,
+            minimum_distance_frames=peak_distance_frames,
+        )
+        tracks.append(
+            (
+                np.flatnonzero(targets[:, class_index] > 0).tolist(),
+                [(frame, float(class_probabilities[frame])) for frame in frames],
+            )
+        )
+    return tracks
+
+
+def _calibration_peak_f1(
+    tracks: list[tuple[list[int], list[tuple[int, float]]]],
+    *,
+    threshold: float,
+    tolerance_frames: int,
+) -> float:
+    true_positive = false_positive = false_negative = 0
+    for references, candidates in tracks:
+        predictions = [frame for frame, probability in candidates if probability >= threshold]
+        tp, fp, fn = _match_frames(references, predictions, tolerance=tolerance_frames)
         true_positive += tp
         false_positive += fp
         false_negative += fn
@@ -810,9 +904,14 @@ def _peak_frames(
         return candidates
     ranked = sorted(candidates, key=lambda frame: (-float(probabilities[frame]), frame))
     selected: list[int] = []
+    blocked = np.zeros(len(probabilities), dtype=bool)
     for candidate in ranked:
-        if all(abs(candidate - existing) >= minimum_distance_frames for existing in selected):
-            selected.append(candidate)
+        if blocked[candidate]:
+            continue
+        selected.append(candidate)
+        start = max(0, candidate - minimum_distance_frames + 1)
+        stop = min(len(blocked), candidate + minimum_distance_frames)
+        blocked[start:stop] = True
     return sorted(selected)
 
 

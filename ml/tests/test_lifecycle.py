@@ -9,6 +9,13 @@ from drumscribe_music import Instrument
 
 from drumscribe_ml.calibration import calibrate_confidence
 from drumscribe_ml.checkpoint_eval import _evidence_level
+from drumscribe_ml.ensemble import (
+    CheckpointReference,
+    EnsembleConfig,
+    EnsembleRule,
+    blend_probabilities,
+    decode_probabilities,
+)
 from drumscribe_ml.lifecycle import (
     PreparationConfig,
     augmentation_recipe,
@@ -21,6 +28,8 @@ from drumscribe_ml.training import (
     TrainingConfig,
     TrainingError,
     _apply_family_competition,
+    _calibration_peak_f1,
+    _calibration_peak_tracks,
     _dilate_targets,
     _epoch_records,
     _family_classification_loss,
@@ -32,6 +41,7 @@ from drumscribe_ml.training import (
     _resume_validation_compatible,
     _threshold_candidates,
     _training_batches,
+    build_model,
     experiment_metadata,
 )
 
@@ -216,6 +226,23 @@ def test_peak_frames_suppress_nearby_duplicates_by_probability():
         _peak_frames(probabilities, threshold=0.5, minimum_distance_frames=0)
 
 
+def test_cached_calibration_peaks_match_direct_evaluation():
+    class_index = 0
+    probabilities = np.array([[0.1], [0.8], [0.2], [0.9], [0.1]], dtype=np.float32)
+    targets = np.array([[0], [1], [0], [1], [0]], dtype=np.float32)
+    evaluated = [(probabilities, targets)]
+    tracks = _calibration_peak_tracks(
+        evaluated,
+        class_index=class_index,
+        peak_distance_frames=1,
+    )
+    assert _calibration_peak_f1(
+        tracks,
+        threshold=0.5,
+        tolerance_frames=0,
+    ) == pytest.approx(1)
+
+
 def test_family_competition_keeps_strongest_hihat_and_ride_articulation():
     probabilities = np.zeros((2, len(TRAINING_CLASSES)), dtype=np.float32)
     class_index = {instrument: index for index, instrument in enumerate(TRAINING_CLASSES)}
@@ -361,3 +388,59 @@ def test_checkpoint_evidence_labels_keep_test_and_training_distinct():
         _evidence_level(evaluation_only=True, split="validation")
         == "synthetic_reserved_validation_probe"
     )
+
+
+def test_oaf_style_model_preserves_frame_alignment():
+    torch = pytest.importorskip("torch")
+    config = TrainingConfig(
+        "prepared.json",
+        "/tmp",
+        "oaf-shape",
+        architecture="oaf_cnn",
+        hidden_size=32,
+    )
+    model = build_model(config, mel_bands=80, class_count=len(TRAINING_CLASSES))
+    onsets, velocities = model(torch.zeros((2, 127, 80)))
+    assert onsets.shape == (2, 127, len(TRAINING_CLASSES))
+    assert velocities.shape == onsets.shape
+
+
+def test_ensemble_blends_and_decodes_with_fixed_rules():
+    class_count = len(TRAINING_CLASSES)
+    primary = np.full((5, class_count), 0.1, dtype=np.float32)
+    secondary = np.full((5, class_count), 0.2, dtype=np.float32)
+    rules = {
+        instrument.value: EnsembleRule(
+            strategy="convex",
+            secondary_weight=0.25,
+            threshold=0.15,
+            peak_distance_frames=1,
+        )
+        for instrument in TRAINING_CLASSES
+    }
+    primary[2, 0] = 0.8
+    secondary[2, 0] = 0.6
+    rules[TRAINING_CLASSES[1].value] = EnsembleRule(
+        strategy="maximum", threshold=0.19, peak_distance_frames=1
+    )
+    rules[TRAINING_CLASSES[2].value] = EnsembleRule(
+        strategy="noisy_or", threshold=0.27, peak_distance_frames=1
+    )
+    blended = blend_probabilities(primary, secondary, rules)
+    assert blended[2, 0] == pytest.approx(0.75)
+    assert blended[0, 1] == pytest.approx(0.2)
+    assert blended[0, 2] == pytest.approx(0.28)
+    decoded = decode_probabilities(blended, rules)
+    assert decoded[TRAINING_CLASSES[0].value] == [2]
+    assert decoded[TRAINING_CLASSES[1].value] == [4]
+
+
+def test_ensemble_config_requires_rules_for_every_class():
+    reference = CheckpointReference(model_version="fixture", sha256="0" * 64)
+    with pytest.raises(TrainingError, match="cover every class"):
+        EnsembleConfig(
+            model_version="fixture",
+            primary=reference,
+            secondary=reference,
+            rules={},
+        )

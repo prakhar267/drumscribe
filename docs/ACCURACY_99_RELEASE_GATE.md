@@ -49,6 +49,16 @@ failed to beat the protected validation result. The test split is now opened and
 must not be used for future tuning. See
 `docs/benchmarks/GROOVE_90_TARGET_ACCURACY.md`.
 
+A clean-room frequency-aware 2D CNN plus bidirectional LSTM subsequently reached
+0.8667 supported-class macro F1 on the same 120 natural validation recordings. A
+frozen, hash-pinned per-class ensemble with the protected spectral-MoE checkpoint
+raised validation to 0.8845. This is 3.40 points above the prior 0.8505 validation
+baseline but still 1.55 points below the interim 0.90 target. No fresh sealed test
+set exists, so the opened Groove test split was not rerun and the ensemble is not
+approved for a production accuracy claim or paid launch. Low tom and tambourine
+still lack natural validation support. See
+`docs/benchmarks/GROOVE_OAF_ENSEMBLE_90_TARGET.md`.
+
 ## Model path
 
 1. Import E-GMD through `drumscribe-ml import-egmd` on dedicated training compute. Its official train, validation and test assignments are preserved, and every kit rendering of one performance stays in the same leakage group.

@@ -26,6 +26,10 @@ uv run --project ml --extra train drumscribe-ml evaluate-checkpoint ./best.pt \
 uv run --project ml --extra train drumscribe-ml evaluate-checkpoint ./best.pt \
   ./prepared/prepared-dataset.json ./sealed-test-report.json --split test \
   --fixed-checkpoint-thresholds --family-competition
+uv run --project ml --extra train drumscribe-ml evaluate-ensemble \
+  ml/configs/groove-oaf-v10-spectral-v7-ensemble-v1.json \
+  ./oaf-best.pt ./spectral-best.pt ./prepared/prepared-dataset.json \
+  ./ensemble-validation.json --split validation
 uv sync --project ml --extra train
 uv run --project ml drumscribe-ml train training-config.json
 uv run --project ml drumscribe-benchmark benchmark-input.json --json report.json --html report.html
@@ -87,6 +91,19 @@ pressure without changing validation or test labels. One-shot generation filters
 tracks that cannot fit the requested hit pattern and deterministically selects a
 maximum collision-free placement, so dense augmentation requests do not fail at
 random.
+
+Training also supports `oaf_cnn`, a clean-room frequency-aware 2D CNN plus
+bidirectional LSTM onset architecture. It is trained only on the configured
+licensed corpus and does not load or redistribute upstream weights. Calibration
+caches threshold-independent local maxima and uses bounded non-maximum
+suppression, preserving the metric while shortening threshold searches.
+
+The frozen ensemble evaluator combines two frame-aligned checkpoints with
+per-class `convex`, `maximum`, or `noisy_or` rules. The config covers every
+canonical class, freezes thresholds and peak distances, and pins both checkpoint
+SHA-256 hashes. Evaluation never fits calibration on the requested split. The
+current ensemble is validation evidence only; it has not been evaluated on a new
+sealed test set and is not production-approved.
 No checkpoint is production-approved merely because this code can train it.
 
 Validation confidence can be calibrated from an NPZ containing `logits` and

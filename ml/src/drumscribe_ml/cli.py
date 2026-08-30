@@ -10,6 +10,7 @@ import numpy as np
 from .calibration import calibrate_confidence
 from .checkpoint_eval import evaluate_checkpoint
 from .egmd import import_egmd_dataset
+from .ensemble import evaluate_ensemble
 from .groove import import_groove_dataset
 from .lifecycle import PreparationConfig, prepare_dataset
 from .manifest import load_manifest, split_payload
@@ -101,6 +102,14 @@ def main(argv: list[str] | None = None) -> int:
     evaluate.add_argument("--split", choices=("train", "validation", "test"))
     evaluate.add_argument("--fixed-checkpoint-thresholds", action="store_true")
     evaluate.add_argument("--family-competition", action="store_true")
+    evaluate_ensemble_parser = command.add_parser("evaluate-ensemble")
+    evaluate_ensemble_parser.add_argument("config", type=Path)
+    evaluate_ensemble_parser.add_argument("primary_checkpoint", type=Path)
+    evaluate_ensemble_parser.add_argument("secondary_checkpoint", type=Path)
+    evaluate_ensemble_parser.add_argument("prepared_dataset", type=Path)
+    evaluate_ensemble_parser.add_argument("output", type=Path)
+    evaluate_ensemble_parser.add_argument("--device", default="auto")
+    evaluate_ensemble_parser.add_argument("--split", choices=("train", "validation", "test"))
     args = parser.parse_args(argv)
     if args.command == "prepare":
         destination = prepare_dataset(
@@ -249,6 +258,18 @@ def main(argv: list[str] | None = None) -> int:
             split=args.split,
             fixed_checkpoint_thresholds=args.fixed_checkpoint_thresholds,
             family_competition=args.family_competition,
+        )
+        print(output.read_text(encoding="utf-8"), end="")
+        return 0
+    if args.command == "evaluate-ensemble":
+        output = evaluate_ensemble(
+            args.config,
+            args.primary_checkpoint,
+            args.secondary_checkpoint,
+            args.prepared_dataset,
+            args.output,
+            device=args.device,
+            split=args.split,
         )
         print(output.read_text(encoding="utf-8"), end="")
         return 0

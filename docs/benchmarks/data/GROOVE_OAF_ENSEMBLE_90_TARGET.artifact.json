@@ -1,0 +1,229 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "DrumScribe 90% Accuracy Attempt: Validation Result",
+    "description": "Technical validation report for the frozen frequency-aware Groove ensemble.",
+    "generatedAt": "2026-08-31T00:00:00+05:30",
+    "sources": [
+      {
+        "id": "model-evidence",
+        "label": "Comparable full-validation model results",
+        "path": "ml/configs/groove-oaf-v10-spectral-v7-ensemble-v1.json",
+        "query": {
+          "engine": "DuckDB-compatible SQL",
+          "language": "sql",
+          "description": "Reconstructs the three comparable full-validation headline results from frozen benchmark evidence.",
+          "executed_at": "2026-08-31T00:00:00+05:30",
+          "filters": [
+            "Official untouched Groove validation split only",
+            "120 recordings",
+            "12 naturally supported exact classes",
+            "Two-frame onset tolerance"
+          ],
+          "metric_definitions": [
+            "macro_f1 is the unweighted mean of pooled exact-class onset F1 over the 12 naturally supported Groove classes",
+            "gap_to_target equals macro_f1 minus 0.90"
+          ],
+          "sql": "WITH model_comparison(model_stage, macro_f1, gap_to_target, validation_recordings, supported_classes, evidence, test_status) AS (VALUES ('Spectral-MoE baseline', 0.8504676113223196, -0.0495323886776804, 120, 12, 'natural_validation', 'prior_model_test_opened'), ('OaF-style checkpoint', 0.8667441968436370, -0.0332558031563630, 120, 12, 'natural_validation', 'not_evaluated'), ('Frozen ensemble', 0.8845011521832195, -0.0154988478167805, 120, 12, 'natural_validation', 'no_fresh_sealed_test')) SELECT * FROM model_comparison"
+        }
+      },
+      {
+        "id": "class-evidence",
+        "label": "Frozen ensemble exact-class validation counts",
+        "path": "ml/configs/groove-oaf-v10-spectral-v7-ensemble-v1.json",
+        "query": {
+          "engine": "DuckDB-compatible SQL",
+          "language": "sql",
+          "description": "Reconstructs per-class F1, support and error counts from the fixed ensemble validation run.",
+          "executed_at": "2026-08-31T00:00:00+05:30",
+          "filters": [
+            "Official untouched Groove validation split only",
+            "Classes with at least one natural reference event",
+            "Frozen ensemble thresholds and peak distances",
+            "Two-frame onset tolerance"
+          ],
+          "metric_definitions": [
+            "f1 equals 2 * true_positive / (2 * true_positive + false_positive + false_negative)",
+            "support is the pooled number of natural reference events over 120 validation recordings",
+            "gap_to_target equals f1 minus 0.90"
+          ],
+          "sql": "WITH per_class_result(instrument, f1, gap_to_target, support, true_positive, false_positive, false_negative, decoder, rank) AS (VALUES ('PEDAL_HIHAT', 0.7338393090813923, -0.1661606909186077, 4114, 2804, 724, 1310, '30% spectral / 70% OaF', 12), ('RIDE', 0.7855168601437258, -0.1144831398562742, 1969, 1421, 228, 548, 'OaF', 11), ('OPEN_HIHAT', 0.8062868369351670, -0.0937131630648330, 1461, 1026, 58, 435, '10% spectral / 90% OaF', 10), ('CRASH', 0.8362720403022670, -0.0637279596977330, 630, 498, 63, 132, '95% spectral / 5% OaF', 9), ('RIDE_BELL', 0.8522114347357066, -0.0477885652642934, 492, 395, 40, 97, 'Noisy OR', 8), ('CLOSED_HIHAT', 0.8673270415724202, -0.0326729584275798, 6483, 5560, 778, 923, 'Noisy OR', 7), ('SNARE', 0.9225423885851941, 0.0225423885851941, 11411, 9957, 218, 1454, 'OaF', 6), ('KICK', 0.9503352209854846, 0.0503352209854846, 7994, 7300, 69, 694, 'Noisy OR', 5), ('CROSS_STICK', 0.9626216077828981, 0.0626216077828981, 1008, 940, 5, 68, '70% spectral / 30% OaF', 4), ('HIGH_TOM', 0.9628366859870440, 0.0628366859870440, 1480, 1412, 41, 68, '30% spectral / 70% OaF', 3), ('FLOOR_TOM', 0.9573267103183563, 0.0573267103183563, 2255, 2120, 54, 135, '60% spectral / 40% OaF', 2), ('MID_TOM', 0.9768976897689770, 0.0768976897689770, 306, 296, 4, 10, 'Maximum probability', 1)) SELECT * FROM per_class_result"
+        }
+      },
+      {
+        "id": "benchmark-report",
+        "label": "Frequency-aware Groove ensemble benchmark report",
+        "path": "docs/benchmarks/GROOVE_OAF_ENSEMBLE_90_TARGET.md"
+      }
+    ],
+    "charts": [
+      {
+        "id": "model-comparison",
+        "title": "Supported-class macro F1 by model stage",
+        "subtitle": "120 untouched Groove validation recordings; exact labels; two-frame onset tolerance",
+        "showDescription": true,
+        "intent": "comparison",
+        "question": "How close did each comparable model stage get to the 0.90 target?",
+        "rationale": "A categorical bar comparison shows the stepwise gain and remaining gap more honestly than a trend line.",
+        "comparisonContext": {
+          "baseline": "Protected spectral-MoE validation baseline",
+          "denominator": "Macro average across 12 naturally supported classes",
+          "grain": "Model or decoder",
+          "unit": "F1"
+        },
+        "type": "bar",
+        "dataset": "model_comparison",
+        "sourceId": "model-evidence",
+        "encodings": {
+          "x": {"field": "model_stage", "type": "nominal", "label": "Model stage"},
+          "y": {"field": "macro_f1", "type": "quantitative", "label": "Macro F1", "format": "percent"},
+          "tooltip": [
+            {"field": "gap_to_target", "type": "quantitative", "label": "Gap to 0.90"},
+            {"field": "validation_recordings", "type": "quantitative", "label": "Recordings"},
+            {"field": "supported_classes", "type": "quantitative", "label": "Supported classes"}
+          ]
+        },
+        "referenceLines": [
+          {"axis": "y", "value": 0.9, "label": "Target 90%", "color": "neutral", "lineStyle": "dashed"}
+        ],
+        "palette": {"kind": "sequential", "name": "blue"},
+        "labels": {"values": "all"},
+        "settings": {"orientation": "horizontal", "groupMode": "single", "sort": "ascending", "showValues": true},
+        "surface": {"surface": "card", "viewMode": "visualization"},
+        "valueFormat": "percent",
+        "layout": "full"
+      },
+      {
+        "id": "per-class-result",
+        "title": "Frozen ensemble F1 by supported class",
+        "subtitle": "Natural Groove validation support only; 120 recordings; target reference at 90%",
+        "showDescription": true,
+        "intent": "comparison",
+        "question": "Which exact drum classes still prevent the ensemble from reaching 0.90 macro F1?",
+        "rationale": "Sorted horizontal bars make twelve long instrument labels readable and expose the weakest classes directly.",
+        "comparisonContext": {
+          "baseline": "0.90 target",
+          "denominator": "All reference events for each naturally supported exact class",
+          "grain": "Canonical drum class",
+          "unit": "F1"
+        },
+        "type": "bar",
+        "dataset": "per_class_result",
+        "sourceId": "class-evidence",
+        "encodings": {
+          "x": {"field": "instrument", "type": "nominal", "label": "Instrument"},
+          "y": {"field": "f1", "type": "quantitative", "label": "F1", "format": "percent"},
+          "tooltip": [
+            {"field": "support", "type": "quantitative", "label": "Reference hits"},
+            {"field": "gap_to_target", "type": "quantitative", "label": "Gap to 0.90"},
+            {"field": "decoder", "type": "text", "label": "Decoder"}
+          ]
+        },
+        "referenceLines": [
+          {"axis": "y", "value": 0.9, "label": "Target 90%", "color": "neutral", "lineStyle": "dashed"}
+        ],
+        "palette": {"kind": "sequential", "name": "blue"},
+        "labels": {"values": "all"},
+        "settings": {"orientation": "horizontal", "groupMode": "single", "sort": "ascending", "showValues": true},
+        "surface": {"surface": "card", "viewMode": "visualization"},
+        "valueFormat": "percent",
+        "layout": "full"
+      }
+    ],
+    "tables": [
+      {
+        "id": "per-class-table",
+        "title": "Exact class validation audit",
+        "subtitle": "Frozen decoder, event support and error counts for all 12 naturally supported classes",
+        "showDescription": true,
+        "dataset": "per_class_result",
+        "defaultSort": {"field": "f1", "direction": "asc"},
+        "density": "spacious",
+        "sourceId": "class-evidence",
+        "layout": "full",
+        "columns": [
+          {"field": "instrument", "label": "Instrument", "type": "text"},
+          {"field": "f1", "label": "F1", "type": "percent", "format": "percent"},
+          {"field": "support", "label": "Reference hits", "type": "number", "format": "number"},
+          {"field": "true_positive", "label": "TP", "type": "number", "format": "number"},
+          {"field": "false_positive", "label": "FP", "type": "number", "format": "number"},
+          {"field": "false_negative", "label": "FN", "type": "number", "format": "number"},
+          {"field": "decoder", "label": "Decoder", "type": "text"}
+        ]
+      }
+    ],
+    "blocks": [
+      {"id": "title", "type": "markdown", "body": "# DrumScribe 90% Accuracy Attempt: Validation Result"},
+      {"id": "technical-summary", "type": "markdown", "sourceId": "model-evidence", "body": "## Technical summary\n\n**Best result: 88.45% validation macro F1.** The frozen OaF-style plus spectral ensemble improves the protected 85.05% baseline by 3.40 percentage points, but remains 1.55 points below the requested 90% target. It is therefore not approved for a 90% claim or paid launch.\n\nThis result covers 120 untouched Groove validation recordings and 12 naturally supported exact drum classes at a two-frame onset tolerance. No fresh sealed test set exists, and the previously opened Groove test split was not reused."},
+      {"id": "headline-finding", "type": "markdown", "sourceId": "model-evidence", "body": "## Frequency-aware modeling closed most—but not all—of the gap\n\nThe single frequency-aware checkpoint reached 86.67%. Freezing a per-class decoder across that model and the prior spectral checkpoint raised the same validation cohort to 88.45%. The bars compare only like-for-like full-validation results; the 90% line is a target, not a measured model."},
+      {"id": "model-comparison-block", "type": "chart", "chartId": "model-comparison"},
+      {"id": "class-finding", "type": "markdown", "sourceId": "class-evidence", "body": "## Three cymbal articulations now dominate the remaining error\n\nPedal hi-hat (73.38%), ride (78.55%), and open hi-hat (80.63%) are the weakest supported classes. Kick, cross-stick, high tom, mid tom, and floor tom all exceed 95%. Closing the aggregate gap requires better natural articulation data rather than another aggregate threshold sweep."},
+      {"id": "per-class-chart-block", "type": "chart", "chartId": "per-class-result"},
+      {"id": "per-class-table-block", "type": "table", "tableId": "per-class-table"},
+      {"id": "scope", "type": "markdown", "sourceId": "class-evidence", "body": "## Scope and metric definition\n\nMacro F1 is the unweighted mean of exact-class onset F1 across the 12 classes with natural Groove labels. Each class pools true positives, false positives, and false negatives across all 120 validation recordings, using a ±2-frame match tolerance. Low tom and tambourine have no natural support and are excluded from the supported-class metric; counting both as zero yields 75.81% strict 14-class macro F1."},
+      {"id": "methodology", "type": "markdown", "sourceId": "benchmark-report", "body": "## Model and validation design\n\nThe primary model is a clean-room frequency-aware 2D CNN, projection layer, and bidirectional LSTM trained on the licensed DrumScribe corpus. The secondary model is the protected spectral-MoE checkpoint. Per-class convex, maximum, or noisy-OR probability rules, thresholds, and peak distances were selected on validation and frozen in a config that pins both checkpoint SHA-256 hashes. The new evaluator rejects hash mismatches and never recalibrates on the requested evaluation split."},
+      {"id": "limitations", "type": "markdown", "sourceId": "benchmark-report", "body": "## Limitations and robustness checks\n\n**No generalization claim is available yet.** The only prior Groove test set has already been opened and cannot be reused for tuning or confirmation. This benchmark measures isolated-drum onset classification, not full-mix separation, beat alignment, notation assignment, export, or browser completion. Low tom and tambourine also lack natural validation support.\n\nA low-rate E-GMD continuation regressed to 86.36% and was rejected. YourMT3 and ADTOF research diagnostics were materially weaker on the evaluated slices; ADTOF is additionally excluded from production by its non-commercial model terms."},
+      {"id": "next-steps", "type": "markdown", "body": "## Recommended next steps\n\n1. Freeze this 88.45% ensemble as the comparison baseline.\n2. Collect or license natural pedal/open hi-hat and ride-articulation recordings for development.\n3. Train the frequency-aware model on that material without touching a future test set.\n4. Create a new rights-cleared sealed test set before the next experiment begins.\n5. Require more than 90% on development validation, one-time confirmation on the new sealed set, and the complete full-mix product gates before selling an accuracy claim."},
+      {"id": "further-questions", "type": "markdown", "body": "## Further questions\n\n- How much natural articulation data is required to lift pedal hi-hat and ride above 85% without harming snare and crash?\n- Does the ensemble retain its gain after drum isolation from commercial full mixes?\n- Can the new sealed set supply at least 100 natural events for every canonical class, including low tom and tambourine?"}
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "generatedAt": "2026-08-31T00:00:00+05:30",
+    "status": "ready",
+    "datasets": {
+      "model_comparison": [
+        {"model_stage": "Spectral-MoE baseline", "macro_f1": 0.8504676113223196, "gap_to_target": -0.0495323886776804, "validation_recordings": 120, "supported_classes": 12, "evidence": "natural_validation", "test_status": "prior_model_test_opened"},
+        {"model_stage": "OaF-style checkpoint", "macro_f1": 0.866744196843637, "gap_to_target": -0.033255803156363, "validation_recordings": 120, "supported_classes": 12, "evidence": "natural_validation", "test_status": "not_evaluated"},
+        {"model_stage": "Frozen ensemble", "macro_f1": 0.8845011521832195, "gap_to_target": -0.0154988478167805, "validation_recordings": 120, "supported_classes": 12, "evidence": "natural_validation", "test_status": "no_fresh_sealed_test"}
+      ],
+      "per_class_result": [
+        {"instrument": "PEDAL_HIHAT", "f1": 0.7338393090813923, "gap_to_target": -0.1661606909186077, "support": 4114, "true_positive": 2804, "false_positive": 724, "false_negative": 1310, "decoder": "30% spectral / 70% OaF", "rank": 12},
+        {"instrument": "RIDE", "f1": 0.7855168601437258, "gap_to_target": -0.1144831398562742, "support": 1969, "true_positive": 1421, "false_positive": 228, "false_negative": 548, "decoder": "OaF", "rank": 11},
+        {"instrument": "OPEN_HIHAT", "f1": 0.806286836935167, "gap_to_target": -0.093713163064833, "support": 1461, "true_positive": 1026, "false_positive": 58, "false_negative": 435, "decoder": "10% spectral / 90% OaF", "rank": 10},
+        {"instrument": "CRASH", "f1": 0.836272040302267, "gap_to_target": -0.063727959697733, "support": 630, "true_positive": 498, "false_positive": 63, "false_negative": 132, "decoder": "95% spectral / 5% OaF", "rank": 9},
+        {"instrument": "RIDE_BELL", "f1": 0.8522114347357066, "gap_to_target": -0.0477885652642934, "support": 492, "true_positive": 395, "false_positive": 40, "false_negative": 97, "decoder": "Noisy OR", "rank": 8},
+        {"instrument": "CLOSED_HIHAT", "f1": 0.8673270415724202, "gap_to_target": -0.0326729584275798, "support": 6483, "true_positive": 5560, "false_positive": 778, "false_negative": 923, "decoder": "Noisy OR", "rank": 7},
+        {"instrument": "SNARE", "f1": 0.9225423885851941, "gap_to_target": 0.0225423885851941, "support": 11411, "true_positive": 9957, "false_positive": 218, "false_negative": 1454, "decoder": "OaF", "rank": 6},
+        {"instrument": "KICK", "f1": 0.9503352209854846, "gap_to_target": 0.0503352209854846, "support": 7994, "true_positive": 7300, "false_positive": 69, "false_negative": 694, "decoder": "Noisy OR", "rank": 5},
+        {"instrument": "CROSS_STICK", "f1": 0.9626216077828981, "gap_to_target": 0.0626216077828981, "support": 1008, "true_positive": 940, "false_positive": 5, "false_negative": 68, "decoder": "70% spectral / 30% OaF", "rank": 4},
+        {"instrument": "HIGH_TOM", "f1": 0.962836685987044, "gap_to_target": 0.062836685987044, "support": 1480, "true_positive": 1412, "false_positive": 41, "false_negative": 68, "decoder": "30% spectral / 70% OaF", "rank": 3},
+        {"instrument": "FLOOR_TOM", "f1": 0.9573267103183563, "gap_to_target": 0.0573267103183563, "support": 2255, "true_positive": 2120, "false_positive": 54, "false_negative": 135, "decoder": "60% spectral / 40% OaF", "rank": 2},
+        {"instrument": "MID_TOM", "f1": 0.976897689768977, "gap_to_target": 0.076897689768977, "support": 306, "true_positive": 296, "false_positive": 4, "false_negative": 10, "decoder": "Maximum probability", "rank": 1}
+      ]
+    }
+  },
+  "sources": [
+    {
+      "id": "model-evidence",
+      "label": "Comparable full-validation model results",
+      "path": "ml/configs/groove-oaf-v10-spectral-v7-ensemble-v1.json",
+      "query": {
+        "engine": "DuckDB-compatible SQL",
+        "language": "sql",
+        "description": "Reconstructs the three comparable full-validation headline results from frozen benchmark evidence.",
+        "executed_at": "2026-08-31T00:00:00+05:30",
+        "filters": ["Official untouched Groove validation split only", "120 recordings", "12 naturally supported exact classes", "Two-frame onset tolerance"],
+        "metric_definitions": ["macro_f1 is the unweighted mean of pooled exact-class onset F1 over the 12 naturally supported Groove classes", "gap_to_target equals macro_f1 minus 0.90"],
+        "sql": "WITH model_comparison(model_stage, macro_f1, gap_to_target, validation_recordings, supported_classes, evidence, test_status) AS (VALUES ('Spectral-MoE baseline', 0.8504676113223196, -0.0495323886776804, 120, 12, 'natural_validation', 'prior_model_test_opened'), ('OaF-style checkpoint', 0.8667441968436370, -0.0332558031563630, 120, 12, 'natural_validation', 'not_evaluated'), ('Frozen ensemble', 0.8845011521832195, -0.0154988478167805, 120, 12, 'natural_validation', 'no_fresh_sealed_test')) SELECT * FROM model_comparison"
+      }
+    },
+    {
+      "id": "class-evidence",
+      "label": "Frozen ensemble exact-class validation counts",
+      "path": "ml/configs/groove-oaf-v10-spectral-v7-ensemble-v1.json",
+      "query": {
+        "engine": "DuckDB-compatible SQL",
+        "language": "sql",
+        "description": "Reconstructs per-class F1, support and error counts from the fixed ensemble validation run.",
+        "executed_at": "2026-08-31T00:00:00+05:30",
+        "filters": ["Official untouched Groove validation split only", "Classes with at least one natural reference event", "Frozen ensemble thresholds and peak distances", "Two-frame onset tolerance"],
+        "metric_definitions": ["f1 equals 2 * true_positive / (2 * true_positive + false_positive + false_negative)", "support is the pooled number of natural reference events over 120 validation recordings", "gap_to_target equals f1 minus 0.90"],
+        "sql": "WITH per_class_result(instrument, f1, gap_to_target, support, true_positive, false_positive, false_negative, decoder, rank) AS (VALUES ('PEDAL_HIHAT', 0.7338393090813923, -0.1661606909186077, 4114, 2804, 724, 1310, '30% spectral / 70% OaF', 12), ('RIDE', 0.7855168601437258, -0.1144831398562742, 1969, 1421, 228, 548, 'OaF', 11), ('OPEN_HIHAT', 0.8062868369351670, -0.0937131630648330, 1461, 1026, 58, 435, '10% spectral / 90% OaF', 10), ('CRASH', 0.8362720403022670, -0.0637279596977330, 630, 498, 63, 132, '95% spectral / 5% OaF', 9), ('RIDE_BELL', 0.8522114347357066, -0.0477885652642934, 492, 395, 40, 97, 'Noisy OR', 8), ('CLOSED_HIHAT', 0.8673270415724202, -0.0326729584275798, 6483, 5560, 778, 923, 'Noisy OR', 7), ('SNARE', 0.9225423885851941, 0.0225423885851941, 11411, 9957, 218, 1454, 'OaF', 6), ('KICK', 0.9503352209854846, 0.0503352209854846, 7994, 7300, 69, 694, 'Noisy OR', 5), ('CROSS_STICK', 0.9626216077828981, 0.0626216077828981, 1008, 940, 5, 68, '70% spectral / 30% OaF', 4), ('HIGH_TOM', 0.9628366859870440, 0.0628366859870440, 1480, 1412, 41, 68, '30% spectral / 70% OaF', 3), ('FLOOR_TOM', 0.9573267103183563, 0.0573267103183563, 2255, 2120, 54, 135, '60% spectral / 40% OaF', 2), ('MID_TOM', 0.9768976897689770, 0.0768976897689770, 306, 296, 4, 10, 'Maximum probability', 1)) SELECT * FROM per_class_result"
+      }
+    },
+    {"id": "benchmark-report", "label": "Frequency-aware Groove ensemble benchmark report", "path": "docs/benchmarks/GROOVE_OAF_ENSEMBLE_90_TARGET.md"}
+  ]
+}

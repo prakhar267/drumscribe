@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "modelVersion": "groove-oaf-v10-spectral-v7-ensemble-v1",
+  "models": {
+    "primary": {
+      "modelVersion": "groove-oaf-cnn-articulation-v10",
+      "sha256": "23a9057d2df6bccde14bce72c280f0bbdbe23236ed4c6e785f2e3496f198ff00"
+    },
+    "secondary": {
+      "modelVersion": "groove-egmd-spectral-moe-v7",
+      "sha256": "b98fe251d7c269fb18dd3474be0109aef1bd6c16b4ee9412308388eae1343625"
+    }
+  },
+  "onsetToleranceFrames": 2,
+  "rules": {
+    "KICK": {
+      "strategy": "noisy_or",
+      "threshold": 0.995,
+      "peakDistanceFrames": 6
+    },
+    "SNARE": {
+      "strategy": "convex",
+      "secondaryWeight": 0.0,
+      "threshold": 0.96,
+      "peakDistanceFrames": 3
+    },
+    "CROSS_STICK": {
+      "strategy": "convex",
+      "secondaryWeight": 0.7,
+      "threshold": 0.8,
+      "peakDistanceFrames": 6
+    },
+    "CLOSED_HIHAT": {
+      "strategy": "noisy_or",
+      "threshold": 0.99,
+      "peakDistanceFrames": 4
+    },
+    "OPEN_HIHAT": {
+      "strategy": "convex",
+      "secondaryWeight": 0.1,
+      "threshold": 0.98,
+      "peakDistanceFrames": 8
+    },
+    "PEDAL_HIHAT": {
+      "strategy": "convex",
+      "secondaryWeight": 0.3,
+      "threshold": 0.96,
+      "peakDistanceFrames": 8
+    },
+    "RIDE": {
+      "strategy": "convex",
+      "secondaryWeight": 0.0,
+      "threshold": 0.995,
+      "peakDistanceFrames": 4
+    },
+    "RIDE_BELL": {
+      "strategy": "noisy_or",
+      "threshold": 0.995,
+      "peakDistanceFrames": 8
+    },
+    "CRASH": {
+      "strategy": "convex",
+      "secondaryWeight": 0.95,
+      "threshold": 0.98,
+      "peakDistanceFrames": 4
+    },
+    "HIGH_TOM": {
+      "strategy": "convex",
+      "secondaryWeight": 0.3,
+      "threshold": 0.98,
+      "peakDistanceFrames": 6
+    },
+    "MID_TOM": {
+      "strategy": "maximum",
+      "threshold": 0.99,
+      "peakDistanceFrames": 5
+    },
+    "LOW_TOM": {
+      "strategy": "convex",
+      "secondaryWeight": 0.0,
+      "threshold": 0.99,
+      "peakDistanceFrames": 1
+    },
+    "FLOOR_TOM": {
+      "strategy": "convex",
+      "secondaryWeight": 0.6,
+      "threshold": 0.9,
+      "peakDistanceFrames": 5
+    },
+    "TAMBOURINE": {
+      "strategy": "convex",
+      "secondaryWeight": 0.0,
+      "threshold": 0.99,
+      "peakDistanceFrames": 1
+    }
+  },
+  "validationEvidence": {
+    "preparedDatasetSha256": "9ef041078b1ffd41965b9fabf1933606b5bc86185f28c5f3c57f1348afaf1426",
+    "split": "validation",
+    "recordCount": 120,
+    "supportedClasses": 12,
+    "supportedMacroF1": 0.8845011521832195,
+    "strict14ClassMacroF1": 0.7581438447284739,
+    "testStatus": "not_evaluated_no_fresh_sealed_set",
+    "perClassF1": {
+      "KICK": 0.9503352209854846,
+      "SNARE": 0.9225423885851941,
+      "CROSS_STICK": 0.9626216077828981,
+      "CLOSED_HIHAT": 0.8673270415724202,
+      "OPEN_HIHAT": 0.806286836935167,
+      "PEDAL_HIHAT": 0.7338393090813923,
+      "RIDE": 0.7855168601437258,
+      "RIDE_BELL": 0.8522114347357066,
+      "CRASH": 0.836272040302267,
+      "HIGH_TOM": 0.962836685987044,
+      "MID_TOM": 0.976897689768977,
+      "FLOOR_TOM": 0.9573267103183563
+    }
+  }
+}
