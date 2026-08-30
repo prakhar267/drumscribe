@@ -13,6 +13,7 @@ from .groove import import_groove_dataset
 from .lifecycle import PreparationConfig, prepare_dataset
 from .manifest import load_manifest, split_payload
 from .one_shots import audit_one_shot_catalog
+from .pilot import create_pilot_dataset
 from .quality import evaluate_accuracy_gate
 from .training import TrainingConfig, run_training
 
@@ -61,6 +62,12 @@ def main(argv: list[str] | None = None) -> int:
     one_shots.add_argument("catalog", type=Path)
     one_shots.add_argument("library_root", type=Path)
     one_shots.add_argument("output", type=Path)
+    pilot = command.add_parser("create-pilot")
+    pilot.add_argument("source", type=Path)
+    pilot.add_argument("output", type=Path)
+    pilot.add_argument("--seed", required=True)
+    pilot.add_argument("--train-groups", type=int, default=100)
+    pilot.add_argument("--validation-groups", type=int, default=20)
     args = parser.parse_args(argv)
     if args.command == "prepare":
         destination = prepare_dataset(
@@ -136,6 +143,28 @@ def main(argv: list[str] | None = None) -> int:
             )
         )
         return 0 if audit["trainingReady"] else 2
+    if args.command == "create-pilot":
+        output = create_pilot_dataset(
+            args.source,
+            args.output,
+            seed=args.seed,
+            train_groups=args.train_groups,
+            validation_groups=args.validation_groups,
+        )
+        payload = json.loads(output.read_text(encoding="utf-8"))
+        print(
+            json.dumps(
+                {
+                    "output": str(output),
+                    "trainGroups": len(payload["pilotSelection"]["selectedGroups"]["train"]),
+                    "validationGroups": len(
+                        payload["pilotSelection"]["selectedGroups"]["validation"]
+                    ),
+                    "testRecords": 0,
+                }
+            )
+        )
+        return 0
 
     manifest = load_manifest(args.input)
     if args.manifest_command == "validate":

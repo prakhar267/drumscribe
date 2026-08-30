@@ -22,7 +22,7 @@ The existing MDB Beatles-style research benchmark does not pass this gate. The l
 
 These figures are research diagnostics, not production generalization evidence. MDB Drums is non-commercial evaluation material and this track was already inspected during DSP development.
 
-The licensed-data pipeline imported 1,076 valid Groove MIDI Dataset recordings while preserving Google's source train/validation/test assignments; 14 audio/annotation pairs with out-of-bounds labels were excluded in full. A three-epoch integration pilot over 100 training and 20 validation recordings reached 0.521 validation macro F1 after per-class threshold calibration. That pilot verifies the training machinery, not model quality. The source corpus contains no low-tom or tambourine labels, so those classes remain explicit blockers rather than being omitted from the release average.
+The licensed-data pipeline imported 1,076 valid Groove MIDI Dataset recordings while preserving Google's source train/validation/test assignments; 14 audio/annotation pairs with out-of-bounds labels were excluded in full. A controlled three-epoch pilot over a deterministically selected, hashed 100-training/20-validation subset compared the original CRNN (0.597 validation macro F1) with the clean-room spectral MoE (0.674). The 13.0% relative gain advances spectral MoE to scaled experimentation, not production. Thresholds were tuned on validation, all 122 official test recordings remain sealed, and the source corpus contains no low-tom or tambourine labels. Those classes remain explicit blockers rather than being omitted from the release average. See `docs/benchmarks/GROOVE_ARCHITECTURE_PILOT.md`.
 
 ## Model path
 

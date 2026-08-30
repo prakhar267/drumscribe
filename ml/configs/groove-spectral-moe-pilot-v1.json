@@ -1,0 +1,18 @@
+{
+  "architecture": "spectral_moe",
+  "batch_size": 8,
+  "device": "auto",
+  "dropout": 0.2,
+  "early_stopping_patience": 3,
+  "epochs": 3,
+  "hidden_size": 64,
+  "learning_rate": 0.0003,
+  "model_version": "groove-spectral-moe-pilot-v1",
+  "moe_experts": 4,
+  "moe_top_k": 2,
+  "onset_tolerance_frames": 2,
+  "output_root": "data/licensed-corpus/experiments",
+  "prepared_dataset": "data/licensed-corpus/pilots/groove-100-20-v1.json",
+  "seed": 20260830,
+  "window_frames": 1024
+}

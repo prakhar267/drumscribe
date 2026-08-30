@@ -12,6 +12,8 @@ uv sync --project ml --extra dev
 uv run --project ml drumscribe-ml manifest validate dataset.json
 uv run --project ml drumscribe-ml manifest split dataset.json split.json --seed drumscribe-v1
 uv run --project ml drumscribe-ml prepare dataset.json /licensed/data ./prepared --seed release-v1
+uv run --project ml drumscribe-ml create-pilot ./prepared/prepared-dataset.json ./pilot.json \
+  --seed architecture-v1 --train-groups 100 --validation-groups 20
 uv sync --project ml --extra train
 uv run --project ml drumscribe-ml train training-config.json
 uv run --project ml drumscribe-benchmark benchmark-input.json --json report.json --html report.html
@@ -48,7 +50,9 @@ augmentations, and caches log-mel features. Training is configuration-driven and
 implements a convolutional + bidirectional GRU multi-label onset network with a
 velocity head, checkpoint/resume, early stopping, metric logs, experiment IDs,
 Git/dataset/config provenance, and model hashes. PyTorch is an explicit optional
-extra; no checkpoint is production-approved merely because this code can train it.
+extra. Pilot manifests select complete train/validation groups by deterministic
+SHA-256 ranking, exclude the test split, and are hashed into experiment metadata.
+No checkpoint is production-approved merely because this code can train it.
 
 Validation confidence can be calibrated from an NPZ containing `logits` and
 binary `targets`:

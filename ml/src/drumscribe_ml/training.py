@@ -157,7 +157,12 @@ def build_model(config: TrainingConfig, *, mel_bands: int, class_count: int):
     return DrumOnsetNetwork()
 
 
-def experiment_metadata(config: TrainingConfig, dataset_payload: dict[str, Any]) -> dict[str, Any]:
+def experiment_metadata(
+    config: TrainingConfig,
+    dataset_payload: dict[str, Any],
+    *,
+    prepared_dataset_sha256: str | None = None,
+) -> dict[str, Any]:
     commit = "unknown"
     with suppress(OSError, subprocess.CalledProcessError):
         commit = subprocess.run(
@@ -166,7 +171,7 @@ def experiment_metadata(config: TrainingConfig, dataset_payload: dict[str, Any])
             capture_output=True,
             text=True,
         ).stdout.strip()
-    return {
+    metadata = {
         "schemaVersion": 1,
         "experimentId": str(uuid.uuid4()),
         "createdAt": datetime.now(UTC).isoformat(),
@@ -177,6 +182,11 @@ def experiment_metadata(config: TrainingConfig, dataset_payload: dict[str, Any])
         "classes": [item.value for item in TRAINING_CLASSES],
         "configuration": asdict(config),
     }
+    if prepared_dataset_sha256:
+        metadata["preparedDatasetSha256"] = prepared_dataset_sha256
+    if dataset_payload.get("pilotSelection"):
+        metadata["pilotSelection"] = dataset_payload["pilotSelection"]
+    return metadata
 
 
 def run_training(config: TrainingConfig) -> Path:
@@ -222,7 +232,11 @@ def run_training(config: TrainingConfig) -> Path:
 
     output = Path(config.output_root).resolve() / config.model_version
     output.mkdir(parents=True, exist_ok=False)
-    metadata = experiment_metadata(config, payload)
+    metadata = experiment_metadata(
+        config,
+        payload,
+        prepared_dataset_sha256=_sha256(prepared_path),
+    )
     (output / "experiment.json").write_text(
         json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
@@ -323,6 +337,14 @@ def run_training(config: TrainingConfig) -> Path:
         json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
     return output
+
+
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def _load_training_record(record: dict[str, Any]) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
