@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import importlib
+import statistics
+from functools import lru_cache
 from pathlib import Path
 
 from ..licensing import LicenseStatus, ProviderLicense
@@ -135,6 +137,116 @@ class ResearchBeatTrackingProvider:
             (TimeSignature(4, 4, confidence=min(confidence, 0.65)),),
             offset_seconds=float(beat_times[0]),
         )
+
+
+class ResearchBeatThisTrackingProvider:
+    """Neural beat/downbeat tracker for accuracy research and local evaluation."""
+
+    provider_id = "research-beat-this-v1"
+    license = ProviderLicense(
+        provider_id=provider_id,
+        status=LicenseStatus.UNRESOLVED,
+        code_license="Beat This code and published weights: MIT",
+        weights_license="MIT",
+        training_data_license=(
+            "Mixed: upstream states some training files are copyrighted or use limited "
+            "Creative Commons licenses"
+        ),
+        attribution_required=True,
+        distribution_restrictions="Commercial training-data provenance requires legal review.",
+        decision="Local research only; the production gate must continue to reject this provider.",
+    )
+
+    def __init__(self, *, checkpoint: str = "final0", device: str | None = None) -> None:
+        if not checkpoint or any(
+            character not in "abcdefghijklmnopqrstuvwxyz0123456789_-" for character in checkpoint
+        ):
+            raise ValueError("invalid Beat This checkpoint name")
+        self.checkpoint = checkpoint
+        self.device = device or _best_torch_device()
+        self.version = f"beat-this/{checkpoint}"
+
+    def track(self, audio_path: Path) -> TempoMap:
+        path = Path(audio_path)
+        if not path.is_file():
+            raise FileNotFoundError(path)
+        model = _beat_this_model(self.checkpoint, self.device)
+        beats, downbeats = model(path)
+        beat_times = sorted({float(value) for value in beats if float(value) >= 0})
+        downbeat_times = sorted({float(value) for value in downbeats if float(value) >= 0})
+        if len(beat_times) < 2:
+            return ResearchBeatTrackingProvider().track(path)
+        return _tempo_map_from_observed_beats(beat_times, downbeat_times)
+
+
+def _tempo_map_from_observed_beats(
+    beat_times: list[float], downbeat_times: list[float]
+) -> TempoMap:
+    """Preserve neural beat anchors while aligning beat zero to an inferred bar boundary."""
+
+    from ..tempo import TempoChange, TimeSignature
+
+    intervals = [second - first for first, second in zip(beat_times, beat_times[1:], strict=False)]
+    positive_intervals = [value for value in intervals if value > 0]
+    if not positive_intervals:
+        return TempoMap.constant(120)
+    median_interval = statistics.median(positive_intervals)
+    downbeat_indices = [
+        min(range(len(beat_times)), key=lambda index: abs(beat_times[index] - downbeat))
+        for downbeat in downbeat_times
+        if min(abs(beat - downbeat) for beat in beat_times) <= 0.08
+    ]
+    meter_differences = [
+        second - first
+        for first, second in zip(downbeat_indices, downbeat_indices[1:], strict=False)
+        if second > first
+    ]
+    numerator = round(statistics.median(meter_differences)) if meter_differences else 4
+    if not 2 <= numerator <= 12:
+        numerator = 4
+
+    first_downbeat_index = downbeat_indices[0] if downbeat_indices else 0
+    virtual_beats = (numerator - first_downbeat_index % numerator) % numerator
+    offset_seconds = beat_times[0] - virtual_beats * median_interval
+    if offset_seconds < 0:
+        virtual_beats = 0
+        offset_seconds = beat_times[0]
+
+    confidence = 0.95 if len(downbeat_indices) >= 2 else 0.85
+    local_bpms = [min(300.0, max(30.0, 60.0 / value)) for value in positive_intervals]
+    changes_by_beat: dict[int, TempoChange] = {0: TempoChange(0, local_bpms[0], confidence)}
+    for index, bpm in enumerate(local_bpms):
+        changes_by_beat[virtual_beats + index] = TempoChange(virtual_beats + index, bpm, confidence)
+    last_beat = virtual_beats + len(beat_times) - 1
+    changes_by_beat[last_beat] = TempoChange(last_beat, local_bpms[-1], confidence)
+    return TempoMap(
+        tuple(changes_by_beat.values()),
+        (TimeSignature(numerator, 4, confidence=confidence),),
+        offset_seconds=offset_seconds,
+    )
+
+
+def _best_torch_device() -> str:
+    try:
+        torch = importlib.import_module("torch")
+    except ImportError:
+        return "cpu"
+    if bool(torch.cuda.is_available()):
+        return "cuda"
+    if bool(getattr(torch.backends, "mps", None)) and bool(torch.backends.mps.is_available()):
+        return "mps"
+    return "cpu"
+
+
+@lru_cache(maxsize=4)
+def _beat_this_model(checkpoint: str, device: str):
+    try:
+        inference = importlib.import_module("beat_this.inference")
+    except ImportError as exc:
+        raise ResearchDependencyError(
+            "accurate beat tracking requires `pip install drumscribe-music[accurate-beats]`"
+        ) from exc
+    return inference.File2Beats(checkpoint_path=checkpoint, device=device, dbn=False)
 
 
 def _analysis_dependencies():

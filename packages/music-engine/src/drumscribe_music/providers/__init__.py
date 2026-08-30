@@ -6,6 +6,7 @@ from .mock import (
     PassthroughSourceSeparationProvider,
 )
 from .research import (
+    ResearchBeatThisTrackingProvider,
     ResearchBeatTrackingProvider,
     ResearchDependencyError,
     ResearchDrumTranscriptionProvider,
@@ -18,6 +19,7 @@ __all__ = [
     "MockDrumTranscriptionProvider",
     "PassthroughSourceSeparationProvider",
     "ResearchBeatTrackingProvider",
+    "ResearchBeatThisTrackingProvider",
     "ResearchDependencyError",
     "ResearchDrumTranscriptionProvider",
 ]

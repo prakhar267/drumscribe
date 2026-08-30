@@ -1,0 +1,15 @@
+{
+  "batch_size": 8,
+  "device": "auto",
+  "dropout": 0.2,
+  "early_stopping_patience": 10,
+  "epochs": 80,
+  "hidden_size": 192,
+  "learning_rate": 0.0003,
+  "model_version": "drumscribe-groove-crnn-0.1.0",
+  "onset_tolerance_frames": 2,
+  "output_root": "data/licensed-corpus/experiments",
+  "prepared_dataset": "data/licensed-corpus/groove-prepared/prepared-dataset.json",
+  "seed": 20260829,
+  "window_frames": 2048
+}

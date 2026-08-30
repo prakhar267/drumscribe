@@ -230,13 +230,25 @@ def split_payload(
     test: float = 0.1,
 ) -> dict[str, Any]:
     manifest.require_training_safe()
-    assignments = deterministic_split(
-        manifest.tracks, seed=seed, train=train, validation=validation, test=test
-    )
+    prescribed = [track.metadata.get("split") for track in manifest.tracks]
+    if prescribed and all(value in {"train", "validation", "test"} for value in prescribed):
+        assignments = {
+            split_name: [
+                track.id for track in manifest.tracks if track.metadata.get("split") == split_name
+            ]
+            for split_name in ("train", "validation", "test")
+        }
+        strategy = "source_prescribed"
+    else:
+        assignments = deterministic_split(
+            manifest.tracks, seed=seed, train=train, validation=validation, test=test
+        )
+        strategy = "deterministic_group"
     return {
         "schemaVersion": 1,
         "source": {"name": manifest.source.name, "version": manifest.source.version},
         "seed": seed,
+        "strategy": strategy,
         "ratios": {"train": train, "validation": validation, "test": test},
         "assignments": assignments,
     }

@@ -18,6 +18,29 @@ uv run --project ml drumscribe-benchmark benchmark-input.json --json report.json
 uv run --project ml drumscribe-separation-benchmark separation-input.json --json separation.json --html separation.html
 ```
 
+Licensed Groove ingestion and the strict accuracy release gate are reproducible:
+
+```bash
+uv sync --project ml --extra data --extra train --group dev
+uv run --project ml drumscribe-ml import-groove \
+  data/licensed-corpus/groove \
+  data/licensed-corpus/groove-manifest.json \
+  --archive data/licensed-corpus/groove-v1.0.0.zip
+uv run --project ml drumscribe-ml prepare \
+  data/licensed-corpus/groove-manifest.json \
+  data/licensed-corpus/groove \
+  data/licensed-corpus/groove-prepared \
+  --seed groove-v1-release --augmentation-variants 0
+uv run --project ml drumscribe-ml train ml/configs/groove-v1.json
+uv run --project ml drumscribe-ml quality-gate benchmark.json release-evidence.json
+```
+
+The importer checks Google's published archive digest, records per-file digests,
+preserves the official split, reports and excludes corrupt audio/annotation pairs,
+and supports both 16-bit and 24-bit PCM. Validation and test recordings are never
+augmented. The 99% gate is defined in `docs/ACCURACY_99_RELEASE_GATE.md`; missing
+evidence fails.
+
 Preparation verifies commercial-use and derivative-work flags, checks audio
 hashes/durations, preserves original labels while canonicalizing annotations,
 keeps performance families in one split, creates deterministic bounded

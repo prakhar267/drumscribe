@@ -4,41 +4,41 @@ Date: 2026-08-30
 
 Application revision: accuracy work following baseline commit `26edba3`
 
-Runtime: `demucs-isolated-v5` (`htdemucs_ft`) + `research-spectral-v2` + `research-librosa-beat-v2`
+Runtime: `demucs-isolated-v5` (`htdemucs_ft`) + `research-spectral-v2` + `research-beat-this-v1`
 
 ## Result
 
 **DrumScribe did not produce an exact match to the reference drum notation.**
 
-The accuracy pass materially improves the first draft, especially its precision and notated grid. It still does not recover every reference event and is not accurate enough to claim an exact or release-quality transcription.
+The accuracy passes materially improve the first draft. The neural timing pass places every emitted onset on an exact reference notation slot and reproduces the annotated tempo, but it still does not recover every reference event and is not accurate enough to claim an exact or release-quality transcription.
 
-| Metric | Baseline | Accuracy pass |
-| --- | ---: | ---: |
-| Reference events | 154 | 154 |
-| DrumScribe events | 102 | 99 |
-| Class-aware precision / recall / F1 at 50 ms | 0.667 / 0.442 / 0.531 | **0.949 / 0.610 / 0.743** |
-| Class-aware precision / recall / F1 at 20 ms | 0.569 / 0.377 / 0.453 | **0.919 / 0.591 / 0.719** |
-| Onset-only precision / recall / F1 at 50 ms | 1.000 / 0.662 / 0.797 | 1.000 / 0.643 / 0.783 |
-| Exact notated class+slot precision / recall / F1 | 0.069 / 0.045 / 0.055 | **0.838 / 0.539 / 0.656** |
-| Exact notated slot-only precision / recall / F1 | 0.373 / 0.247 / 0.297 | **0.879 / 0.565 / 0.688** |
-| Reference / generated tempo | 111.11 / 112.35 BPM | 111.11 / 112.35 BPM |
-| Drum-stem SI-SDR | -2.02 dB | **-1.89 dB** |
-| Drum-stem waveform correlation | 0.621 | **0.627** |
+| Metric | Baseline | Detector pass | Neural timing E2E |
+| --- | ---: | ---: | ---: |
+| Reference events | 154 | 154 | 154 |
+| DrumScribe events | 102 | 99 | 100 |
+| Class-aware precision / recall / F1 at 50 ms | 0.667 / 0.442 / 0.531 | **0.949 / 0.610 / 0.743** | 0.940 / 0.610 / 0.740 |
+| Class-aware precision / recall / F1 at 20 ms | 0.569 / 0.377 / 0.453 | 0.919 / 0.591 / 0.719 | **0.920 / 0.597 / 0.724** |
+| Onset-only precision / recall / F1 at 50 ms | 1.000 / 0.662 / 0.797 | 1.000 / 0.643 / 0.783 | 1.000 / 0.649 / 0.787 |
+| Exact notated class+slot precision / recall / F1 | 0.069 / 0.045 / 0.055 | 0.838 / 0.539 / 0.656 | **0.940 / 0.610 / 0.740** |
+| Exact notated slot-only precision / recall / F1 | 0.373 / 0.247 / 0.297 | 0.879 / 0.565 / 0.688 | **1.000 / 0.649 / 0.787** |
+| Reference / generated tempo | 111.11 / 112.35 BPM | 111.11 / 112.35 BPM | **111.11 / 111.11 BPM** |
+| Drum-stem SI-SDR | -2.02 dB | **-1.89 dB** | -1.90 dB |
+| Drum-stem waveform correlation | 0.621 | **0.627** | 0.626 |
 
 ### Instrument results at 50 ms
 
 | MDB class | Reference | Predicted | TP | FP | FN | Precision | Recall | F1 |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | Kick | 47 | 47 | 46 | 1 | 1 | 0.979 | 0.979 | 0.979 |
-| Snare | 45 | 33 | 32 | 1 | 13 | 0.970 | 0.711 | 0.821 |
+| Snare | 45 | 34 | 32 | 2 | 13 | 0.941 | 0.711 | 0.810 |
 | Hi-hat | 0 | 3 | 0 | 3 | 0 | 0.000 | n/a | 0.000 |
 | Toms | 30 | 16 | 16 | 0 | 14 | 1.000 | 0.533 | 0.696 |
 | Cymbals | 0 | 0 | 0 | 0 | 0 | n/a | n/a | n/a |
 | Other percussion | 32 | 0 | 0 | 0 | 32 | n/a | 0.000 | 0.000 |
 
-All 99 emitted hits remain close to a real annotated onset within 50 ms. The expanded physical-feature classifier recognizes toms and sharply reduces snare/hi-hat confusion while retaining a conservative onset gate. Recall is still limited: this recording's tambourine often lands within milliseconds of a snare, and the research path does not recover those 32 separate annotations.
+All 100 emitted hits remain close to a real annotated onset within 50 ms. The expanded physical-feature classifier recognizes toms and sharply reduces snare/hi-hat confusion while retaining a conservative onset gate. Recall is still limited: this recording's tambourine often lands within milliseconds of a snare, and the research path does not recover those 32 separate annotations.
 
-The notation gain comes from two corrections: beat tracking now analyzes the full mix rather than the sparse drum stem, and the complete observed piecewise beat map plus bar-one offset reaches quantization instead of being flattened to one BPM. Automatic drafts favor readable quarter/eighth/sixteenth and eighth-triplet grids; the editor still permits finer manual snapping.
+The notation gain comes from neural beat and downbeat tracking on the full mix. The complete observed piecewise beat map, inferred meter, and bar-one offset reach quantization instead of being flattened to one BPM. Direct beat evaluation on this track measured 1.000 beat F1 and 1.000 downbeat F1 at 50 ms. Automatic drafts favor readable quarter/eighth/sixteenth and eighth-triplet grids; the editor still permits finer manual snapping.
 
 ## Cross-style regression
 
@@ -80,16 +80,16 @@ Reference hashes:
 1. Uploaded the full stereo mix through the real browser upload page.
 2. Confirmed recording rights and created an anonymous private project.
 3. Transferred the audio using a signed Neon Object Storage upload.
-4. Ran the durable normalization, fine-tuned Demucs isolation, spectral transcription, full-mix beat tracking, piecewise quantization, and score-generation pipeline.
-5. Opened the rendered drum editor and verified 99 notation events.
+4. Ran the durable normalization, fine-tuned Demucs isolation, spectral transcription, neural full-mix beat/downbeat tracking, piecewise quantization, and score-generation pipeline.
+5. Opened the rendered drum editor and verified 100 notation events.
 6. Downloaded the private isolated drum stem.
 7. Generated and signature-checked MIDI, MusicXML, and PDF exports.
 8. Captured the rendered editor and stored the generated events for scoring.
 9. Soft-deleted the project and verified that every signed artifact URL was revoked.
 
-The updated automated browser journey passed in 3.5 minutes.
+The neural-timing automated browser journey passed in 2.7 minutes.
 
-Baseline artifacts are under `data/benchmark-mdb-beatles/output/`; updated artifacts are under `data/benchmark-mdb-beatles/output-v2/`. Both are local and Git-ignored. Each directory contains the machine-readable score, rendered editor, isolated stem, and all three exports.
+Baseline artifacts are under `data/benchmark-mdb-beatles/output/`; detector-pass artifacts are under `data/benchmark-mdb-beatles/output-v2/`; neural-timing artifacts are under `data/benchmark-mdb-beatles/output-v3/`. All are local and Git-ignored. Each directory contains the machine-readable score, rendered editor, isolated stem, and all three exports.
 
 ## Scoring method
 
@@ -107,7 +107,7 @@ The next model iteration should be accepted only after it:
 
 1. Recovers layered/near-simultaneous events rather than selecting one class per broadband onset.
 2. Distinguishes open/closed/pedal hi-hat, ride/crash, and side-stick/tambourine from licensed model output.
-3. Adds downbeat inference for songs whose first detected pulse is not bar one.
+3. Validates neural beat/downbeat tracking across a separately held-out, metrically diverse corpus rather than relying on this single track.
 4. Clears a commercial transcription/separation provider contract or replaces research weights with fully documented commercially licensed weights.
 5. Passes a separately held-out, rights-cleared evaluation set with predeclared release thresholds.
 

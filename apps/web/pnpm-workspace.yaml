@@ -1,6 +1,9 @@
 allowBuilds:
+  '@sentry/cli': true
+  esbuild: true
   sharp@0.35.4: true
   unrs-resolver@1.12.2: true
+  workerd: true
 
 minimumReleaseAgeExclude:
   - lucide-react@1.35.0

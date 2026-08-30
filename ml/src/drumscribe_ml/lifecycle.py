@@ -69,8 +69,8 @@ def validate_track(track: DatasetTrack, dataset_root: Path) -> dict[str, Any]:
     if track.audio_sha256 and digest != track.audio_sha256.lower():
         raise PreparationError(f"track {track.id!r} audio checksum does not match its manifest")
     with wave.open(str(audio), "rb") as source:
-        if source.getsampwidth() != 2:
-            raise PreparationError("preparation currently requires normalized 16-bit PCM WAV input")
+        if source.getsampwidth() not in {2, 3}:
+            raise PreparationError("preparation requires 16-bit or 24-bit PCM WAV input")
         measured_duration = source.getnframes() / source.getframerate()
     tolerance = max(0.1, track.duration_seconds * 0.01)
     if abs(measured_duration - track.duration_seconds) > tolerance:
@@ -138,10 +138,19 @@ def read_pcm_wav(path: Path) -> tuple[np.ndarray, int]:
     with wave.open(str(path), "rb") as source:
         channels = source.getnchannels()
         sample_rate = source.getframerate()
-        if source.getsampwidth() != 2 or channels not in {1, 2}:
-            raise PreparationError("audio must be mono or stereo 16-bit PCM WAV")
-        samples = np.frombuffer(source.readframes(source.getnframes()), dtype="<i2")
-    return samples.reshape(-1, channels).astype(np.float32) / 32768.0, sample_rate
+        sample_width = source.getsampwidth()
+        frames = source.readframes(source.getnframes())
+        if sample_width not in {2, 3} or channels not in {1, 2}:
+            raise PreparationError("audio must be mono or stereo 16-bit/24-bit PCM WAV")
+    if sample_width == 2:
+        samples = np.frombuffer(frames, dtype="<i2").astype(np.int32)
+        scale = 32768.0
+    else:
+        octets = np.frombuffer(frames, dtype=np.uint8).reshape(-1, 3).astype(np.int32)
+        samples = octets[:, 0] | (octets[:, 1] << 8) | (octets[:, 2] << 16)
+        samples = np.where(samples & 0x800000, samples - 0x1000000, samples)
+        scale = 8388608.0
+    return samples.reshape(-1, channels).astype(np.float32) / scale, sample_rate
 
 
 def write_pcm_wav(path: Path, samples: np.ndarray, sample_rate: int) -> Path:
@@ -263,11 +272,14 @@ def prepare_dataset(
             duration=validation["durationSeconds"],
         )
         sources = [("original", dataset_root / track.audio_path, None)]
-        for variant in range(1, config.augmentation_variants + 1):
-            recipe = augmentation_recipe(config.seed, track.id, variant)
-            augmented = output_root / "augmented" / track.id / f"variant-{variant}.wav"
-            augment_wav(dataset_root / track.audio_path, augmented, recipe)
-            sources.append((f"variant-{variant}", augmented, asdict(recipe)))
+        # Validation and test audio must remain untouched. Augmenting them inflates
+        # evaluation size with near-duplicates and makes the release score misleading.
+        if track_split[track.id] == "train":
+            for variant in range(1, config.augmentation_variants + 1):
+                recipe = augmentation_recipe(config.seed, track.id, variant)
+                augmented = output_root / "augmented" / track.id / f"variant-{variant}.wav"
+                augment_wav(dataset_root / track.audio_path, augmented, recipe)
+                sources.append((f"variant-{variant}", augmented, asdict(recipe)))
         for variant_name, audio_path, recipe_payload in sources:
             cache_path = output_root / "features" / track.id / f"{variant_name}.npz"
             cache_log_mel(audio_path, cache_path, config)

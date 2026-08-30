@@ -24,6 +24,9 @@ dependencies = [
   "uvicorn[standard]>=0.34,<1",
 ]
 
+[project.optional-dependencies]
+research = ["drumscribe-music[audio,demucs,accurate-beats]"]
+
 [tool.uv.sources]
 drumscribe-music = { path = "../../packages/music-engine", editable = true }
 

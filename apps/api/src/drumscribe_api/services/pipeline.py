@@ -215,7 +215,9 @@ class MusicEngineAdapter:
             return KlangioBeatTrackingProvider(self._klangio_config())
         class_name = {
             "mock": "MockBeatTrackingProvider",
-            "research": "ResearchBeatTrackingProvider",
+            "research": "ResearchBeatThisTrackingProvider",
+            "research_accurate": "ResearchBeatThisTrackingProvider",
+            "research_librosa": "ResearchBeatTrackingProvider",
         }
         return self._provider(engine, self.settings.beat_tracking_provider, class_name)
 

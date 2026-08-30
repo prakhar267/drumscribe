@@ -5,6 +5,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+from drumscribe_music import Instrument
 
 from drumscribe_ml.calibration import calibrate_confidence
 from drumscribe_ml.lifecycle import (
@@ -14,7 +15,16 @@ from drumscribe_ml.lifecycle import (
     read_pcm_wav,
 )
 from drumscribe_ml.manifest import DatasetLicense, DatasetManifest, DatasetSource, DatasetTrack
-from drumscribe_ml.training import TrainingConfig, TrainingError, experiment_metadata
+from drumscribe_ml.training import (
+    TRAINING_CLASSES,
+    TrainingConfig,
+    TrainingError,
+    _dilate_targets,
+    _match_frames,
+    _peak_frames,
+    _training_batches,
+    experiment_metadata,
+)
 
 
 def _write_wav(path: Path, *, frequency: float = 110) -> None:
@@ -27,6 +37,19 @@ def _write_wav(path: Path, *, frequency: float = 110) -> None:
         target.setsampwidth(2)
         target.setframerate(sample_rate)
         target.writeframes(samples.tobytes())
+
+
+def _write_24_bit_wav(path: Path) -> None:
+    values = np.array([-8_388_608, -1, 0, 1, 8_388_607], dtype=np.int64)
+    encoded = (values & 0xFFFFFF).astype(np.uint32)
+    octets = np.column_stack(
+        (encoded & 0xFF, (encoded >> 8) & 0xFF, (encoded >> 16) & 0xFF)
+    ).astype(np.uint8)
+    with wave.open(str(path), "wb") as target:
+        target.setnchannels(1)
+        target.setsampwidth(3)
+        target.setframerate(8_000)
+        target.writeframes(octets.tobytes())
 
 
 def _manifest(root: Path) -> DatasetManifest:
@@ -111,3 +134,32 @@ def test_calibration_and_training_metadata_are_versioned(tmp_path):
     assert metadata["datasetManifestHash"] == "abc"
     with pytest.raises(TrainingError):
         TrainingConfig("prepared.json", str(tmp_path), "bad/version")
+
+
+def test_training_targets_and_validation_are_onset_tolerant_and_multilabel():
+    targets = np.zeros((8, 2), dtype=np.float32)
+    targets[3, :] = 1
+    dilated = _dilate_targets(targets, 1)
+    assert dilated[:, 0].tolist() == [0, 0, 1, 1, 1, 0, 0, 0]
+    probabilities = np.array([0.1, 0.6, 0.8, 0.7, 0.2])
+    assert _peak_frames(probabilities, threshold=0.5) == [2]
+    assert _match_frames([4, 10], [5, 20], tolerance=2) == (1, 1, 1)
+    assert set(TRAINING_CLASSES) == set(Instrument)
+
+
+def test_pcm_reader_decodes_signed_24_bit_audio(tmp_path):
+    path = tmp_path / "24-bit.wav"
+    _write_24_bit_wav(path)
+    samples, sample_rate = read_pcm_wav(path)
+    assert sample_rate == 8_000
+    assert samples[:, 0].tolist() == pytest.approx([-1, -1 / 8_388_608, 0, 1 / 8_388_608, 1])
+
+
+def test_training_batches_pad_and_mask_only_real_frames():
+    features = np.ones((5, 3), dtype=np.float32)
+    onsets = np.zeros((5, 2), dtype=np.float32)
+    velocities = np.zeros_like(onsets)
+    batches = list(_training_batches(features, onsets, velocities, 3, 2))
+    feature_batch, _, _, valid = batches[0]
+    assert feature_batch.shape == (2, 3, 3)
+    assert valid[:, :, 0].tolist() == [[1, 1, 1], [1, 1, 0]]

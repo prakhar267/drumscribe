@@ -60,6 +60,24 @@ def test_split_is_deterministic_and_never_leaks_groups():
     assert payload["seed"] == "v1" and sum(map(len, payload["assignments"].values())) == 12
 
 
+def test_source_prescribed_splits_are_not_randomized():
+    manifest = _manifest()
+    tracks = tuple(
+        DatasetTrack(
+            track.id,
+            track.group_id,
+            track.audio_path,
+            track.annotation_path,
+            track.duration_seconds,
+            metadata={"split": ("train", "validation", "test")[index % 3]},
+        )
+        for index, track in enumerate(manifest.tracks)
+    )
+    payload = split_payload(DatasetManifest(manifest.source, tracks), seed="ignored")
+    assert payload["strategy"] == "source_prescribed"
+    assert payload["assignments"]["validation"] == ["take-1", "take-4", "take-7", "take-10"]
+
+
 def test_manifest_rejects_escaping_paths_and_bad_ratios():
     with pytest.raises(ManifestError, match="escape"):
         DatasetTrack("id", "group", "../audio.wav", "hit.mid", 1)

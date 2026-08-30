@@ -18,7 +18,12 @@ from drumscribe_music import (
     require_production_safe,
     validate_provider_registry,
 )
-from drumscribe_music.providers.research import _classify_features, _classify_spectrum
+from drumscribe_music.providers.research import (
+    ResearchBeatThisTrackingProvider,
+    _classify_features,
+    _classify_spectrum,
+    _tempo_map_from_observed_beats,
+)
 
 
 def test_mock_provider_is_deterministic_and_protocol_friendly(tmp_path):
@@ -126,6 +131,25 @@ def test_research_multiclass_mapping_uses_spectral_and_decay_evidence():
         )[0].value
         == "TAMBOURINE"
     )
+
+
+def test_accurate_research_tracker_preserves_beats_downbeats_and_meter():
+    tempo_map = _tempo_map_from_observed_beats(
+        [0.02, 0.54, 1.08, 1.64, 2.20, 2.74, 3.30, 3.84, 4.38],
+        [0.02, 2.20, 4.38],
+    )
+
+    assert tempo_map.time_signatures[0].numerator == 4
+    assert tempo_map.offset_seconds == pytest.approx(0.02)
+    assert tempo_map.beat_to_seconds(4) == pytest.approx(2.20)
+    assert tempo_map.beat_to_seconds(8) == pytest.approx(4.38)
+
+
+def test_accurate_research_tracker_remains_blocked_in_production():
+    provider = ResearchBeatThisTrackingProvider(device="cpu")
+    assert provider.version == "beat-this/final0"
+    with pytest.raises(UnsafeProviderError):
+        require_production_safe(provider, production=True)
 
 
 def test_mock_beat_and_passthrough_separation(tmp_path):

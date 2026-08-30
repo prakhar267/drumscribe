@@ -8,8 +8,10 @@ from pathlib import Path
 import numpy as np
 
 from .calibration import calibrate_confidence
+from .groove import import_groove_dataset
 from .lifecycle import PreparationConfig, prepare_dataset
 from .manifest import load_manifest, split_payload
+from .quality import evaluate_accuracy_gate
 from .training import TrainingConfig, run_training
 
 
@@ -39,6 +41,14 @@ def main(argv: list[str] | None = None) -> int:
     calibrate = command.add_parser("calibrate")
     calibrate.add_argument("input", type=Path, help="NPZ containing logits and targets")
     calibrate.add_argument("output", type=Path)
+    quality_gate = command.add_parser("quality-gate")
+    quality_gate.add_argument("benchmark", type=Path)
+    quality_gate.add_argument("evidence", type=Path)
+    groove = command.add_parser("import-groove")
+    groove.add_argument("dataset_root", type=Path)
+    groove.add_argument("manifest", type=Path)
+    groove.add_argument("--archive", type=Path)
+    groove.add_argument("--overwrite", action="store_true")
     args = parser.parse_args(argv)
     if args.command == "prepare":
         destination = prepare_dataset(
@@ -63,6 +73,22 @@ def main(argv: list[str] | None = None) -> int:
             json.dumps(asdict(result), indent=2, sort_keys=True) + "\n", encoding="utf-8"
         )
         print(json.dumps({"calibration": str(args.output)}))
+        return 0
+    if args.command == "quality-gate":
+        result = evaluate_accuracy_gate(
+            json.loads(args.benchmark.read_text(encoding="utf-8")),
+            json.loads(args.evidence.read_text(encoding="utf-8")),
+        )
+        print(json.dumps(asdict(result), indent=2, sort_keys=True))
+        return 0 if result.passed else 2
+    if args.command == "import-groove":
+        imported = import_groove_dataset(
+            args.dataset_root,
+            args.manifest,
+            archive_path=args.archive,
+            overwrite=args.overwrite,
+        )
+        print(json.dumps({"manifest": str(args.manifest), "tracks": len(imported.tracks)}))
         return 0
 
     manifest = load_manifest(args.input)

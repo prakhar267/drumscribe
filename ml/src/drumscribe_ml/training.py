@@ -21,19 +21,7 @@ class TrainingError(RuntimeError):
     pass
 
 
-TRAINING_CLASSES = (
-    Instrument.KICK,
-    Instrument.SNARE,
-    Instrument.CLOSED_HIHAT,
-    Instrument.OPEN_HIHAT,
-    Instrument.RIDE,
-    Instrument.CRASH,
-    Instrument.HIGH_TOM,
-    Instrument.MID_TOM,
-    Instrument.LOW_TOM,
-    Instrument.FLOOR_TOM,
-    Instrument.TAMBOURINE,
-)
+TRAINING_CLASSES = tuple(Instrument)
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,18 +35,25 @@ class TrainingConfig:
     hidden_size: int = 192
     dropout: float = 0.2
     onset_tolerance_frames: int = 2
+    window_frames: int = 2_048
+    batch_size: int = 8
     seed: int = 20260829
     resume_checkpoint: str | None = None
+    device: str = "auto"
 
     def __post_init__(self) -> None:
         if not self.model_version.strip() or "/" in self.model_version:
             raise TrainingError("model_version must be a non-empty filesystem-safe version")
         if self.epochs < 1 or self.early_stopping_patience < 1 or self.hidden_size < 16:
             raise TrainingError("epochs, patience, and hidden size must be positive")
+        if self.onset_tolerance_frames < 0 or self.window_frames < 64 or self.batch_size < 1:
+            raise TrainingError("onset tolerance and training window are invalid")
         if not math.isfinite(self.learning_rate) or self.learning_rate <= 0:
             raise TrainingError("learning_rate must be positive and finite")
         if not 0 <= self.dropout < 1:
             raise TrainingError("dropout must be between zero and one")
+        if self.device not in {"auto", "cpu", "cuda", "mps"}:
+            raise TrainingError("device must be auto, cpu, cuda, or mps")
 
     @classmethod
     def load(cls, path: Path) -> TrainingConfig:
@@ -133,6 +128,7 @@ def run_training(config: TrainingConfig) -> Path:
 
     torch.manual_seed(config.seed)
     np.random.seed(config.seed)
+    device = _training_device(torch, config.device)
     prepared_path = Path(config.prepared_dataset).resolve()
     payload = json.loads(prepared_path.read_text(encoding="utf-8"))
     records = payload.get("records", [])
@@ -147,15 +143,21 @@ def run_training(config: TrainingConfig) -> Path:
         mel_bands=int(first_features.shape[1]),
         class_count=len(TRAINING_CLASSES),
     )
+    model.to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=config.learning_rate)
+    positive_weights = torch.from_numpy(_positive_class_weights(train_records)).to(device)
     start_epoch = 0
     best_f1 = -1.0
+    best_thresholds: dict[str, float] = {}
+    best_per_class: dict[str, float] = {}
     if config.resume_checkpoint:
-        checkpoint = torch.load(config.resume_checkpoint, map_location="cpu", weights_only=True)
+        checkpoint = torch.load(config.resume_checkpoint, map_location=device, weights_only=True)
         model.load_state_dict(checkpoint["model"])
         optimizer.load_state_dict(checkpoint["optimizer"])
         start_epoch = int(checkpoint["epoch"]) + 1
         best_f1 = float(checkpoint.get("bestF1", -1))
+        best_thresholds = dict(checkpoint.get("validationThresholds", {}))
+        best_per_class = dict(checkpoint.get("validationPerClassF1", {}))
 
     output = Path(config.output_root).resolve() / config.model_version
     output.mkdir(parents=True, exist_ok=False)
@@ -171,27 +173,59 @@ def run_training(config: TrainingConfig) -> Path:
         train_losses = []
         for record in train_records:
             features, onset_targets, velocity_targets = _load_training_record(record)
-            onset_logits, velocity = model(torch.from_numpy(features)[None])
-            onset_tensor = torch.from_numpy(onset_targets)[None]
-            velocity_tensor = torch.from_numpy(velocity_targets)[None]
-            onset_loss = functional.binary_cross_entropy_with_logits(onset_logits, onset_tensor)
-            mask = onset_tensor > 0
-            velocity_loss = (
-                functional.mse_loss(velocity[mask], velocity_tensor[mask])
-                if mask.any()
-                else velocity.sum() * 0
-            )
-            loss = onset_loss + velocity_loss * 0.25
-            optimizer.zero_grad()
-            loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), 5)
-            optimizer.step()
-            train_losses.append(float(loss.detach()))
-        validation_f1 = _validation_f1(model, validation_records)
+            for (
+                feature_batch,
+                onset_batch,
+                velocity_batch,
+                valid_batch,
+            ) in _training_batches(
+                features,
+                onset_targets,
+                velocity_targets,
+                config.window_frames,
+                config.batch_size,
+            ):
+                onset_logits, velocity = model(torch.from_numpy(feature_batch).to(device))
+                original_onsets = torch.from_numpy(onset_batch).to(device)
+                loss_onsets = torch.from_numpy(
+                    _dilate_batched_targets(onset_batch, config.onset_tolerance_frames)
+                ).to(device)
+                velocity_tensor = torch.from_numpy(velocity_batch).to(device)
+                valid_tensor = torch.from_numpy(valid_batch).to(device)
+                onset_losses = functional.binary_cross_entropy_with_logits(
+                    onset_logits,
+                    loss_onsets,
+                    pos_weight=positive_weights,
+                    reduction="none",
+                )
+                onset_loss = (onset_losses * valid_tensor).sum() / (
+                    valid_tensor.sum() * len(TRAINING_CLASSES)
+                )
+                mask = original_onsets > 0
+                velocity_loss = (
+                    functional.mse_loss(velocity[mask], velocity_tensor[mask])
+                    if mask.any()
+                    else velocity.sum() * 0
+                )
+                loss = onset_loss + velocity_loss * 0.25
+                optimizer.zero_grad()
+                loss.backward()
+                torch.nn.utils.clip_grad_norm_(model.parameters(), 5)
+                optimizer.step()
+                train_losses.append(float(loss.detach()))
+        validation = _validation_metrics(
+            model,
+            validation_records,
+            tolerance_frames=config.onset_tolerance_frames,
+            device=device,
+        )
+        validation_f1 = float(validation["macroF1"])
         metrics = {
             "epoch": epoch,
             "trainLoss": sum(train_losses) / len(train_losses),
             "validationMacroF1": validation_f1,
+            "validationThresholds": validation["thresholds"],
+            "validationPerClassF1": validation["perClassF1"],
         }
         with metrics_path.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(metrics, sort_keys=True) + "\n")
@@ -201,10 +235,14 @@ def run_training(config: TrainingConfig) -> Path:
             "optimizer": optimizer.state_dict(),
             "bestF1": max(best_f1, validation_f1),
             "configuration": asdict(config),
+            "validationThresholds": validation["thresholds"],
+            "validationPerClassF1": validation["perClassF1"],
         }
         torch.save(state, output / f"checkpoint-{epoch:04d}.pt")
         if validation_f1 > best_f1:
             best_f1 = validation_f1
+            best_thresholds = dict(validation["thresholds"])
+            best_per_class = dict(validation["perClassF1"])
             stale_epochs = 0
             torch.save(state, best_checkpoint)
         else:
@@ -212,7 +250,14 @@ def run_training(config: TrainingConfig) -> Path:
             if stale_epochs >= config.early_stopping_patience:
                 break
     digest = hashlib.sha256(best_checkpoint.read_bytes()).hexdigest()
-    metadata.update({"modelSha256": digest, "bestValidationMacroF1": best_f1})
+    metadata.update(
+        {
+            "modelSha256": digest,
+            "bestValidationMacroF1": best_f1,
+            "validationThresholds": best_thresholds,
+            "validationPerClassF1": best_per_class,
+        }
+    )
     (output / "experiment.json").write_text(
         json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
@@ -238,23 +283,170 @@ def _load_training_record(record: dict[str, Any]) -> tuple[np.ndarray, np.ndarra
     return features, targets, velocities
 
 
-def _validation_f1(model, records: list[dict[str, Any]]) -> float:
+def _validation_f1(
+    model,
+    records: list[dict[str, Any]],
+    *,
+    tolerance_frames: int = 2,
+    device: str = "cpu",
+) -> float:
+    return float(
+        _validation_metrics(
+            model,
+            records,
+            tolerance_frames=tolerance_frames,
+            device=device,
+        )["macroF1"]
+    )
+
+
+def _validation_metrics(
+    model,
+    records: list[dict[str, Any]],
+    *,
+    tolerance_frames: int = 2,
+    device: str = "cpu",
+) -> dict[str, Any]:
     import torch
 
-    scores: list[float] = []
+    evaluated: list[tuple[np.ndarray, np.ndarray]] = []
     model.eval()
     with torch.no_grad():
         for record in records:
             features, targets, _ = _load_training_record(record)
-            logits, _ = model(torch.from_numpy(features)[None])
-            predictions = torch.sigmoid(logits)[0].numpy() >= 0.5
-            for index in range(targets.shape[1]):
-                truth = targets[:, index] > 0
-                predicted = predictions[:, index]
-                tp = int(np.logical_and(truth, predicted).sum())
-                fp = int(np.logical_and(~truth, predicted).sum())
-                fn = int(np.logical_and(truth, ~predicted).sum())
-                denominator = 2 * tp + fp + fn
-                if denominator:
-                    scores.append(2 * tp / denominator)
-    return sum(scores) / len(scores) if scores else 0.0
+            logits, _ = model(torch.from_numpy(features)[None].to(device))
+            probabilities = torch.sigmoid(logits)[0].cpu().numpy()
+            evaluated.append((probabilities, targets))
+
+    threshold_candidates = np.linspace(0.05, 0.95, 19)
+    thresholds: dict[str, float] = {}
+    per_class: dict[str, float] = {}
+    for index, instrument in enumerate(TRAINING_CLASSES):
+        support = sum(int(targets[:, index].sum()) for _, targets in evaluated)
+        if not support:
+            thresholds[instrument.value] = 0.99
+            continue
+        candidates: list[tuple[float, float]] = []
+        for threshold in threshold_candidates:
+            true_positive = false_positive = false_negative = 0
+            for probabilities, targets in evaluated:
+                references = np.flatnonzero(targets[:, index] > 0).tolist()
+                predictions = _peak_frames(probabilities[:, index], threshold=float(threshold))
+                tp, fp, fn = _match_frames(
+                    references,
+                    predictions,
+                    tolerance=tolerance_frames,
+                )
+                true_positive += tp
+                false_positive += fp
+                false_negative += fn
+            denominator = 2 * true_positive + false_positive + false_negative
+            score = 2 * true_positive / denominator if denominator else 0.0
+            candidates.append((score, float(threshold)))
+        score, threshold = max(candidates, key=lambda item: (item[0], -abs(item[1] - 0.5)))
+        thresholds[instrument.value] = threshold
+        per_class[instrument.value] = score
+    macro_f1 = sum(per_class.values()) / len(per_class) if per_class else 0.0
+    return {"macroF1": macro_f1, "thresholds": thresholds, "perClassF1": per_class}
+
+
+def _positive_class_weights(records: list[dict[str, Any]]) -> np.ndarray:
+    positive = np.zeros(len(TRAINING_CLASSES), dtype=np.float64)
+    frame_count = 0
+    for record in records:
+        _, targets, _ = _load_training_record(record)
+        positive += targets.sum(axis=0)
+        frame_count += len(targets)
+    negative = frame_count - positive
+    return np.where(positive > 0, np.clip(negative / np.maximum(positive, 1), 1, 100), 1).astype(
+        np.float32
+    )
+
+
+def _dilate_targets(targets: np.ndarray, tolerance: int) -> np.ndarray:
+    if tolerance <= 0:
+        return targets.copy()
+    output = targets.copy()
+    for shift in range(1, tolerance + 1):
+        output[shift:] = np.maximum(output[shift:], targets[:-shift])
+        output[:-shift] = np.maximum(output[:-shift], targets[shift:])
+    return output
+
+
+def _training_batches(
+    features: np.ndarray,
+    onsets: np.ndarray,
+    velocities: np.ndarray,
+    window_frames: int,
+    batch_size: int,
+):
+    windows = [
+        (
+            features[start : start + window_frames],
+            onsets[start : start + window_frames],
+            velocities[start : start + window_frames],
+        )
+        for start in range(0, len(features), window_frames)
+    ]
+    for batch_start in range(0, len(windows), batch_size):
+        batch = windows[batch_start : batch_start + batch_size]
+        maximum = max(len(window[0]) for window in batch)
+        feature_batch = np.zeros((len(batch), maximum, features.shape[1]), dtype=np.float32)
+        onset_batch = np.zeros((len(batch), maximum, onsets.shape[1]), dtype=np.float32)
+        velocity_batch = np.zeros_like(onset_batch)
+        valid_batch = np.zeros((len(batch), maximum, 1), dtype=np.float32)
+        for index, (feature_window, onset_window, velocity_window) in enumerate(batch):
+            length = len(feature_window)
+            feature_batch[index, :length] = feature_window
+            onset_batch[index, :length] = onset_window
+            velocity_batch[index, :length] = velocity_window
+            valid_batch[index, :length] = 1
+        yield feature_batch, onset_batch, velocity_batch, valid_batch
+
+
+def _dilate_batched_targets(targets: np.ndarray, tolerance: int) -> np.ndarray:
+    return np.stack([_dilate_targets(row, tolerance) for row in targets])
+
+
+def _peak_frames(probabilities: np.ndarray, *, threshold: float) -> list[int]:
+    if not len(probabilities):
+        return []
+    padded = np.pad(probabilities, (1, 1), constant_values=-np.inf)
+    return np.flatnonzero(
+        (probabilities >= threshold) & (probabilities >= padded[:-2]) & (probabilities > padded[2:])
+    ).tolist()
+
+
+def _match_frames(
+    references: list[int], predictions: list[int], *, tolerance: int
+) -> tuple[int, int, int]:
+    reference_index = prediction_index = true_positive = 0
+    while reference_index < len(references) and prediction_index < len(predictions):
+        delta = predictions[prediction_index] - references[reference_index]
+        if delta < -tolerance:
+            prediction_index += 1
+        elif delta > tolerance:
+            reference_index += 1
+        else:
+            true_positive += 1
+            reference_index += 1
+            prediction_index += 1
+    return (
+        true_positive,
+        len(predictions) - true_positive,
+        len(references) - true_positive,
+    )
+
+
+def _training_device(torch, requested: str) -> str:
+    if requested != "auto":
+        if requested == "cuda" and not torch.cuda.is_available():
+            raise TrainingError("CUDA was requested but is unavailable")
+        if requested == "mps" and not torch.backends.mps.is_available():
+            raise TrainingError("MPS was requested but is unavailable")
+        return requested
+    if torch.cuda.is_available():
+        return "cuda"
+    if torch.backends.mps.is_available():
+        return "mps"
+    return "cpu"
