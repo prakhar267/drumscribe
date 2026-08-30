@@ -2,15 +2,23 @@
 
 import Link from "next/link";
 import { CheckCircle2, LoaderCircle, XCircle } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api/client";
 
 export function MagicLinkConsumer({ token }: { token?: string }) {
   const [state, setState] = useState<"loading" | "ready" | "error">(token ? "loading" : "error");
+  const consumeAttemptRef = useRef<{
+    token: string;
+    attempt: ReturnType<typeof api.consumeMagicLink>;
+  } | null>(null);
   useEffect(() => {
     if (!token) return;
+    const attempt = consumeAttemptRef.current?.token === token
+      ? consumeAttemptRef.current.attempt
+      : api.consumeMagicLink(token);
+    consumeAttemptRef.current = { token, attempt };
     let active = true;
-    void api.consumeMagicLink(token).then(() => { if (active) setState("ready"); }).catch(() => { if (active) setState("error"); });
+    void attempt.then(() => { if (active) setState("ready"); }).catch(() => { if (active) setState("error"); });
     return () => { active = false; };
   }, [token]);
   return (

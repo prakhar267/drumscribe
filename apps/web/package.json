@@ -11,30 +11,42 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "dev:vinext": "vinext dev --port 3001",
+    "build:vinext": "vinext build",
+    "start:vinext": "wrangler dev --config dist/server/wrangler.json",
+    "deploy:vinext": "vinext-cloudflare deploy --config dist/server/wrangler.json"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.72.0",
+    "@vinext/cloudflare": "1.0.0-beta.6",
     "lucide-react": "1.35.0",
     "next": "16.3.3",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "verovio": "6.3.0"
+    "react-server-dom-webpack": "19.2.8",
+    "verovio": "6.3.0",
+    "vinext": "1.0.0-beta.8"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "1.54.2",
     "@playwright/test": "1.62.1",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.2",
     "@types/node": "24.3.0",
     "@types/react": "19.1.12",
     "@types/react-dom": "19.1.9",
+    "@vitejs/plugin-react": "6.1.1",
+    "@vitejs/plugin-rsc": "0.5.34",
     "eslint": "9.34.0",
     "eslint-config-next": "16.3.3",
     "jsdom": "26.1.0",
     "typescript": "5.9.2",
-    "vitest": "4.1.11"
+    "vite": "8.2.2",
+    "vitest": "4.1.11",
+    "wrangler": "4.127.1"
   }
 }

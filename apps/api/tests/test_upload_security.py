@@ -1,5 +1,6 @@
 import asyncio
 import uuid
+from pathlib import Path
 from urllib.parse import urlparse
 
 import pytest
@@ -172,6 +173,70 @@ def test_s3_presigned_urls_use_browser_reachable_endpoint() -> None:
     assert rule["ExposeHeaders"] == ["ETag"]
     with pytest.raises(ValueError, match="explicit"):
         storage.browser_cors_configuration(["*"])
+
+
+@pytest.mark.parametrize(
+    "endpoint",
+    [
+        "https://account.r2.cloudflarestorage.com",
+        "https://br-production.storage.c-2.us-east-2.aws.neon.tech",
+    ],
+)
+def test_managed_s3_providers_omit_unsupported_aws_encryption_header(endpoint: str) -> None:
+    storage = S3PrivateStorage(
+        Settings(
+            storage_backend="s3",
+            s3_endpoint_url=endpoint,
+            s3_public_endpoint_url=endpoint,
+            s3_region="auto",
+            s3_access_key_id="test-access",
+            s3_secret_access_key="test-secret",
+            s3_bucket="drumscribe-private",
+        )
+    )
+    put = asyncio.run(storage.presign_put("users/u/object", "audio/wav", 44, 60))
+    assert storage.server_side_encryption is None
+    assert "x-amz-server-side-encryption" not in put.required_headers
+    assert "x-amz-server-side-encryption" not in urlparse(put.url).query
+    cors = storage.browser_cors_configuration(["https://drumscribe.example"])
+    assert cors["CORSRules"][0]["AllowedHeaders"] == ["content-type"]
+
+
+def test_neon_storage_uses_file_copy_fallback() -> None:
+    storage = S3PrivateStorage(
+        Settings(
+            storage_backend="s3",
+            s3_endpoint_url="https://br-production.storage.c-2.us-east-2.aws.neon.tech",
+            s3_public_endpoint_url=("https://br-production.storage.c-2.us-east-2.aws.neon.tech"),
+            s3_region="us-east-2",
+            s3_access_key_id="test-access",
+            s3_secret_access_key="test-secret",
+            s3_bucket="drumscribe-private",
+        )
+    )
+
+    class FakeClient:
+        def __init__(self) -> None:
+            self.copy_called = False
+            self.uploaded = b""
+
+        def copy_object(self, **kwargs):
+            self.copy_called = True
+
+        def download_file(self, bucket, key, filename):
+            del bucket, key
+            Path(filename).write_bytes(b"private-audio")
+
+        def upload_file(self, filename, bucket, key, ExtraArgs):
+            del bucket, key
+            assert ExtraArgs == {"ContentType": "audio/wav"}
+            self.uploaded = Path(filename).read_bytes()
+
+    fake = FakeClient()
+    storage.client = fake
+    asyncio.run(storage.copy("source/audio", "destination/audio", "audio/wav"))
+    assert fake.copy_called is False
+    assert fake.uploaded == b"private-audio"
 
 
 def test_s3_deletes_are_batched_and_partial_failures_are_not_ignored() -> None:

@@ -54,6 +54,7 @@ class Settings(BaseSettings):
     s3_bucket: str = "drumscribe-private"
     s3_access_key_id: str | None = None
     s3_secret_access_key: SecretStr | None = None
+    s3_server_side_encryption: Literal["auto", "AES256", "none"] = "auto"
     s3_configure_bucket_cors: bool = False
 
     session_secret: SecretStr = SecretStr("development-only-change-this-secret")
@@ -88,7 +89,7 @@ class Settings(BaseSettings):
     rate_limit_per_minute: int = Field(default=180, gt=0)
     auth_rate_limit_per_minute: int = Field(default=10, gt=0)
     enable_rate_limiting: bool = True
-    readiness_timeout_seconds: float = Field(default=2.0, gt=0, le=30)
+    readiness_timeout_seconds: float = Field(default=10.0, gt=0, le=30)
     anonymous_retention_hours: int = 24
     export_retention_hours: int = 24 * 7
     project_delete_grace_hours: int = 24 * 7

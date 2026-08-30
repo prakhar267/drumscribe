@@ -5,8 +5,10 @@ packages:
 # pnpm 11 blocks dependency scripts unless each exact reviewed release is listed.
 allowBuilds:
   '@sentry/cli': true
+  esbuild@0.28.1: true
   sharp@0.35.4: true
   unrs-resolver@1.12.2: true
+  workerd@1.20260828.1: true
 
 minimumReleaseAgeExclude:
   - lucide-react@1.35.0

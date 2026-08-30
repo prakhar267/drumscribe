@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { EDITOR_ROWS } from "../lib/domain";
 
 const API_BASE = "http://localhost:8000/api/v1";
 const FIXTURE_SECONDS = 12;
@@ -55,7 +56,7 @@ async function requestExport(page: Page, projectId: string, format: "MIDI" | "MU
 
 test("real stack covers anonymous upload, conversion, editing, exports and revocable deletion", async ({ page }) => {
   test.skip(process.env.DRUMSCRIBE_FULL_STACK_E2E !== "1", "Requires the full acceptance stack");
-  test.setTimeout(240_000);
+  test.setTimeout(600_000);
 
   await page.goto("/upload");
   await page.getByTestId("audio-file").setInputFiles({
@@ -66,7 +67,9 @@ test("real stack covers anonymous upload, conversion, editing, exports and revoc
   await expect(page.getByTestId("file-summary")).toContainText("e2e-rights-cleared-groove.wav");
   await page.getByRole("checkbox").check();
   await page.getByTestId("start-transcription").click();
-  await expect(page).toHaveURL(/\/jobs\/[0-9a-f-]+$/);
+  // A scaled-to-zero database can need several seconds to resume before the
+  // anonymous session and project are created.
+  await expect(page).toHaveURL(/\/jobs\/[0-9a-f-]+$/, { timeout: 30_000 });
   const jobId = page.url().split("/").at(-1);
   expect(jobId).toMatch(/^[0-9a-f-]+$/);
   // Closing the progress view must not own the job lifecycle. Reopen it from a
@@ -91,6 +94,9 @@ test("real stack covers anonymous upload, conversion, editing, exports and revoc
 
   await page.goto(`/projects/${projectId}`);
   await expect(page.getByTestId("editor")).toBeVisible();
+  // The client renders a demo-shaped skeleton before the real project request
+  // completes. Wait for the uploaded project to hydrate before counting hits.
+  await expect(page.getByLabel("Project title")).toHaveValue("e2e-rights-cleared-groove", { timeout: 30_000 });
   const hits = page.getByTestId("grid-hit");
   const initialCount = await hits.count();
   expect(initialCount).toBeGreaterThan(0);
@@ -108,7 +114,9 @@ test("real stack covers anonymous upload, conversion, editing, exports and revoc
   const box = await grid.boundingBox();
   if (!box) throw new Error("Drum grid is not visible");
   // Move the incorrect 0.50-second snare to the next empty sixteenth.
-  await page.mouse.click(box.x + box.width * (0.75 / FIXTURE_SECONDS), box.y + 11 * 30 + 15);
+  const snareRow = EDITOR_ROWS.indexOf("SNARE");
+  expect(snareRow).toBeGreaterThanOrEqual(0);
+  await page.mouse.click(box.x + box.width * (0.75 / FIXTURE_SECONDS), box.y + snareRow * 30 + 15);
   await expect(hits).toHaveCount(initialCount);
   const correctedSnare = page.getByRole("button", { name: "Snare hit at 0.75 seconds" });
   await expect(correctedSnare).toBeVisible();
@@ -116,15 +124,22 @@ test("real stack covers anonymous upload, conversion, editing, exports and revoc
   await expect(hits).toHaveCount(initialCount - 1);
   await page.getByTestId("redo").click();
   await expect(hits).toHaveCount(initialCount);
+  const saveStatus = page.locator(".save-status");
+  await expect(saveStatus).not.toHaveText("Saved", { timeout: 5_000 });
 
   const waveform = page.getByTestId("editor-waveform");
+  await waveform.scrollIntoViewIfNeeded();
   const waveformBox = await waveform.boundingBox();
   if (!waveformBox) throw new Error("Waveform is not visible");
   const loopEnd = 4 * 4 * 60 / FIXTURE_BPM;
   const waveformY = waveformBox.y + waveformBox.height / 2;
-  await page.mouse.move(waveformBox.x + 2, waveformY);
+  await page.mouse.move(waveformBox.x + waveformBox.width * 0.01, waveformY);
   await page.mouse.down();
-  await page.mouse.move(waveformBox.x + waveformBox.width * (loopEnd / FIXTURE_SECONDS), waveformY);
+  await page.mouse.move(
+    waveformBox.x + waveformBox.width * (loopEnd / FIXTURE_SECONDS),
+    waveformY,
+    { steps: 10 },
+  );
   await page.mouse.up();
   await expect(page.getByTestId("loop-toggle")).toHaveAttribute("aria-pressed", "true");
   const loopBox = await page.locator(".wave-loop").boundingBox();
@@ -135,10 +150,10 @@ test("real stack covers anonymous upload, conversion, editing, exports and revoc
   await page.getByTestId("transport-play").click();
   await page.waitForTimeout(300);
   await page.getByTestId("transport-play").click();
-  await expect(page.getByRole("button", { name: "All changes saved" })).toBeVisible({ timeout: 15_000 });
+  await expect(saveStatus).toHaveText("Saved", { timeout: 30_000 });
   await page.reload();
+  await expect(page.getByRole("button", { name: "Snare hit at 0.75 seconds" })).toBeVisible({ timeout: 30_000 });
   await expect(page.getByTestId("grid-hit")).toHaveCount(initialCount);
-  await expect(page.getByRole("button", { name: "Snare hit at 0.75 seconds" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Snare hit at 0.50 seconds" })).toHaveCount(0);
 
   const originalSigned = await page.request.get(`${API_BASE}/projects/${projectId}/audio/original/url`);
@@ -163,7 +178,9 @@ test("real stack covers anonymous upload, conversion, editing, exports and revoc
 
   await page.goto(`/projects/${projectId}/settings`);
   await page.getByRole("button", { name: "Delete project" }).click();
-  await expect(page.getByText("Project moved to deleted items.")).toBeVisible();
+  // Neon Object Storage currently uses the adapter's streamed move fallback,
+  // so revoking every project artifact can take longer than a single DB call.
+  await expect(page.getByText("Project moved to deleted items.")).toBeVisible({ timeout: 60_000 });
   expect((await page.request.get(`${API_BASE}/projects/${projectId}`)).status()).toBe(404);
   for (const privateUrl of [originalUrl, drumsUrl, waveformUrl, midi.url, musicXml.url, pdf.url]) {
     expect((await page.request.get(privateUrl)).ok()).toBeFalsy();

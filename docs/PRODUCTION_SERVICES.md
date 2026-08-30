@@ -8,21 +8,24 @@ This is the non-secret source of truth for DrumScribe's pre-launch service topol
 | --- | --- | --- | --- |
 | PostgreSQL | Neon project `drumstick` (`cool-cell-64604736`), organization `Prakhar` (`org-winter-sea-89158570`), AWS Ohio | `DRUMSCRIBE_DATABASE_URL` | CLI/MCP are configured. All migrations passed first on an ephemeral branch and then on `production`; pooled application connectivity is verified. |
 | Durable queue and rate-limit state | Upstash Redis `drumscribe-production`, AWS Ohio | `DRUMSCRIBE_REDIS_URL`; production uses `DRUMSCRIBE_QUEUE_BACKEND=celery` | TLS authentication and write/read/delete verified. Localhost stays `inline` so it remains usable without a separate worker process. |
-| Private audio and exports | Cloudflare R2 private bucket | `DRUMSCRIBE_S3_*` | Account is connected, but R2 itself is not activated. Cloudflare shows $0 due now and free allowances, while requiring acceptance of an auto-renewing usage subscription that can charge above those allowances. |
+| Private audio and exports | Neon Object Storage bucket `drumscribe-private`, AWS Ohio | `DRUMSCRIBE_S3_*` | Private bucket, scoped production credential, exact-origin CORS, signed browser upload/download, unsigned denial, streamed move fallback, and cleanup are live-verified. Neon Object Storage is beta, so application retention/deletion remains authoritative. The existing public-read `drumstick` bucket is unused for customer media. |
 | Transactional sign-in email | Resend | `DRUMSCRIBE_MAGIC_LINK_DELIVERY=resend`, `DRUMSCRIBE_RESEND_*` | Adapter and unit test are complete; live delivery to the account email passed. Customer delivery is blocked until a custom domain is verified. |
 | API error monitoring | Sentry `python-fastapi` | `DRUMSCRIBE_SENTRY_DSN`, `DRUMSCRIBE_SENTRY_TRACES_SAMPLE_RATE` | SDK wiring and a live ingestion event are verified. |
 | Web error monitoring | Sentry `drumscribe-web` | `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_DSN`, sample-rate variables | Next.js client, server, edge, global-error, and build integration are complete; lint, type checking, tests, and production build pass. Source-map upload needs a CI auth token at deployment time. |
-| Public web, API, worker, and beat | Oracle Cloud | Container environment variables and TLS hostnames | Account provisioning is external and still pending. No production workload is deployed yet. |
-| Logs and uptime | Better Stack | Deployment log drain and public health URLs | Account is connected, but sources and monitors wait for the public Oracle URLs. |
-| Source and CI | GitHub `prakhar267/drumscribe` | Repository secrets and workflows | CLI access is working. Hosted Actions billing/spending availability remains a launch check. |
+| Public web | Cloudflare Workers, `drumscribe-web` | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_DEMO_MODE`, `API_ORIGIN` | Vinext production build and live Workers deployment are verified at `https://drumscribe-web.prakhargupta267.workers.dev`. It remains in explicit pre-launch demo mode until the public API URL exists. |
+| Public API, worker, and scheduler | Northflank Sandbox | Container environment variables and TLS hostname | Deployment is prepared but blocked on the account owner's GitHub passkey confirmation. Sandbox is suitable for a free pre-launch beta, not an SLA production launch. Oracle is no longer in the selected topology. |
+| Logs and uptime | Better Stack | Deployment log drain and public health URLs | Account is connected, but sources and monitors wait for the public API URL. |
+| Source and CI | GitHub `prakhar267/drumscribe` | Repository secrets and workflows | CLI access and repository push are working. Hosted Actions are externally blocked by the account billing/spending limit; the equivalent local suite is required before push. |
 
 ## Neon boundary
 
-DrumScribe currently uses Neon only for PostgreSQL. Do not enable Neon Auth, Storage, Functions, or AI features merely because they are available:
+DrumScribe uses Neon PostgreSQL and Neon Object Storage. Other Neon primitives stay disabled unless they are deliberately adopted:
 
 - Authentication is the application's own first-party magic-link and session implementation, delivered through Resend.
-- Private audio and generated exports use the existing S3-compatible storage boundary, planned for Cloudflare R2.
-- API and background inference run in application and worker containers, planned for Oracle Cloud.
+- Private audio and generated exports use the existing S3-compatible boundary backed by the private `drumscribe-private` bucket.
+- Neon requires path-style S3 addressing and does not currently expose `CopyObject`; the adapter streams recoverable moves through a temporary local file.
+- `DRUMSCRIBE_S3_SERVER_SIDE_ENCRYPTION=auto` omits unsupported AWS SSE request headers for Neon while retaining provider-managed at-rest encryption.
+- API and background work run in separate application and worker containers, planned for Northflank during pre-launch.
 - The runtime database URL must use Neon's pooled connection string. Alembic migrations must use the direct, unpooled connection string.
 - Neon's canonical libpq URL is normalized centrally for SQLAlchemy `asyncpg`: TLS remains required while unsupported libpq-only query parameters are removed before connecting.
 - The project-scoped Neon MCP configuration is for development and testing, not a production runtime dependency.
@@ -34,14 +37,14 @@ DrumScribe currently uses Neon only for PostgreSQL. Do not enable Neon Auth, Sto
 - `.env` is Git-ignored, mode `0600`, and currently contains only local pre-launch values.
 - Local managed-service credentials are also stored in macOS Keychain under DrumScribe-specific service names.
 - No committed example contains a real DSN, token, password, or connection string.
-- Production secrets must be copied into Oracle/GitHub secret storage rather than committed or baked into images.
+- Production secrets must be copied into Northflank/GitHub secret storage rather than committed or baked into images.
 
 ## Launch gates that remain external
 
-1. Activate R2 after explicit billing approval, create the private bucket, block public access, configure exact-origin CORS, and issue bucket-scoped credentials.
-2. Finish Oracle provisioning; deploy separate web, API, worker, and single beat services behind TLS.
-3. Verify a customer sending domain in Resend and publish its SPF/DKIM records.
-4. Attach Better Stack logs and uptime checks to the deployed health endpoints and document alert recipients.
-5. Obtain the commercial provider credentials, contractual approval, retention/training terms, and rights evidence required by the fail-closed production validator.
+1. Complete the GitHub passkey confirmation, deploy the API and worker on Northflank, run the migration job, and switch the Worker from demo mode to the generated public API hostname.
+2. Verify a customer sending domain in Resend and publish its SPF/DKIM records.
+3. Attach Better Stack logs and uptime checks to the deployed health endpoints and document alert recipients.
+4. Obtain the commercial provider credentials, contractual approval, retention/training terms, and rights evidence required by the fail-closed production validator. The local Demucs/research path is validated for research only and is never accepted by the production safety gate.
+5. Move off Northflank Sandbox to an SLA-capable paid/runtime tier before the production launch.
 6. Complete legal-entity/address decisions and qualified review of the customer-facing legal text.
-7. Run staging restore/deletion/security tests, real browser acceptance, and measured quality benchmarks before launch.
+7. Run deployed restore/deletion/security tests and measured quality benchmarks after the public API is available. Local full-stack and rights-cleared recording journeys already pass against production Neon data and storage services.

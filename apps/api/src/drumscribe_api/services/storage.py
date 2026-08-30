@@ -9,7 +9,7 @@ from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse
 
 import anyio
 import boto3  # type: ignore[import-untyped]
@@ -235,6 +235,21 @@ class LocalPrivateStorage:
 class S3PrivateStorage:
     def __init__(self, settings: Settings) -> None:
         self.bucket = settings.s3_bucket
+        endpoint_host = urlparse(settings.s3_endpoint_url or "").hostname or ""
+        self.supports_server_side_copy = not endpoint_host.endswith(".aws.neon.tech")
+        if settings.s3_server_side_encryption == "auto":
+            # R2 and Neon encrypt managed storage without implementing the AWS SSE
+            # request header. Other S3-compatible stores retain the prior AES256
+            # behavior unless deployment configuration explicitly disables it.
+            self.server_side_encryption = (
+                None
+                if endpoint_host.endswith((".r2.cloudflarestorage.com", ".aws.neon.tech"))
+                else "AES256"
+            )
+        elif settings.s3_server_side_encryption == "none":
+            self.server_side_encryption = None
+        else:
+            self.server_side_encryption = settings.s3_server_side_encryption
         credentials = {
             "region_name": settings.s3_region,
             "aws_access_key_id": settings.s3_access_key_id,
@@ -243,7 +258,7 @@ class S3PrivateStorage:
                 if settings.s3_secret_access_key
                 else None
             ),
-            "config": Config(signature_version="s3v4"),
+            "config": Config(signature_version="s3v4", s3={"addressing_style": "path"}),
         }
         # Server-side operations use the private service address; URLs handed to browsers
         # must be signed with the separately configured browser-reachable endpoint.
@@ -254,20 +269,19 @@ class S3PrivateStorage:
     async def healthcheck(self) -> None:
         await asyncio.to_thread(self.client.head_bucket, Bucket=self.bucket)
 
-    @staticmethod
-    def browser_cors_configuration(origins: list[str]) -> dict[str, Any]:
+    def browser_cors_configuration(self, origins: list[str]) -> dict[str, Any]:
         clean_origins = sorted({origin.rstrip("/") for origin in origins if origin.strip()})
         if not clean_origins or "*" in clean_origins:
             raise ValueError("S3 browser CORS requires explicit web origins")
+        allowed_headers = ["content-type"]
+        if self.server_side_encryption:
+            allowed_headers.append("x-amz-server-side-encryption")
         return {
             "CORSRules": [
                 {
                     "AllowedOrigins": clean_origins,
                     "AllowedMethods": ["GET", "HEAD", "PUT"],
-                    "AllowedHeaders": [
-                        "content-type",
-                        "x-amz-server-side-encryption",
-                    ],
+                    "AllowedHeaders": allowed_headers,
                     "ExposeHeaders": ["ETag"],
                     "MaxAgeSeconds": 600,
                 }
@@ -289,18 +303,19 @@ class S3PrivateStorage:
             "Bucket": self.bucket,
             "Key": safe_key,
             "ContentType": content_type,
-            "ServerSideEncryption": "AES256",
         }
+        if self.server_side_encryption:
+            params["ServerSideEncryption"] = self.server_side_encryption
         url = self.signing_client.generate_presigned_url(
             "put_object", Params=params, ExpiresIn=expires_in, HttpMethod="PUT"
         )
+        required_headers = {"Content-Type": content_type}
+        if self.server_side_encryption:
+            required_headers["x-amz-server-side-encryption"] = self.server_side_encryption
         return PresignedRequest(
             url=url,
             expires_at_epoch=int(time.time()) + expires_in,
-            required_headers={
-                "Content-Type": content_type,
-                "x-amz-server-side-encryption": "AES256",
-            },
+            required_headers=required_headers,
         )
 
     async def presign_get(self, key: str, expires_in: int) -> PresignedRequest:
@@ -342,35 +357,49 @@ class S3PrivateStorage:
         return await asyncio.to_thread(result["Body"].read)
 
     async def put_bytes(self, key: str, data: bytes, content_type: str) -> None:
+        extra_args: dict[str, Any] = {}
+        if self.server_side_encryption:
+            extra_args["ServerSideEncryption"] = self.server_side_encryption
         await asyncio.to_thread(
             self.client.put_object,
             Bucket=self.bucket,
             Key=_validate_key(key),
             Body=data,
             ContentType=content_type,
-            ServerSideEncryption="AES256",
+            **extra_args,
         )
 
     async def put_file(self, key: str, source: Path, content_type: str) -> None:
+        extra_args = {"ContentType": content_type}
+        if self.server_side_encryption:
+            extra_args["ServerSideEncryption"] = self.server_side_encryption
         await asyncio.to_thread(
             self.client.upload_file,
             str(source),
             self.bucket,
             _validate_key(key),
-            ExtraArgs={"ContentType": content_type, "ServerSideEncryption": "AES256"},
+            ExtraArgs=extra_args,
         )
 
     async def copy(self, source_key: str, destination_key: str, content_type: str) -> None:
+        extra_args: dict[str, Any] = {}
+        if self.server_side_encryption:
+            extra_args["ServerSideEncryption"] = self.server_side_encryption
         try:
-            await asyncio.to_thread(
-                self.client.copy_object,
-                Bucket=self.bucket,
-                Key=_validate_key(destination_key),
-                CopySource={"Bucket": self.bucket, "Key": _validate_key(source_key)},
-                ContentType=content_type,
-                MetadataDirective="REPLACE",
-                ServerSideEncryption="AES256",
-            )
+            if self.supports_server_side_copy:
+                await asyncio.to_thread(
+                    self.client.copy_object,
+                    Bucket=self.bucket,
+                    Key=_validate_key(destination_key),
+                    CopySource={"Bucket": self.bucket, "Key": _validate_key(source_key)},
+                    ContentType=content_type,
+                    MetadataDirective="REPLACE",
+                    **extra_args,
+                )
+            else:
+                await self._copy_via_temporary_file(
+                    source_key, destination_key, content_type, extra_args
+                )
         except ClientError as exc:
             if exc.response.get("Error", {}).get("Code") in {
                 "404",
@@ -379,6 +408,33 @@ class S3PrivateStorage:
             }:
                 raise ObjectNotFoundError(source_key) from exc
             raise
+
+    async def _copy_via_temporary_file(
+        self,
+        source_key: str,
+        destination_key: str,
+        content_type: str,
+        extra_args: dict[str, Any],
+    ) -> None:
+        handle = tempfile.NamedTemporaryFile(prefix="drumscribe-copy-", delete=False)
+        path = Path(handle.name)
+        handle.close()
+        try:
+            await asyncio.to_thread(
+                self.client.download_file,
+                self.bucket,
+                _validate_key(source_key),
+                str(path),
+            )
+            await asyncio.to_thread(
+                self.client.upload_file,
+                str(path),
+                self.bucket,
+                _validate_key(destination_key),
+                ExtraArgs={"ContentType": content_type, **extra_args},
+            )
+        finally:
+            await asyncio.to_thread(path.unlink, missing_ok=True)
 
     async def delete_many(self, keys: list[str]) -> None:
         if not keys:
