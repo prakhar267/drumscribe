@@ -8,7 +8,6 @@ import pytest
 from fastapi.testclient import TestClient
 
 from drumscribe_api.config import Environment, Settings
-from drumscribe_api.main import create_app
 
 
 @pytest.fixture
@@ -31,7 +30,12 @@ def settings(tmp_path: Path) -> Settings:
 
 
 @pytest.fixture
-def app(settings: Settings):
+def app(settings: Settings, monkeypatch: pytest.MonkeyPatch):
+    # Importing the ASGI module constructs its deployment app. Keep a developer's
+    # local Sentry DSN from turning test failures into real monitoring events.
+    monkeypatch.setenv("DRUMSCRIBE_SENTRY_DSN", "")
+    from drumscribe_api.main import create_app
+
     return create_app(settings)
 
 

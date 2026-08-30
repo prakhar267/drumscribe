@@ -6,9 +6,9 @@ This is the non-secret source of truth for DrumScribe's pre-launch service topol
 
 | Product boundary | Service | App configuration | Current pre-launch status |
 | --- | --- | --- | --- |
-| PostgreSQL | Neon project `drumstick` (`cool-cell-64604736`), organization `Prakhar` (`org-winter-sea-89158570`), AWS Ohio | `DRUMSCRIBE_DATABASE_URL` | Project and production branch verified. CLI OAuth, environment pull, migration, and application connectivity still require final authorization. |
+| PostgreSQL | Neon project `drumstick` (`cool-cell-64604736`), organization `Prakhar` (`org-winter-sea-89158570`), AWS Ohio | `DRUMSCRIBE_DATABASE_URL` | CLI/MCP are configured. All migrations passed first on an ephemeral branch and then on `production`; pooled application connectivity is verified. |
 | Durable queue and rate-limit state | Upstash Redis `drumscribe-production`, AWS Ohio | `DRUMSCRIBE_REDIS_URL`; production uses `DRUMSCRIBE_QUEUE_BACKEND=celery` | TLS authentication and write/read/delete verified. Localhost stays `inline` so it remains usable without a separate worker process. |
-| Private audio and exports | Cloudflare R2 private bucket | `DRUMSCRIBE_S3_*` | Account is connected. The bucket and narrowly scoped S3 credentials are pending refreshed R2 authorization. |
+| Private audio and exports | Cloudflare R2 private bucket | `DRUMSCRIBE_S3_*` | Account is connected, but R2 itself is not activated. Cloudflare shows $0 due now and free allowances, while requiring acceptance of an auto-renewing usage subscription that can charge above those allowances. |
 | Transactional sign-in email | Resend | `DRUMSCRIBE_MAGIC_LINK_DELIVERY=resend`, `DRUMSCRIBE_RESEND_*` | Adapter and unit test are complete; live delivery to the account email passed. Customer delivery is blocked until a custom domain is verified. |
 | API error monitoring | Sentry `python-fastapi` | `DRUMSCRIBE_SENTRY_DSN`, `DRUMSCRIBE_SENTRY_TRACES_SAMPLE_RATE` | SDK wiring and a live ingestion event are verified. |
 | Web error monitoring | Sentry `drumscribe-web` | `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_DSN`, sample-rate variables | Next.js client, server, edge, global-error, and build integration are complete; lint, type checking, tests, and production build pass. Source-map upload needs a CI auth token at deployment time. |
@@ -24,8 +24,10 @@ DrumScribe currently uses Neon only for PostgreSQL. Do not enable Neon Auth, Sto
 - Private audio and generated exports use the existing S3-compatible storage boundary, planned for Cloudflare R2.
 - API and background inference run in application and worker containers, planned for Oracle Cloud.
 - The runtime database URL must use Neon's pooled connection string. Alembic migrations must use the direct, unpooled connection string.
+- Neon's canonical libpq URL is normalized centrally for SQLAlchemy `asyncpg`: TLS remains required while unsupported libpq-only query parameters are removed before connecting.
 - The project-scoped Neon MCP configuration is for development and testing, not a production runtime dependency.
 - Create database changes on a temporary Neon branch first, run tests there, and apply them to the default production branch only after review.
+- An existing public-read Neon bucket named `drumstick` was observed but is intentionally not wired to customer audio. DrumScribe's storage safety gate requires private S3-compatible storage.
 
 ## Secret handling
 
@@ -36,11 +38,10 @@ DrumScribe currently uses Neon only for PostgreSQL. Do not enable Neon Auth, Sto
 
 ## Launch gates that remain external
 
-1. Authorize the Neon CLI, link the exact project, pull pooled/direct URLs, migrate with the direct URL, and run connectivity tests with the pooled URL.
-2. Create the private R2 bucket, block public access, configure exact-origin CORS, and issue bucket-scoped credentials.
-3. Finish Oracle provisioning; deploy separate web, API, worker, and single beat services behind TLS.
-4. Verify a customer sending domain in Resend and publish its SPF/DKIM records.
-5. Attach Better Stack logs and uptime checks to the deployed health endpoints and document alert recipients.
-6. Obtain the commercial provider credentials, contractual approval, retention/training terms, and rights evidence required by the fail-closed production validator.
-7. Complete legal-entity/address decisions and qualified review of the customer-facing legal text.
-8. Run staging migrations from zero, restore/deletion/security tests, real browser acceptance, and measured quality benchmarks before launch.
+1. Activate R2 after explicit billing approval, create the private bucket, block public access, configure exact-origin CORS, and issue bucket-scoped credentials.
+2. Finish Oracle provisioning; deploy separate web, API, worker, and single beat services behind TLS.
+3. Verify a customer sending domain in Resend and publish its SPF/DKIM records.
+4. Attach Better Stack logs and uptime checks to the deployed health endpoints and document alert recipients.
+5. Obtain the commercial provider credentials, contractual approval, retention/training terms, and rights evidence required by the fail-closed production validator.
+6. Complete legal-entity/address decisions and qualified review of the customer-facing legal text.
+7. Run staging restore/deletion/security tests, real browser acceptance, and measured quality benchmarks before launch.
