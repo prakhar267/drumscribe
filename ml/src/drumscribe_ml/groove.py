@@ -30,6 +30,7 @@ GROOVE_MIDI_MAP = {
     37: Instrument.CROSS_STICK,
     38: Instrument.SNARE,
     40: Instrument.SNARE,
+    41: Instrument.FLOOR_TOM,
     42: Instrument.CLOSED_HIHAT,
     44: Instrument.PEDAL_HIHAT,
     46: Instrument.OPEN_HIHAT,
@@ -46,6 +47,7 @@ GROOVE_MIDI_MAP = {
     51: Instrument.RIDE,
     59: Instrument.RIDE,
     53: Instrument.RIDE_BELL,
+    54: Instrument.TAMBOURINE,
 }
 
 

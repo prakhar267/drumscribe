@@ -3,6 +3,7 @@ import importlib
 import inspect
 import json
 import math
+import shlex
 import shutil
 import socket
 import statistics
@@ -175,13 +176,60 @@ class MusicEngineAdapter:
             raise RuntimeError(f"Configured provider {provider_name!r} is not ready.") from exc
 
     def _transcription_provider(self, engine: Any) -> Any:
-        if self.settings.music_transcription_provider.casefold() == "klangio_drums":
+        selected = self.settings.music_transcription_provider.casefold()
+        if selected == "klangio_drums":
             return KlangioDrumTranscriptionProvider(self._klangio_config())
-        class_name = {
+        external = {
+            "yourmt3_plus": (
+                "YourMT3PlusTranscriptionProvider",
+                self.settings.yourmt3_command,
+                self.settings.yourmt3_model_version,
+            ),
+            "oaf_drums": (
+                "OaFDrumsTranscriptionProvider",
+                self.settings.oaf_drums_command,
+                self.settings.oaf_drums_model_version,
+            ),
+            "adtof": (
+                "ADTOFResearchTranscriptionProvider",
+                self.settings.adtof_command,
+                self.settings.adtof_model_version,
+            ),
+        }
+        if selected in external:
+            class_name, command, version = external[selected]
+            if not command:
+                raise RuntimeError(
+                    f"Configured provider {selected!r} requires its model command setting."
+                )
+            try:
+                argv = shlex.split(command)
+            except ValueError as exc:
+                raise RuntimeError(f"Configured provider {selected!r} has invalid argv.") from exc
+            provider_class = getattr(engine, class_name, None)
+            if provider_class is None:
+                raise RuntimeError(f"Configured provider {selected!r} is not installed.")
+            return provider_class(
+                argv,
+                model_version=version,
+                timeout_seconds=self.settings.provider_timeout_seconds,
+            )
+        aliases = {
             "mock": "MockDrumTranscriptionProvider",
             "research": "ResearchDrumTranscriptionProvider",
         }
-        return self._provider(engine, self.settings.music_transcription_provider, class_name)
+        return self._provider(engine, self.settings.music_transcription_provider, aliases)
+
+    def transcription_input_kind(self) -> str:
+        """Return whether the selected detector expects a full mix or drum stem."""
+
+        if self.settings.pipeline_provider == "development":
+            return "drum_stem"
+        provider = self._transcription_provider(self._engine())
+        input_kind = str(getattr(provider, "input_kind", "drum_stem"))
+        if input_kind not in {"full_mix", "drum_stem"}:
+            raise RuntimeError("Configured transcription provider has an invalid input kind.")
+        return input_kind
 
     def _separation_provider(self, engine: Any) -> Any:
         selected = self.settings.source_separation_provider.casefold()
@@ -445,6 +493,9 @@ class MusicEngineAdapter:
                 model_version=version,
                 request_id=None,
                 processing_ms=round((time.monotonic() - started) * 1000),
+                raw_metadata={
+                    "inputKind": str(getattr(provider, "input_kind", "drum_stem")),
+                },
             ),
         )
 
@@ -852,8 +903,12 @@ class PipelineService:
             )
             if existing is not None:
                 return
-            stem = await self._asset(db, project.id, AssetKind.DRUM_STEM)
-            async with self.storage.materialize(stem.storage_key) as path:
+            input_kind = self.music.transcription_input_kind()
+            input_asset_kind = (
+                AssetKind.NORMALIZED if input_kind == "full_mix" else AssetKind.DRUM_STEM
+            )
+            transcription_input = await self._asset(db, project.id, input_asset_kind)
+            async with self.storage.materialize(transcription_input.storage_key) as path:
                 transcription_result = await self.music.transcribe(
                     path, project.duration_seconds or 8.0
                 )
@@ -875,7 +930,11 @@ class PipelineService:
                 provider_request_id=provider_metadata.request_id,
                 model_name=self.settings.music_transcription_provider,
                 model_version=provider_metadata.model_version,
-                parameters={"canonicalClasses": [item.value for item in Instrument]},
+                parameters={
+                    "canonicalClasses": [item.value for item in Instrument],
+                    "inputKind": input_kind,
+                    "inputAssetKind": input_asset_kind.value,
+                },
                 duration_seconds=provider_metadata.processing_ms / 1000,
                 summary={"rawHits": raw_hit_rows, "rawHitCount": len(raw_hit_rows)},
                 hardware_metadata={"worker": socket.gethostname()},

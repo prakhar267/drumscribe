@@ -102,3 +102,25 @@ credits. Credentialed staging runs must set `RUN_LIVE_ML_TESTS=1`, use only
 rights-cleared fixtures, name the provider request IDs, and delete remote inputs/jobs
 when the provider API permits. Until credentials exist, the precise blocker is tracked
 in `COMMERCIAL_DRUM_PROVIDER_BLOCKER.md`.
+
+## Local research transcription stack
+
+Research selection is explicit and never falls back silently:
+
+- `yourmt3_plus` runs `scripts/model_runners/yourmt3_runner.py` against the normalized
+  full mix. Configure its isolated interpreter, runner and upstream checkout in
+  `DRUMSCRIBE_YOURMT3_COMMAND`.
+- `oaf_drums` runs `scripts/model_runners/oaf_drums_runner.py` against the Demucs drum
+  stem. Its legacy TensorFlow/Magenta interpreter and `--model-dir` belong in
+  `DRUMSCRIBE_OAF_DRUMS_COMMAND`. The official E-GMD checkpoint archive is pinned
+  locally at SHA-256 `09765ae0ff19c7d769a3c20e158eba3b9cd279429b02e498b1e911d16f82e2c0`;
+  Apple Silicon has no compatible legacy runtime, so execution belongs on an isolated
+  x86/Linux research worker.
+- `adtof` runs `scripts/model_runners/adtof_runner.py` against the drum stem. It is
+  hard-labelled non-commercial and cannot pass production configuration or runtime
+  licensing checks.
+
+All runners receive fixed `--input` and `--output` arguments through `subprocess`
+argv with `shell=False`. Output must be schema-versioned JSON, match the configured
+provider ID, remain below 16 MiB/50,000 hits, and contain only finite, bounded,
+canonical events. Wrong, missing, symlinked or malformed output fails the job.

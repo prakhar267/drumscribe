@@ -26,4 +26,5 @@ exports/
 apps/web/public/demo/*.wav
 apps/web/public/demo/*.mp3
 .neon
+.research-models/
 .env.storage-test-57235

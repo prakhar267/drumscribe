@@ -35,12 +35,19 @@ seconds/audio minute, cost/audio minute and cost/successful transcription.
 Customer correction data remains excluded from training unless the owner gave
 explicit opt-in consent and the example passed licensing/privacy review.
 
+The research bakeoff uses one immutable reference payload and separate candidate
+prediction files. Run `drumscribe-bakeoff references.json --candidate
+spectral=predictions-spectral.json --candidate yourmt3_plus=predictions-yourmt3.json
+--candidate oaf_drums=predictions-oaf.json --json bakeoff.json`. Candidates are ranked
+by 50 ms micro F1, then macro F1, then 25 ms F1; their full per-class reports remain
+embedded rather than reducing the decision to one score.
+
 ## Self-hosted lifecycle
 
 `ml/` now implements manifest validation, hash/duration checks, canonical label
 preservation, leakage-safe splitting, deterministic bounded audio augmentation,
-log-mel feature caching, a multi-label convolutional/bi-GRU onset model with a
-velocity head, checkpoint/resume, early stopping, JSONL metric logging,
+log-mel feature caching, multi-label convolutional/bi-GRU and sparse spectral-MoE
+onset models with velocity heads, checkpoint/resume, early stopping, JSONL metric logging,
 experiment/Git/dataset/config provenance, model hashing and validation-set
 temperature/threshold calibration. This is runnable engineering infrastructure,
 not a production-approved checkpoint.
@@ -48,6 +55,16 @@ not a production-approved checkpoint.
 The committed HTML/JSON reports are labelled `synthetic_tooling_only`. They prove
 the evaluator works; they do not establish real-song quality. Production remains
 blocked until a rights-cleared corpus and real provider credentials are supplied.
+
+`drumscribe-ml import-egmd` consumes an already downloaded/extracted E-GMD v1.0.0
+archive; it never downloads the 90 GB corpus. Each kit render has a unique track ID,
+but all renders of one source performance share a group ID, preventing kit leakage.
+The source-prescribed split is retained. `drumscribe-ml audit-one-shots` validates
+commercial-use evidence, paths, class coverage and a content-derived corpus hash for
+the MuldjordKit/FreePats augmentation catalog. The current local audit covers 29
+closed hats, 29 open hats, 44 toms across four canonical levels, 64 ride/ride-bell/
+crash samples and 24 tambourines; its corpus SHA-256 is
+`427e674e82c9f36fc146a00bae29720a1d05632f425f33d03bac6d0731930ccd`.
 
 ## Release gate
 

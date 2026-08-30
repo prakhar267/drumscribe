@@ -30,6 +30,12 @@ class Settings(BaseSettings):
     commercial_provider_approval_reference: str | None = None
     provider_timeout_seconds: float = Field(default=600, gt=0, le=3600)
     provider_poll_interval_seconds: float = Field(default=2, ge=0, le=30)
+    yourmt3_command: str | None = None
+    yourmt3_model_version: str = "YPTF.MoE+Multi-noPS"
+    oaf_drums_command: str | None = None
+    oaf_drums_model_version: str = "e-gmd-checkpoint"
+    adtof_command: str | None = None
+    adtof_model_version: str = "local-research"
 
     audioshake_api_url: str = "https://api.audioshake.ai"
     audioshake_api_key: SecretStr | None = None

@@ -4,4 +4,4 @@
 !data/
 data/*
 !data/example-benchmark.json
-
+!data/rights-cleared-one-shots.json

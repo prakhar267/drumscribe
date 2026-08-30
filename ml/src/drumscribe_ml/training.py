@@ -11,7 +11,7 @@ from contextlib import suppress
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 from drumscribe_music import Instrument
@@ -40,6 +40,9 @@ class TrainingConfig:
     seed: int = 20260829
     resume_checkpoint: str | None = None
     device: str = "auto"
+    architecture: Literal["crnn", "spectral_moe"] = "crnn"
+    moe_experts: int = 8
+    moe_top_k: int = 2
 
     def __post_init__(self) -> None:
         if not self.model_version.strip() or "/" in self.model_version:
@@ -54,6 +57,10 @@ class TrainingConfig:
             raise TrainingError("dropout must be between zero and one")
         if self.device not in {"auto", "cpu", "cuda", "mps"}:
             raise TrainingError("device must be auto, cpu, cuda, or mps")
+        if self.architecture not in {"crnn", "spectral_moe"}:
+            raise TrainingError("architecture must be crnn or spectral_moe")
+        if self.moe_experts < 2 or not 1 <= self.moe_top_k <= self.moe_experts:
+            raise TrainingError("MoE expert count or top-k routing is invalid")
 
     @classmethod
     def load(cls, path: Path) -> TrainingConfig:
@@ -62,6 +69,7 @@ class TrainingConfig:
 
 def build_model(config: TrainingConfig, *, mel_bands: int, class_count: int):
     try:
+        import torch
         import torch.nn as nn
     except ImportError as exc:  # pragma: no cover - exercised only with training extra
         raise TrainingError("install the 'train' extra to build the self-hosted model") from exc
@@ -93,6 +101,59 @@ def build_model(config: TrainingConfig, *, mel_bands: int, class_count: int):
             contextual, _ = self.temporal(encoded)
             return self.onset_head(contextual), self.velocity_head(contextual)
 
+    class SpectralMoEDrumOnsetNetwork(nn.Module):
+        """Frame-aligned spectral BiGRU with sparse expert routing.
+
+        This is a clean-room DrumScribe architecture. It borrows only the general
+        Mixture-of-Experts design idea from the research comparison, not upstream
+        source code or weights.
+        """
+
+        def __init__(self) -> None:
+            super().__init__()
+            self.encoder = nn.Sequential(
+                nn.Conv1d(mel_bands, 128, kernel_size=5, padding=2),
+                nn.BatchNorm1d(128),
+                nn.SiLU(),
+                nn.Conv1d(128, 160, kernel_size=5, padding=4, dilation=2),
+                nn.SiLU(),
+                nn.Dropout(config.dropout),
+            )
+            self.temporal = nn.GRU(
+                160,
+                config.hidden_size,
+                batch_first=True,
+                bidirectional=True,
+            )
+            width = config.hidden_size * 2
+            self.router = nn.Linear(width, config.moe_experts)
+            self.experts = nn.ModuleList(
+                nn.Sequential(
+                    nn.Linear(width, width * 2),
+                    nn.SiLU(),
+                    nn.Dropout(config.dropout),
+                    nn.Linear(width * 2, width),
+                )
+                for _ in range(config.moe_experts)
+            )
+            self.output_norm = nn.LayerNorm(width)
+            self.onset_head = nn.Linear(width, class_count)
+            self.velocity_head = nn.Sequential(nn.Linear(width, class_count), nn.Sigmoid())
+
+        def forward(self, features):
+            encoded = self.encoder(features.transpose(1, 2)).transpose(1, 2)
+            contextual, _ = self.temporal(encoded)
+            router_logits = self.router(contextual)
+            top_values, top_indices = torch.topk(router_logits, k=config.moe_top_k, dim=-1)
+            top_weights = torch.softmax(top_values, dim=-1)
+            weights = torch.zeros_like(router_logits).scatter(-1, top_indices, top_weights)
+            expert_outputs = torch.stack([expert(contextual) for expert in self.experts], dim=-2)
+            routed = (expert_outputs * weights.unsqueeze(-1)).sum(dim=-2)
+            output = self.output_norm(contextual + routed)
+            return self.onset_head(output), self.velocity_head(output)
+
+    if config.architecture == "spectral_moe":
+        return SpectralMoEDrumOnsetNetwork()
     return DrumOnsetNetwork()
 
 

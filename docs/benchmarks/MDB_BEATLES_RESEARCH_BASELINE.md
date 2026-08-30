@@ -52,6 +52,37 @@ The same conservative detector was also evaluated against all 23 MDB Drums isola
 
 This is a breadth regression over rock, pop, metal, country, reggae, and multiple jazz styles. It is not an independent unseen test set: the corpus was inspected while designing the deterministic feature rules, so these numbers must not be presented as a production model generalization claim.
 
+## Local ADTOF recall experiment
+
+The process-isolated ADTOF PyTorch baseline was run locally against the same
+`htdemucs_ft` stem with its published five-class thresholds. It emitted 139 hits:
+47 kick, 32 snare, 35 tom and 25 hi-hat. At 50 ms it measured 0.676 precision,
+0.610 recall and 0.642 F1. Recall therefore did not improve over the selected
+spectral pass, while precision fell from 0.940 and F1 fell from 0.740. Kick F1 was
+0.979 and snare F1 was 0.831, but tom F1 fell to 0.492 and the five-class model
+cannot represent this track's 32 tambourine events.
+
+This is a useful negative result: ADTOF is not selected for the application stack.
+The checkout/weights remain local and ignored, and its non-commercial/unlicensed
+distribution constraints independently prohibit production deployment.
+
+## YourMT3+ full-mixture A/B experiment
+
+The `YPTF.MoE+Multi (noPS)` checkpoint was hash-verified as
+`ae38e415c79efd5592dcb9b658cdb99ddb11d4c4e1eaa364cab04a052473fc25` and run
+directly on the same 36.37-second full mix. The process-isolated bridge retained
+only General MIDI drum-channel events and emitted 163 hits. At 50 ms it measured
+0.534 precision, 0.565 recall and 0.549 F1, so it does not replace the selected
+spectral detector on this track.
+
+The per-class result is still useful: kick precision/recall/F1 was
+0.958/0.979/0.968 and snare was 0.950/0.844/0.894, improving snare recall over
+the spectral pass's 0.711. Tom recall fell to 0.100, extra cymbal/low-tom events
+reduced aggregate precision, and no tambourine was recovered. A future ensemble
+may evaluate calibrated YourMT3+ snare evidence, but it must win on a separately
+held-out bakeoff before selection. The local CPU inference took about 70 seconds
+after model loading/cache warm-up.
+
 ## Test material
 
 `MusicDelta_Beatles` is a 36.37-second, full-band Beatles-style Music Delta research recording—not a copyrighted Beatles master. MDB Drums supplies the full mix, isolated drum recording, beat grid, and manually reviewed onset labels. The local benchmark copy is used only for non-commercial quality evaluation under the dataset's CC BY-NC-SA terms and remains Git-ignored.
@@ -101,7 +132,7 @@ Baseline artifacts are under `data/benchmark-mdb-beatles/output/`; detector-pass
 
 ## Engineering decision
 
-Do not treat the improved local research path as production transcription quality. It remains behind the existing production safety gate because the Demucs weight/training-data rights are not cleared for the commercial deployment and the deterministic classifier still has material recall gaps.
+Do not treat the improved local research path as production transcription quality. It remains behind the existing production safety gate because the Demucs weight/training-data rights are not cleared for the commercial deployment and the deterministic classifier still has material recall gaps. ADTOF was rejected on both quality and licensing grounds; YourMT3+ remains an unselected A/B backend because aggregate quality regressed and its code/checkpoint/training-data rights are unresolved.
 
 The next model iteration should be accepted only after it:
 

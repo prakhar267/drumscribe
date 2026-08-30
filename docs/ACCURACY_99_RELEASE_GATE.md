@@ -26,11 +26,11 @@ The licensed-data pipeline imported 1,076 valid Groove MIDI Dataset recordings w
 
 ## Model path
 
-1. Import the Groove MIDI Dataset through `drumscribe-ml import-groove`. Its official train, validation and test assignments are preserved.
+1. Import E-GMD through `drumscribe-ml import-egmd` on dedicated training compute. Its official train, validation and test assignments are preserved, and every kit rendering of one performance stays in the same leakage group.
 2. Prepare only the training split with augmentation. Validation and test files remain unchanged.
 3. Train the multi-label CRNN over all canonical DrumScribe instruments using class-balanced, onset-tolerant loss and bounded windows.
 4. Calibrate each class on validation data, freeze the model and thresholds, and evaluate once on the held-out test split.
-5. Add rights-cleared recordings for classes not sufficiently represented in Groove, especially tambourine and four-way tom distinctions.
+5. Add the audited rights-cleared MuldjordKit and FreePats one-shot catalog for tambourine, four-way tom distinctions, hi-hat articulations and cymbal robustness. Preserve its content hash and attribution in every experiment/model card.
 6. Evaluate full mixes after separation and run the browser upload/editor/export/delete journey.
 7. Keep production blocked until the gate passes and model, weights, data, attribution and deployment licenses are approved.
 

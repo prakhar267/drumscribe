@@ -8,9 +8,11 @@ from pathlib import Path
 import numpy as np
 
 from .calibration import calibrate_confidence
+from .egmd import import_egmd_dataset
 from .groove import import_groove_dataset
 from .lifecycle import PreparationConfig, prepare_dataset
 from .manifest import load_manifest, split_payload
+from .one_shots import audit_one_shot_catalog
 from .quality import evaluate_accuracy_gate
 from .training import TrainingConfig, run_training
 
@@ -49,6 +51,16 @@ def main(argv: list[str] | None = None) -> int:
     groove.add_argument("manifest", type=Path)
     groove.add_argument("--archive", type=Path)
     groove.add_argument("--overwrite", action="store_true")
+    egmd = command.add_parser("import-egmd")
+    egmd.add_argument("dataset_root", type=Path)
+    egmd.add_argument("manifest", type=Path)
+    egmd.add_argument("--metadata", type=Path)
+    egmd.add_argument("--archive", type=Path)
+    egmd.add_argument("--overwrite", action="store_true")
+    one_shots = command.add_parser("audit-one-shots")
+    one_shots.add_argument("catalog", type=Path)
+    one_shots.add_argument("library_root", type=Path)
+    one_shots.add_argument("output", type=Path)
     args = parser.parse_args(argv)
     if args.command == "prepare":
         destination = prepare_dataset(
@@ -90,6 +102,40 @@ def main(argv: list[str] | None = None) -> int:
         )
         print(json.dumps({"manifest": str(args.manifest), "tracks": len(imported.tracks)}))
         return 0
+    if args.command == "import-egmd":
+        imported = import_egmd_dataset(
+            args.dataset_root,
+            args.manifest,
+            metadata_path=args.metadata,
+            archive_path=args.archive,
+            overwrite=args.overwrite,
+        )
+        print(
+            json.dumps(
+                {
+                    "manifest": str(args.manifest),
+                    "tracks": len(imported.tracks),
+                    "performanceGroups": len({track.group_id for track in imported.tracks}),
+                }
+            )
+        )
+        return 0
+    if args.command == "audit-one-shots":
+        audit = audit_one_shot_catalog(args.catalog, args.library_root)
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        with args.output.open("x", encoding="utf-8") as handle:
+            json.dump(audit, handle, indent=2, sort_keys=True)
+            handle.write("\n")
+        print(
+            json.dumps(
+                {
+                    "output": str(args.output),
+                    "trainingReady": audit["trainingReady"],
+                    "corpusSha256": audit["corpusSha256"],
+                }
+            )
+        )
+        return 0 if audit["trainingReady"] else 2
 
     manifest = load_manifest(args.input)
     if args.manifest_command == "validate":

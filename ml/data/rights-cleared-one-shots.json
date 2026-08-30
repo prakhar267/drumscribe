@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "requiredClasses": [
+    "CLOSED_HIHAT",
+    "OPEN_HIHAT",
+    "RIDE",
+    "RIDE_BELL",
+    "CRASH",
+    "HIGH_TOM",
+    "MID_TOM",
+    "LOW_TOM",
+    "FLOOR_TOM",
+    "TAMBOURINE"
+  ],
+  "sources": [
+    {
+      "id": "freepats-muldjordkit-2020-10-18",
+      "homepage": "https://freepats.zenvoid.org/Percussion/acoustic-drum-kits.html",
+      "license": {
+        "identifier": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "commercialUseAllowed": true,
+        "attribution": "Drum samples provided by DrumGizmo.org. Original MuldjordKit by Lars Muldjord; FreePats version assembled by Roberto Díaz."
+      },
+      "mappings": [
+        {"instrument": "KICK", "directory": "freepats-muldjordkit/samples/KdrumL"},
+        {"instrument": "KICK", "directory": "freepats-muldjordkit/samples/KdrumR"},
+        {"instrument": "SNARE", "directory": "freepats-muldjordkit/samples/Snare1"},
+        {"instrument": "SNARE", "directory": "freepats-muldjordkit/samples/Snare2"},
+        {"instrument": "CLOSED_HIHAT", "directory": "freepats-muldjordkit/samples/HihatClosed"},
+        {"instrument": "OPEN_HIHAT", "directory": "freepats-muldjordkit/samples/HihatOpen"},
+        {"instrument": "RIDE", "directory": "freepats-muldjordkit/samples/RideL"},
+        {"instrument": "RIDE", "directory": "freepats-muldjordkit/samples/RideR"},
+        {"instrument": "RIDE_BELL", "directory": "freepats-muldjordkit/samples/RideLBell"},
+        {"instrument": "RIDE_BELL", "directory": "freepats-muldjordkit/samples/RideRBell"},
+        {"instrument": "CRASH", "directory": "freepats-muldjordkit/samples/CrashL"},
+        {"instrument": "CRASH", "directory": "freepats-muldjordkit/samples/CrashR"},
+        {"instrument": "CRASH", "directory": "freepats-muldjordkit/samples/China"},
+        {"instrument": "HIGH_TOM", "directory": "freepats-muldjordkit/samples/Tom1"},
+        {"instrument": "MID_TOM", "directory": "freepats-muldjordkit/samples/Tom2"},
+        {"instrument": "LOW_TOM", "directory": "freepats-muldjordkit/samples/Tom3"},
+        {"instrument": "FLOOR_TOM", "directory": "freepats-muldjordkit/samples/Tom4"}
+      ]
+    },
+    {
+      "id": "freepats-world-percussion-2020-09-05",
+      "homepage": "https://freepats.zenvoid.org/Percussion/world-percussion.html",
+      "license": {
+        "identifier": "CC0-1.0",
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "commercialUseAllowed": true,
+        "attribution": "FreePats World Percussion recordings by Xavimart, Gonzalo, Roberto Díaz and credited contributors; attribution retained voluntarily."
+      },
+      "mappings": [
+        {"instrument": "TAMBOURINE", "directory": "freepats-world-percussion/samples/Tambourine"}
+      ]
+    }
+  ]
+}

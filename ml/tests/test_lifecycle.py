@@ -134,6 +134,24 @@ def test_calibration_and_training_metadata_are_versioned(tmp_path):
     assert metadata["datasetManifestHash"] == "abc"
     with pytest.raises(TrainingError):
         TrainingConfig("prepared.json", str(tmp_path), "bad/version")
+    moe = TrainingConfig(
+        "prepared.json",
+        str(tmp_path),
+        "drumscribe-events-moe-0.1.0",
+        architecture="spectral_moe",
+        moe_experts=8,
+        moe_top_k=2,
+    )
+    assert moe.architecture == "spectral_moe"
+    with pytest.raises(TrainingError, match="top-k"):
+        TrainingConfig(
+            "prepared.json",
+            str(tmp_path),
+            "invalid-moe",
+            architecture="spectral_moe",
+            moe_experts=2,
+            moe_top_k=3,
+        )
 
 
 def test_training_targets_and_validation_are_onset_tolerant_and_multilabel():

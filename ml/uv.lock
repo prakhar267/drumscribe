@@ -199,6 +199,7 @@ data = [
     { name = "mido" },
 ]
 dev = [
+    { name = "mido" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "ruff" },
@@ -209,6 +210,7 @@ train = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "mido" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "ruff" },
@@ -218,6 +220,7 @@ dev = [
 requires-dist = [
     { name = "drumscribe-music", editable = "../packages/music-engine" },
     { name = "mido", marker = "extra == 'data'", specifier = ">=1.3,<2" },
+    { name = "mido", marker = "extra == 'dev'", specifier = ">=1.3,<2" },
     { name = "numpy", specifier = ">=2.0,<3" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.3,<9" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=5,<7" },
@@ -228,6 +231,7 @@ provides-extras = ["dev", "data", "train"]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "mido", specifier = ">=1.3,<2" },
     { name = "pytest", specifier = ">=8.3,<9" },
     { name = "pytest-cov", specifier = ">=5,<7" },
     { name = "ruff", specifier = ">=0.12,<1" },

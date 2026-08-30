@@ -1,3 +1,4 @@
+import json
 import os
 import subprocess
 from pathlib import Path
@@ -5,16 +6,20 @@ from pathlib import Path
 import pytest
 
 from drumscribe_music import (
+    ADTOFResearchTranscriptionProvider,
     CommercialProviderConfig,
     DemucsAdapter,
+    ExternalModelError,
     MockBeatTrackingProvider,
     MockDrumTranscriptionProvider,
+    OaFDrumsTranscriptionProvider,
     PassthroughSourceSeparationProvider,
     RawDrumHit,
     ResearchDependencyError,
     ResearchDrumTranscriptionProvider,
     TempoMap,
     UnsafeProviderError,
+    YourMT3PlusTranscriptionProvider,
     require_production_safe,
     validate_provider_registry,
 )
@@ -192,6 +197,79 @@ def test_provider_registry_rejects_duplicate_ids():
             [MockDrumTranscriptionProvider(), MockDrumTranscriptionProvider()],
             production=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("provider_class", "license_status", "input_kind"),
+    [
+        (YourMT3PlusTranscriptionProvider, "unresolved", "full_mix"),
+        (OaFDrumsTranscriptionProvider, "unresolved", "drum_stem"),
+        (ADTOFResearchTranscriptionProvider, "non_commercial", "drum_stem"),
+    ],
+)
+def test_external_research_models_are_license_gated(provider_class, license_status, input_kind):
+    provider = provider_class(("/safe/runner",), model_version="test")
+    assert provider.license.status.value == license_status
+    assert provider.input_kind == input_kind
+    with pytest.raises(UnsafeProviderError):
+        require_production_safe(provider, production=True)
+    require_production_safe(provider, production=False)
+
+
+def test_external_model_contract_is_argv_safe_and_validated(monkeypatch, tmp_path):
+    source = tmp_path / "mix; touch NEVER.wav"
+    source.write_bytes(b"audio")
+    observed = {}
+
+    def fake_run(argv, **kwargs):
+        observed["argv"] = argv
+        observed["kwargs"] = kwargs
+        output = Path(argv[argv.index("--output") + 1])
+        output.write_text(
+            json.dumps(
+                {
+                    "schemaVersion": 1,
+                    "provider": "research-yourmt3-plus-v1",
+                    "hits": [
+                        {
+                            "instrument": 38,
+                            "onsetSeconds": 0.51,
+                            "velocity": 112,
+                            "confidence": 0.91,
+                        },
+                        {"instrument": "kick", "onsetSeconds": 0.01},
+                    ],
+                }
+            ),
+            encoding="utf-8",
+        )
+        return subprocess.CompletedProcess(argv, 0, stdout=b"ignored", stderr=b"")
+
+    monkeypatch.setattr("drumscribe_music.providers.external.subprocess.run", fake_run)
+    provider = YourMT3PlusTranscriptionProvider(
+        ("/safe/python", "/safe/runner.py"), model_version="yptf-moe"
+    )
+    hits = provider.transcribe(source)
+    assert [item.instrument_class.value for item in hits] == ["KICK", "SNARE"]
+    assert observed["argv"][-4:-2] == ("--input", os.fspath(source.resolve()))
+    assert observed["kwargs"]["shell"] is False
+    assert len([item for item in observed["argv"] if "touch" in item]) == 1
+
+
+def test_external_model_contract_rejects_wrong_provider(monkeypatch, tmp_path):
+    source = tmp_path / "mix.wav"
+    source.write_bytes(b"audio")
+
+    def fake_run(argv, **kwargs):
+        del kwargs
+        output = Path(argv[argv.index("--output") + 1])
+        output.write_text('{"schemaVersion":1,"provider":"wrong","hits":[]}', encoding="utf-8")
+        return subprocess.CompletedProcess(argv, 0, stdout=b"", stderr=b"")
+
+    monkeypatch.setattr("drumscribe_music.providers.external.subprocess.run", fake_run)
+    provider = OaFDrumsTranscriptionProvider(("/safe/runner",), model_version="checkpoint")
+    with pytest.raises(ExternalModelError, match="does not match"):
+        provider.transcribe(source)
 
 
 def test_commercial_config_fails_closed():
