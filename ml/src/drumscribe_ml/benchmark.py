@@ -40,6 +40,7 @@ FAMILIES: dict[str, frozenset[Instrument]] = {
         }
     ),
     "CYMBALS": frozenset({Instrument.RIDE, Instrument.RIDE_BELL, Instrument.CRASH}),
+    "AUXILIARY_PERCUSSION": frozenset({Instrument.TAMBOURINE}),
 }
 
 

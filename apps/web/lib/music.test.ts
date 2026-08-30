@@ -54,6 +54,7 @@ describe("canonical conversions", () => {
     expect(GM_PERCUSSION_MAP.KICK).toBe(36);
     expect(GM_PERCUSSION_MAP.SNARE).toBe(38);
     expect(GM_PERCUSSION_MAP.CLOSED_HIHAT).toBe(42);
+    expect(GM_PERCUSSION_MAP.TAMBOURINE).toBe(54);
   });
 
   it("generates duration-complete MusicXML with stable IDs, tempo, rests and percussion metadata", () => {
@@ -64,7 +65,7 @@ describe("canonical conversions", () => {
     expect(document_.querySelector("attributes > divisions")?.textContent).toBe(String(MUSIC_XML_DIVISIONS));
     expect(document_.querySelector("direction sound")?.getAttribute("tempo")).toBe("112");
     expect(document_.querySelector("clef > sign")?.textContent).toBe("percussion");
-    expect(document_.querySelectorAll("score-instrument")).toHaveLength(13);
+    expect(document_.querySelectorAll("score-instrument")).toHaveLength(14);
     expect(document_.querySelector("midi-instrument midi-channel")?.textContent).toBe("10");
     expect(document_.getElementById(musicXmlIdForEvent(events[0].id))).not.toBeNull();
     expect(document_.querySelector("note > rest")).not.toBeNull();
@@ -94,8 +95,8 @@ describe("canonical conversions", () => {
   });
 
   it("exposes every canonical instrument as an editable grid row", () => {
-    expect(EDITOR_ROWS).toEqual(expect.arrayContaining(["RIDE_BELL", "PEDAL_HIHAT", "LOW_TOM", "CROSS_STICK"]));
-    expect(new Set(EDITOR_ROWS).size).toBe(13);
+    expect(EDITOR_ROWS).toEqual(expect.arrayContaining(["RIDE_BELL", "PEDAL_HIHAT", "LOW_TOM", "CROSS_STICK", "TAMBOURINE"]));
+    expect(new Set(EDITOR_ROWS).size).toBe(14);
   });
 
   it("generates a standard MIDI header and percussion track", () => {

@@ -136,6 +136,7 @@ const DISPLAY_POSITION: Record<Instrument, { step: string; octave: number }> = {
   MID_TOM: { step: "D", octave: 5 },
   LOW_TOM: { step: "A", octave: 4 },
   FLOOR_TOM: { step: "G", octave: 4 },
+  TAMBOURINE: { step: "E", octave: 6 },
 };
 
 export const MUSIC_XML_DIVISIONS = 480;
@@ -233,7 +234,7 @@ function beamMarkup(clusters: NoteCluster[], index: number) {
 
 function noteheadForInstrument(instrument: Instrument) {
   if (instrument === "RIDE_BELL") return "diamond";
-  if (["CRASH", "RIDE", "OPEN_HIHAT", "CLOSED_HIHAT", "PEDAL_HIHAT", "CROSS_STICK"].includes(instrument)) return "x";
+  if (["CRASH", "RIDE", "OPEN_HIHAT", "CLOSED_HIHAT", "PEDAL_HIHAT", "CROSS_STICK", "TAMBOURINE"].includes(instrument)) return "x";
   return "normal";
 }
 

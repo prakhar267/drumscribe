@@ -18,7 +18,7 @@ from drumscribe_music import (
     require_production_safe,
     validate_provider_registry,
 )
-from drumscribe_music.providers.research import _classify_spectrum
+from drumscribe_music.providers.research import _classify_features, _classify_spectrum
 
 
 def test_mock_provider_is_deterministic_and_protocol_friendly(tmp_path):
@@ -58,6 +58,76 @@ def test_research_spectral_mapping_is_deliberately_conservative():
     assert _classify_spectrum(0.1, 0.1)[0].value == "SNARE"
 
 
+def test_research_multiclass_mapping_uses_spectral_and_decay_evidence():
+    base = {
+        "lowRatio": 0.02,
+        "lowMidRatio": 0.16,
+        "midRatio": 0.18,
+        "highMidRatio": 0.31,
+        "highRatio": 0.29,
+        "centroid": 0.16,
+        "flatness": 0.53,
+        "decay": -0.5,
+        "zeroCrossingRate": 0.08,
+        "dominantBodyHz": 180,
+    }
+    assert _classify_features(base)[0].value == "SNARE"
+    assert _classify_features({**base, "lowRatio": 0.4})[0].value == "KICK"
+    assert (
+        _classify_features(
+            {
+                **base,
+                "lowRatio": 0.18,
+                "lowMidRatio": 0.23,
+                "midRatio": 0.21,
+                "highRatio": 0.12,
+                "centroid": 0.08,
+                "flatness": 0.28,
+                "dominantBodyHz": 95,
+            }
+        )[0].value
+        == "FLOOR_TOM"
+    )
+    assert (
+        _classify_features(
+            {
+                **base,
+                "lowMidRatio": 0.06,
+                "midRatio": 0.04,
+                "highRatio": 0.5,
+                "zeroCrossingRate": 0.2,
+            }
+        )[0].value
+        == "CLOSED_HIHAT"
+    )
+    assert (
+        _classify_features(
+            {
+                **base,
+                "lowMidRatio": 0.08,
+                "midRatio": 0.08,
+                "highRatio": 0.33,
+                "decay": 0.0,
+            }
+        )[0].value
+        == "CRASH"
+    )
+    assert (
+        _classify_features(
+            {
+                **base,
+                "lowMidRatio": 0.07,
+                "midRatio": 0.07,
+                "highRatio": 0.4,
+                "flatness": 0.48,
+                "decay": -1.2,
+                "zeroCrossingRate": 0.25,
+            }
+        )[0].value
+        == "TAMBOURINE"
+    )
+
+
 def test_mock_beat_and_passthrough_separation(tmp_path):
     source = tmp_path / "source.wav"
     source.write_bytes(b"audio fixture")
@@ -77,7 +147,7 @@ def test_demucs_adapter_is_process_isolated_and_argv_safe(monkeypatch, tmp_path)
     def fake_run(argv, **kwargs):
         observed["argv"] = argv
         output_root = Path(argv[argv.index("--out") + 1])
-        result = output_root / "htdemucs" / source.stem / "drums.wav"
+        result = output_root / "htdemucs_ft" / source.stem / "drums.wav"
         result.parent.mkdir(parents=True)
         result.write_bytes(b"separated")
         return subprocess.CompletedProcess(argv, 0, stdout=b"", stderr=b"")

@@ -2,42 +2,55 @@
 
 Date: 2026-08-30
 
-Application revision: `6995d3e` plus the benchmark harness introduced with this report
+Application revision: accuracy work following baseline commit `26edba3`
 
-Runtime: `demucs-isolated-v4` (`htdemucs`) + `research-spectral-v1` + `research-librosa-beat-v1`
+Runtime: `demucs-isolated-v5` (`htdemucs_ft`) + `research-spectral-v2` + `research-librosa-beat-v2`
 
 ## Result
 
 **DrumScribe did not produce an exact match to the reference drum notation.**
 
-The current research pipeline is useful for a first timing draft, especially for kick drum, but it is not accurate enough to claim faithful multi-instrument drum transcription or release-quality notation.
+The accuracy pass materially improves the first draft, especially its precision and notated grid. It still does not recover every reference event and is not accurate enough to claim an exact or release-quality transcription.
 
-| Metric | Result |
-| --- | ---: |
-| Reference events | 154 |
-| DrumScribe events | 102 |
-| Class-aware precision / recall / F1 at 50 ms | 0.667 / 0.442 / 0.531 |
-| Class-aware precision / recall / F1 at 20 ms | 0.569 / 0.377 / 0.453 |
-| Onset-only precision / recall / F1 at 50 ms | 1.000 / 0.662 / 0.797 |
-| Exact notated class+slot precision / recall / F1 | 0.069 / 0.045 / 0.055 |
-| Exact notated slot-only precision / recall / F1 | 0.373 / 0.247 / 0.297 |
-| Reference / generated tempo | 111.11 / 112.35 BPM |
-| Absolute tempo error | 1.24 BPM |
-| Drum-stem SI-SDR | -2.02 dB |
-| Drum-stem waveform correlation | 0.621 |
+| Metric | Baseline | Accuracy pass |
+| --- | ---: | ---: |
+| Reference events | 154 | 154 |
+| DrumScribe events | 102 | 99 |
+| Class-aware precision / recall / F1 at 50 ms | 0.667 / 0.442 / 0.531 | **0.949 / 0.610 / 0.743** |
+| Class-aware precision / recall / F1 at 20 ms | 0.569 / 0.377 / 0.453 | **0.919 / 0.591 / 0.719** |
+| Onset-only precision / recall / F1 at 50 ms | 1.000 / 0.662 / 0.797 | 1.000 / 0.643 / 0.783 |
+| Exact notated class+slot precision / recall / F1 | 0.069 / 0.045 / 0.055 | **0.838 / 0.539 / 0.656** |
+| Exact notated slot-only precision / recall / F1 | 0.373 / 0.247 / 0.297 | **0.879 / 0.565 / 0.688** |
+| Reference / generated tempo | 111.11 / 112.35 BPM | 111.11 / 112.35 BPM |
+| Drum-stem SI-SDR | -2.02 dB | **-1.89 dB** |
+| Drum-stem waveform correlation | 0.621 | **0.627** |
 
 ### Instrument results at 50 ms
 
 | MDB class | Reference | Predicted | TP | FP | FN | Precision | Recall | F1 |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | Kick | 47 | 47 | 46 | 1 | 1 | 0.979 | 0.979 | 0.979 |
-| Snare | 45 | 38 | 22 | 16 | 23 | 0.579 | 0.489 | 0.530 |
-| Hi-hat | 0 | 17 | 0 | 17 | 0 | 0.000 | n/a | 0.000 |
-| Toms | 30 | 0 | 0 | 0 | 30 | n/a | 0.000 | 0.000 |
+| Snare | 45 | 33 | 32 | 1 | 13 | 0.970 | 0.711 | 0.821 |
+| Hi-hat | 0 | 3 | 0 | 3 | 0 | 0.000 | n/a | 0.000 |
+| Toms | 30 | 16 | 16 | 0 | 14 | 1.000 | 0.533 | 0.696 |
 | Cymbals | 0 | 0 | 0 | 0 | 0 | n/a | n/a | n/a |
 | Other percussion | 32 | 0 | 0 | 0 | 32 | n/a | 0.000 | 0.000 |
 
-The onset-only score shows that all 102 generated hits were close to a real annotated onset within 50 ms. The larger class-aware error comes from instrument identification: this research provider only emits kick, snare, or closed hi-hat, while the reference contains toms and other percussion. The low exact-notation score also exposes accumulated beat-grid drift from forcing a naturally performed excerpt onto one constant tempo.
+All 99 emitted hits remain close to a real annotated onset within 50 ms. The expanded physical-feature classifier recognizes toms and sharply reduces snare/hi-hat confusion while retaining a conservative onset gate. Recall is still limited: this recording's tambourine often lands within milliseconds of a snare, and the research path does not recover those 32 separate annotations.
+
+The notation gain comes from two corrections: beat tracking now analyzes the full mix rather than the sparse drum stem, and the complete observed piecewise beat map plus bar-one offset reaches quantization instead of being flattened to one BPM. Automatic drafts favor readable quarter/eighth/sixteenth and eighth-triplet grids; the editor still permits finer manual snapping.
+
+## Cross-style regression
+
+The same conservative detector was also evaluated against all 23 MDB Drums isolated reference stems (7,994 annotations) without changing the number of onset candidates:
+
+| Metric | Baseline | Accuracy pass |
+| --- | ---: | ---: |
+| Aggregate class precision | 0.647 | **0.804** |
+| Aggregate class recall | 0.387 | **0.480** |
+| Aggregate class F1 | 0.484 | **0.601** |
+
+This is a breadth regression over rock, pop, metal, country, reggae, and multiple jazz styles. It is not an independent unseen test set: the corpus was inspected while designing the deterministic feature rules, so these numbers must not be presented as a production model generalization claim.
 
 ## Test material
 
@@ -67,16 +80,16 @@ Reference hashes:
 1. Uploaded the full stereo mix through the real browser upload page.
 2. Confirmed recording rights and created an anonymous private project.
 3. Transferred the audio using a signed Neon Object Storage upload.
-4. Ran the durable normalization, Demucs isolation, spectral transcription, beat tracking, quantization, and score-generation pipeline.
-5. Opened the rendered drum editor and verified 102 notation events.
+4. Ran the durable normalization, fine-tuned Demucs isolation, spectral transcription, full-mix beat tracking, piecewise quantization, and score-generation pipeline.
+5. Opened the rendered drum editor and verified 99 notation events.
 6. Downloaded the private isolated drum stem.
 7. Generated and signature-checked MIDI, MusicXML, and PDF exports.
 8. Captured the rendered editor and stored the generated events for scoring.
 9. Soft-deleted the project and verified that every signed artifact URL was revoked.
 
-The automated browser journey passed in 2.6 minutes.
+The updated automated browser journey passed in 3.5 minutes.
 
-Generated artifacts are retained locally under `data/benchmark-mdb-beatles/output/` and are not committed. The machine-readable score is `benchmark-results.json`; the captured user view is `drumscribe-editor.png`.
+Baseline artifacts are under `data/benchmark-mdb-beatles/output/`; updated artifacts are under `data/benchmark-mdb-beatles/output-v2/`. Both are local and Git-ignored. Each directory contains the machine-readable score, rendered editor, isolated stem, and all three exports.
 
 ## Scoring method
 
@@ -88,15 +101,15 @@ Generated artifacts are retained locally under `data/benchmark-mdb-beatles/outpu
 
 ## Engineering decision
 
-Do not treat the current local research path as production transcription quality. Keep it behind the existing production safety gate.
+Do not treat the improved local research path as production transcription quality. It remains behind the existing production safety gate because the Demucs weight/training-data rights are not cleared for the commercial deployment and the deterministic classifier still has material recall gaps.
 
 The next model iteration should be accepted only after it:
 
-1. Emits all supported drum classes, including toms, cymbals, hi-hat states, and other-percussion handling.
-2. Adds downbeat-aware, variable-tempo tracking instead of one global BPM.
-3. Improves snare classification and reduces tom/percussion-to-hi-hat confusion.
-4. Improves drum isolation against true stems.
-5. Re-runs this harness over the full 23-track MDB Drums set, with predeclared release thresholds rather than tuning against this single excerpt.
+1. Recovers layered/near-simultaneous events rather than selecting one class per broadband onset.
+2. Distinguishes open/closed/pedal hi-hat, ride/crash, and side-stick/tambourine from licensed model output.
+3. Adds downbeat inference for songs whose first detected pulse is not bar one.
+4. Clears a commercial transcription/separation provider contract or replaces research weights with fully documented commercially licensed weights.
+5. Passes a separately held-out, rights-cleared evaluation set with predeclared release thresholds.
 
 ## Reproduction
 

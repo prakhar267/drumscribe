@@ -32,6 +32,7 @@ TRAINING_CLASSES = (
     Instrument.MID_TOM,
     Instrument.LOW_TOM,
     Instrument.FLOOR_TOM,
+    Instrument.TAMBOURINE,
 )
 
 

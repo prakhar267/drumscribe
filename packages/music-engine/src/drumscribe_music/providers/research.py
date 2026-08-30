@@ -15,9 +15,9 @@ class ResearchDependencyError(RuntimeError):
 
 
 class ResearchDrumTranscriptionProvider:
-    """Conservative kick/snare/closed-hat baseline, not a trained drum model."""
+    """Multi-band spectral-feature baseline, not a trained drum model."""
 
-    provider_id = "research-spectral-v1"
+    provider_id = "research-spectral-v2"
     license = ProviderLicense(
         provider_id=provider_id,
         status=LicenseStatus.UNRESOLVED,
@@ -41,35 +41,27 @@ class ResearchDrumTranscriptionProvider:
         signal, sample_rate = librosa.load(path, sr=self.sample_rate, mono=True)
         if signal.size == 0:
             return []
-        envelope = librosa.onset.onset_strength(
-            y=signal, sr=sample_rate, hop_length=self.hop_length, aggregate=np.median
+        candidates = _candidate_onsets(
+            librosa,
+            np,
+            signal,
+            sample_rate,
+            self.hop_length,
         )
-        frames = librosa.onset.onset_detect(
-            onset_envelope=envelope,
-            sr=sample_rate,
-            hop_length=self.hop_length,
-            backtrack=True,
-            units="frames",
-        )
-        if len(frames) == 0:
+        if not candidates:
             return []
-        peak = max(float(envelope.max()), 1e-9)
         hits: list[RawDrumHit] = []
-        window = max(256, int(sample_rate * 0.08))
-        for frame in frames:
+        window = max(256, int(sample_rate * 0.20))
+        for frame, strength in candidates:
             start = int(librosa.frames_to_samples(frame, hop_length=self.hop_length))
             clip = signal[start : start + window]
             if clip.size < 32:
                 continue
-            magnitude = np.abs(np.fft.rfft(clip * np.hanning(clip.size)))
-            frequencies = np.fft.rfftfreq(clip.size, 1 / sample_rate)
-            total = float(magnitude.sum()) + 1e-12
-            low_ratio = float(magnitude[frequencies < 180].sum()) / total
-            high_ratio = float(magnitude[frequencies > 5_000].sum()) / total
-            instrument, margin = _classify_spectrum(low_ratio, high_ratio)
-            strength = float(envelope[min(int(frame), len(envelope) - 1)]) / peak
+            features = _spectral_features(np, clip, sample_rate)
+            instrument, margin = _classify_features(features)
             confidence = max(0.25, min(0.88, 0.35 + 0.35 * strength + 0.18 * margin))
-            rms = float(np.sqrt(np.mean(clip * clip)))
+            velocity_clip = clip[: max(32, int(sample_rate * 0.08))]
+            rms = float(np.sqrt(np.mean(velocity_clip * velocity_clip)))
             velocity = max(20, min(127, round(28 + 99 * min(1.0, rms * 8))))
             hits.append(
                 RawDrumHit(
@@ -79,8 +71,7 @@ class ResearchDrumTranscriptionProvider:
                     confidence=confidence,
                     metadata={
                         "provider": self.provider_id,
-                        "lowRatio": round(low_ratio, 5),
-                        "highRatio": round(high_ratio, 5),
+                        **{name: round(float(value), 5) for name, value in features.items()},
                     },
                 )
             )
@@ -88,7 +79,7 @@ class ResearchDrumTranscriptionProvider:
 
 
 class ResearchBeatTrackingProvider:
-    provider_id = "research-librosa-beat-v1"
+    provider_id = "research-librosa-beat-v2"
     license = ProviderLicense(
         provider_id=provider_id,
         status=LicenseStatus.UNRESOLVED,
@@ -109,17 +100,40 @@ class ResearchBeatTrackingProvider:
             return TempoMap.constant(120)
         onset = librosa.onset.onset_strength(y=signal, sr=sample_rate)
         tempo, beat_frames = librosa.beat.beat_track(onset_envelope=onset, sr=sample_rate)
-        bpm = float(np.asarray(tempo).reshape(-1)[0]) if np.asarray(tempo).size else 120.0
-        bpm = min(300.0, max(30.0, bpm))
+        fallback_bpm = float(np.asarray(tempo).reshape(-1)[0]) if np.asarray(tempo).size else 120.0
+        fallback_bpm = min(300.0, max(30.0, fallback_bpm))
         beat_count = int(len(beat_frames))
         confidence = min(
-            0.85, max(0.25, beat_count / max(8.0, len(signal) / sample_rate * bpm / 60))
+            0.85,
+            max(0.25, beat_count / max(8.0, len(signal) / sample_rate * fallback_bpm / 60)),
         )
         from ..tempo import TempoChange, TimeSignature
 
+        if beat_count == 0:
+            return TempoMap.constant(fallback_bpm)
+
+        beat_times = np.asarray(librosa.frames_to_time(beat_frames, sr=sample_rate), dtype=float)
+        if beat_count == 1:
+            return TempoMap(
+                (TempoChange(0, fallback_bpm, confidence),),
+                (TimeSignature(4, 4, confidence=min(confidence, 0.65)),),
+                offset_seconds=float(beat_times[0]),
+            )
+
+        # Preserve the tracker's actual beat anchors. A single global tempo accumulates
+        # visible notation drift on human performances even when every detected hit is
+        # correctly timed. One piecewise segment per beat keeps beat_to_seconds(i)
+        # aligned with the observed beat timestamp while still interpolating sub-beats.
+        intervals = np.diff(beat_times)
+        local_bpms = np.clip(60.0 / intervals, 30.0, 300.0)
+        changes = tuple(
+            TempoChange(index, float(local_bpms[min(index, len(local_bpms) - 1)]), confidence)
+            for index in range(beat_count)
+        )
         return TempoMap(
-            (TempoChange(0, bpm, confidence),),
+            changes,
             (TimeSignature(4, 4, confidence=min(confidence, 0.65)),),
+            offset_seconds=float(beat_times[0]),
         )
 
 
@@ -132,6 +146,121 @@ def _analysis_dependencies():
             "research analysis requires `pip install drumscribe-music[audio]`"
         ) from exc
     return librosa, np
+
+
+def _candidate_onsets(librosa, np, signal, sample_rate: int, hop_length: int):
+    """Find high-confidence broadband attacks before multi-class analysis."""
+
+    envelope = librosa.onset.onset_strength(
+        y=signal,
+        sr=sample_rate,
+        hop_length=hop_length,
+        aggregate=np.median,
+    )
+    peak = max(float(envelope.max()), 1e-9)
+    frames = librosa.onset.onset_detect(
+        onset_envelope=envelope,
+        sr=sample_rate,
+        hop_length=hop_length,
+        backtrack=True,
+        units="frames",
+    )
+    return [
+        (int(frame), float(envelope[min(int(frame), len(envelope) - 1)]) / peak) for frame in frames
+    ]
+
+
+def _spectral_features(np, clip, sample_rate: int) -> dict[str, float]:
+    fft_size = min(int(clip.size), 2_048)
+    attack = clip[:fft_size]
+    magnitude = np.abs(np.fft.rfft(attack * np.hanning(fft_size)))
+    frequencies = np.fft.rfftfreq(fft_size, 1 / sample_rate)
+    total = float(magnitude.sum()) + 1e-12
+
+    def ratio(minimum: float, maximum: float) -> float:
+        mask = (frequencies >= minimum) & (frequencies < maximum)
+        return float(magnitude[mask].sum()) / total
+
+    low = ratio(0, 180)
+    low_mid = ratio(180, 700)
+    mid = ratio(700, 2_000)
+    high_mid = ratio(2_000, 5_000)
+    high = ratio(5_000, 12_000)
+    centroid = float((magnitude * frequencies).sum()) / total / sample_rate
+    flatness = float(np.exp(np.mean(np.log(magnitude + 1e-8))) / (np.mean(magnitude) + 1e-8))
+
+    def segment_rms(start_seconds: float, end_seconds: float) -> float:
+        segment = clip[int(start_seconds * sample_rate) : int(end_seconds * sample_rate)]
+        if segment.size == 0:
+            return 1e-9
+        return float(np.sqrt(np.mean(segment * segment))) + 1e-9
+
+    decay = float(np.log10(segment_rms(0.08, 0.18) / segment_rms(0, 0.03)))
+    zero_cross_clip = clip[: max(2, int(0.08 * sample_rate))]
+    zero_crossing_rate = float(np.mean(zero_cross_clip[1:] * zero_cross_clip[:-1] < 0))
+    body_mask = (frequencies >= 60) & (frequencies < 500)
+    body_magnitude = magnitude[body_mask]
+    body_frequencies = frequencies[body_mask]
+    dominant_body_hz = (
+        float(body_frequencies[int(np.argmax(body_magnitude))]) if body_magnitude.size else 0.0
+    )
+    return {
+        "lowRatio": low,
+        "lowMidRatio": low_mid,
+        "midRatio": mid,
+        "highMidRatio": high_mid,
+        "highRatio": high,
+        "centroid": centroid,
+        "flatness": flatness,
+        "decay": decay,
+        "zeroCrossingRate": zero_crossing_rate,
+        "dominantBodyHz": dominant_body_hz,
+    }
+
+
+def _classify_features(features: dict[str, float]) -> tuple[Instrument, float]:
+    """Classify using physical spectral/decay evidence across the supported kit."""
+
+    low = features["lowRatio"]
+    low_mid = features["lowMidRatio"]
+    mid = features["midRatio"]
+    high_mid = features["highMidRatio"]
+    high = features["highRatio"]
+    centroid = features["centroid"]
+    flatness = features["flatness"]
+    decay = features["decay"]
+    zero_crossing_rate = features["zeroCrossingRate"]
+    body = low_mid + mid
+    brightness = high / max(body, 1e-9)
+
+    if low >= 0.16 and low > body * 0.75:
+        return Instrument.KICK, min(1.0, (low - 0.16) * 4)
+    if centroid < 0.125 and low >= 0.085 and body >= 0.22 and high < 0.24:
+        dominant = features["dominantBodyHz"]
+        instrument = (
+            Instrument.FLOOR_TOM
+            if dominant < 110
+            else Instrument.LOW_TOM
+            if dominant < 160
+            else Instrument.MID_TOM
+            if dominant < 230
+            else Instrument.HIGH_TOM
+        )
+        return instrument, min(1.0, body)
+    if decay < -0.95 and low < 0.10 and flatness < 0.53 and 0.10 < centroid < 0.29:
+        instrument = (
+            Instrument.TAMBOURINE
+            if high >= 0.32 or zero_crossing_rate >= 0.22
+            else Instrument.CROSS_STICK
+        )
+        return instrument, min(1.0, abs(decay + 0.95))
+    if body >= 0.23 and brightness < 1.45:
+        return Instrument.SNARE, min(1.0, body)
+    if decay > -0.28 and high_mid >= 0.25 and high < 0.53:
+        return Instrument.CRASH, min(1.0, decay + 0.28 + high_mid)
+    if brightness >= 1.20 or high >= 0.36 or zero_crossing_rate >= 0.13:
+        return Instrument.CLOSED_HIHAT, min(1.0, max(brightness - 1.20, high - 0.36))
+    return Instrument.SNARE, min(1.0, body)
 
 
 def _classify_spectrum(low_ratio: float, high_ratio: float) -> tuple[Instrument, float]:

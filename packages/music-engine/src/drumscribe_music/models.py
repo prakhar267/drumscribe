@@ -25,6 +25,7 @@ class Instrument(StrEnum):
     MID_TOM = "MID_TOM"
     LOW_TOM = "LOW_TOM"
     FLOOR_TOM = "FLOOR_TOM"
+    TAMBOURINE = "TAMBOURINE"
 
 
 class EventSource(StrEnum):

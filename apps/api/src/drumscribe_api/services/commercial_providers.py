@@ -474,6 +474,7 @@ KLANGIO_INSTRUMENTS: dict[str, Instrument] = {
     "mid_tom": Instrument.MID_TOM,
     "low_tom": Instrument.LOW_TOM,
     "floor_tom": Instrument.FLOOR_TOM,
+    "tambourine": Instrument.TAMBOURINE,
 }
 
 

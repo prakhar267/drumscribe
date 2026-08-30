@@ -29,6 +29,7 @@ def test_complete_initial_instrument_taxonomy_and_unique_primary_gm_notes():
         "MID_TOM",
         "LOW_TOM",
         "FLOOR_TOM",
+        "TAMBOURINE",
     }
     assert len(set(INSTRUMENT_TO_GM.values())) == len(Instrument)
     assert GM_PERCUSSION_CHANNEL == 9
@@ -44,6 +45,7 @@ def test_complete_initial_instrument_taxonomy_and_unique_primary_gm_notes():
         (37, Instrument.CROSS_STICK),
         (43, Instrument.FLOOR_TOM),
         ("53", Instrument.RIDE_BELL),
+        ("tambourine", Instrument.TAMBOURINE),
     ],
 )
 def test_raw_and_gm_mapping(raw, expected):

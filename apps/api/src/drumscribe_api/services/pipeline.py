@@ -5,11 +5,13 @@ import json
 import math
 import shutil
 import socket
+import statistics
 import tempfile
 import time
 import uuid
 from collections.abc import Iterable
 from datetime import datetime
+from itertools import pairwise
 from pathlib import Path
 from typing import Any, cast
 
@@ -108,6 +110,8 @@ RAW_INSTRUMENT_MAP: dict[str, Instrument] = {
     "mid_tom": Instrument.MID_TOM,
     "low_tom": Instrument.LOW_TOM,
     "floor_tom": Instrument.FLOOR_TOM,
+    "tambourine": Instrument.TAMBOURINE,
+    "tmb": Instrument.TAMBOURINE,
 }
 
 
@@ -289,6 +293,7 @@ class MusicEngineAdapter:
             result = await result
         first_tempo = result.changes[0]
         first_signature = result.time_signatures[0]
+        display_bpm = statistics.median(change.bpm for change in result.changes)
         provider_id = str(getattr(provider, "provider_id", provider.__class__.__name__))
         metadata = ProviderRunMetadata(
             provider=provider_id,
@@ -304,7 +309,7 @@ class MusicEngineAdapter:
             raw_metadata={"audioDerived": self.settings.pipeline_provider != "development"},
         )
         return {
-            "tempoBpm": float(first_tempo.bpm),
+            "tempoBpm": float(display_bpm),
             "timeSignatureNumerator": int(first_signature.numerator),
             "timeSignatureDenominator": int(first_signature.denominator),
             "confidence": min(float(first_tempo.confidence), float(first_signature.confidence)),
@@ -328,7 +333,17 @@ class MusicEngineAdapter:
                 for signature in result.time_signatures
             ],
             "offsetSeconds": float(result.offset_seconds),
-            "beats": [],
+            "beats": [
+                {
+                    "timeSeconds": float(result.beat_to_seconds(change.start_beat)),
+                    "beatInMeasure": int(change.start_beat) % first_signature.numerator,
+                    "measureIndex": int(change.start_beat) // first_signature.numerator,
+                    "isDownbeat": int(change.start_beat) % first_signature.numerator == 0,
+                    "confidence": float(change.confidence),
+                }
+                for change in result.changes
+                if len(result.changes) > 1 and change.start_beat.denominator == 1
+            ],
             "provider": provider_id,
             "providerMetadata": metadata.as_dict(),
         }
@@ -464,30 +479,139 @@ def quantize_hits(
     bpm: float = 120.0,
     numerator: int = 4,
     denominator: int = 4,
+    *,
+    timing_analysis: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
-    quarter = 60.0 / bpm
-    sixteenth = quarter / 4
-    quarter_beats_per_measure = numerator * 4 / denominator
-    measure_duration = quarter * quarter_beats_per_measure
+    """Quantize without flattening an observed beat grid to one global BPM."""
+
+    engine = importlib.import_module("drumscribe_music")
+    analysis = timing_analysis or {
+        "tempoBpm": bpm,
+        "timeSignatureNumerator": numerator,
+        "timeSignatureDenominator": denominator,
+    }
+    tempo_map = _tempo_map_from_analysis(analysis, engine)
+    engine_hits = [
+        engine.RawDrumHit(
+            instrument_class=hit.instrument.value,
+            onset_seconds=hit.onset_seconds,
+            velocity=hit.velocity,
+            confidence=hit.confidence,
+            duration_seconds=0.08,
+        )
+        for hit in hits
+    ]
+    subdivision_names = {
+        engine.GridSubdivision.QUARTER: "1/4",
+        engine.GridSubdivision.EIGHTH: "1/8",
+        engine.GridSubdivision.SIXTEENTH: "1/16",
+        engine.GridSubdivision.THIRTY_SECOND: "1/32",
+        engine.GridSubdivision.EIGHTH_TRIPLET: "1/8T",
+        engine.GridSubdivision.SIXTEENTH_TRIPLET: "1/16T",
+    }
     output: list[dict[str, Any]] = []
-    for hit in hits:
-        quantized = round(hit.onset_seconds / sixteenth) * sixteenth
+    # Automatic drafts favor readable quarter/eighth/sixteenth grids plus eighth
+    # triplets. Thirty-second choices are still available in the editor, but allowing
+    # them during first-pass inference turns normal human timing offsets into spurious
+    # complex notation.
+    quantization_settings = engine.QuantizationSettings(
+        subdivisions=(
+            engine.GridSubdivision.QUARTER,
+            engine.GridSubdivision.EIGHTH,
+            engine.GridSubdivision.SIXTEENTH,
+            engine.GridSubdivision.EIGHTH_TRIPLET,
+        )
+    )
+    for event in engine.quantize_hits(engine_hits, tempo_map, settings=quantization_settings):
         output.append(
             {
-                "instrument": hit.instrument,
-                "onset_seconds": hit.onset_seconds,
-                "duration_seconds": 0.08,
-                "velocity": hit.velocity,
-                "confidence": hit.confidence,
+                "instrument": canonical_instrument(event.instrument),
+                "onset_seconds": event.onset_seconds,
+                "duration_seconds": max(0.001, event.duration_seconds),
+                "velocity": event.velocity,
+                "confidence": event.confidence,
                 "source": EventSource.AI,
-                "beat_position": (quantized % measure_duration) / quarter,
-                "measure_index": int(quantized // measure_duration),
-                "subdivision": "1/16",
-                "quantized_onset": quantized,
+                "beat_position": float(event.beat_in_measure or 0),
+                "measure_index": int(event.measure_index or 0),
+                "subdivision": subdivision_names.get(event.subdivision, "free"),
+                "quantized_onset": float(
+                    event.quantized_onset_seconds
+                    if event.quantized_onset_seconds is not None
+                    else event.onset_seconds
+                ),
                 "manually_edited": False,
             }
         )
     return output
+
+
+def _tempo_map_from_analysis(analysis: dict[str, Any], engine: Any) -> Any:
+    """Rehydrate provider timing data into the music engine's exact tempo map."""
+
+    confidence = float(analysis.get("confidence", 1.0) or 1.0)
+    offset_seconds = max(0.0, float(analysis.get("offsetSeconds", 0.0) or 0.0))
+    changes = [
+        engine.TempoChange(
+            item["startBeat"],
+            float(item["bpm"]),
+            float(item.get("confidence", confidence) or confidence),
+        )
+        for item in analysis.get("tempoMap", [])
+        if isinstance(item, dict) and "startBeat" in item and "bpm" in item
+    ]
+
+    # Commercial trackers may provide timestamped beats instead of beat-indexed
+    # tempo changes. Convert adjacent timestamps to exact piecewise beat segments.
+    beats = sorted(
+        (
+            float(item["timeSeconds"]),
+            float(item.get("confidence", confidence) or confidence),
+        )
+        for item in analysis.get("beats", [])
+        if isinstance(item, dict) and "timeSeconds" in item
+    )
+    if not changes and len(beats) >= 2:
+        offset_seconds = max(0.0, beats[0][0])
+        for index, ((start, beat_confidence), (end, _)) in enumerate(pairwise(beats)):
+            interval = end - start
+            if interval <= 0:
+                continue
+            changes.append(
+                engine.TempoChange(
+                    index,
+                    min(300.0, max(30.0, 60.0 / interval)),
+                    beat_confidence,
+                )
+            )
+        if changes:
+            changes.append(
+                engine.TempoChange(len(changes), changes[-1].bpm, changes[-1].confidence)
+            )
+    if not changes:
+        changes = [engine.TempoChange(0, float(analysis.get("tempoBpm", 120.0)), confidence)]
+
+    signatures = [
+        engine.TimeSignature(
+            int(item["numerator"]),
+            int(item["denominator"]),
+            item.get("startBeat", 0),
+            float(item.get("confidence", confidence) or confidence),
+        )
+        for item in analysis.get("timeSignatures", [])
+        if isinstance(item, dict)
+        and "numerator" in item
+        and "denominator" in item
+        and "startSeconds" not in item
+    ]
+    if not signatures:
+        signatures = [
+            engine.TimeSignature(
+                int(analysis.get("timeSignatureNumerator", 4)),
+                int(analysis.get("timeSignatureDenominator", 4)),
+                confidence=confidence,
+            )
+        ]
+    return engine.TempoMap(tuple(changes), tuple(signatures), offset_seconds)
 
 
 def minimal_musicxml(project: Project, transcription: Transcription) -> bytes:
@@ -774,8 +898,10 @@ class PipelineService:
             return
         if stage == JobStage.DETECTING_BEATS:
             run = await self._model_run(db, job.id)
-            stem = await self._asset(db, project.id, AssetKind.DRUM_STEM)
-            async with self.storage.materialize(stem.storage_key) as path:
+            # The full mix supplies stable pulse/downbeat evidence that may be absent
+            # from a sparse or imperfectly separated drum stem.
+            normalized = await self._asset(db, project.id, AssetKind.NORMALIZED)
+            async with self.storage.materialize(normalized.storage_key) as path:
                 beat_analysis = await self.music.track_beats(path)
             summary = dict(run.summary)
             summary["beatAnalysis"] = beat_analysis
@@ -815,7 +941,13 @@ class PipelineService:
             bpm = float(checkpoint_analysis["tempoBpm"])
             numerator = int(checkpoint_analysis["timeSignatureNumerator"])
             denominator = int(checkpoint_analysis["timeSignatureDenominator"])
-            quantized = quantize_hits(checkpoint_hits, bpm, numerator, denominator)
+            quantized = quantize_hits(
+                checkpoint_hits,
+                bpm,
+                numerator,
+                denominator,
+                timing_analysis=checkpoint_analysis,
+            )
             low_confidence = sum(1 for item in quantized if (item["confidence"] or 0) < 0.75)
             timing_map = [
                 *list(checkpoint_analysis.get("tempoMap", [])),

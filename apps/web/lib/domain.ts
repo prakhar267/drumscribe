@@ -10,6 +10,7 @@ export const INSTRUMENTS = [
   "LOW_TOM",
   "FLOOR_TOM",
   "CROSS_STICK",
+  "TAMBOURINE",
   "SNARE",
   "KICK",
 ] as const;
@@ -30,6 +31,7 @@ export const EDITOR_ROWS: Instrument[] = [
   "LOW_TOM",
   "FLOOR_TOM",
   "CROSS_STICK",
+  "TAMBOURINE",
 ];
 
 export const INSTRUMENT_LABELS: Record<Instrument, string> = {
@@ -46,6 +48,7 @@ export const INSTRUMENT_LABELS: Record<Instrument, string> = {
   MID_TOM: "Mid tom",
   LOW_TOM: "Low tom",
   FLOOR_TOM: "Floor tom",
+  TAMBOURINE: "Tambourine",
 };
 
 export const GM_PERCUSSION_MAP: Record<Instrument, number> = {
@@ -62,6 +65,7 @@ export const GM_PERCUSSION_MAP: Record<Instrument, number> = {
   MID_TOM: 47,
   LOW_TOM: 45,
   FLOOR_TOM: 43,
+  TAMBOURINE: 54,
 };
 
 export type EventSource = "MODEL" | "MANUAL" | "IMPORTED";

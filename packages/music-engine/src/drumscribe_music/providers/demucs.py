@@ -13,7 +13,7 @@ from ..licensing import LicenseStatus, ProviderLicense
 
 
 class DemucsAdapter:
-    provider_id = "demucs-isolated-v4"
+    provider_id = "demucs-isolated-v5"
     license = ProviderLicense(
         provider_id=provider_id,
         status=LicenseStatus.UNRESOLVED,
@@ -27,13 +27,14 @@ class DemucsAdapter:
         decision="Optional local adapter only; production gate refuses it.",
     )
 
-    def __init__(self, *, model: str = "htdemucs", python_executable: str | None = None) -> None:
+    def __init__(self, *, model: str = "htdemucs_ft", python_executable: str | None = None) -> None:
         if not model or any(
             character not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-"
             for character in model
         ):
             raise ValueError("invalid Demucs model name")
         self.model = model
+        self.version = model
         self.python_executable = python_executable or sys.executable
 
     def separate_drums(self, source: Path, destination: Path) -> Path:

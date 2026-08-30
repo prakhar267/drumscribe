@@ -23,6 +23,7 @@ INSTRUMENT_TO_GM: dict[Instrument, int] = {
     Instrument.MID_TOM: 47,
     Instrument.LOW_TOM: 45,
     Instrument.FLOOR_TOM: 41,
+    Instrument.TAMBOURINE: 54,
 }
 
 GM_TO_INSTRUMENT: dict[int, Instrument] = {
@@ -48,6 +49,7 @@ GM_TO_INSTRUMENT: dict[int, Instrument] = {
     51: Instrument.RIDE,
     59: Instrument.RIDE,
     53: Instrument.RIDE_BELL,
+    54: Instrument.TAMBOURINE,
 }
 
 
@@ -89,6 +91,8 @@ RAW_CLASS_ALIASES: dict[str, Instrument] = {
     "low_tom": Instrument.LOW_TOM,
     "tom_low": Instrument.LOW_TOM,
     "floor_tom": Instrument.FLOOR_TOM,
+    "tambourine": Instrument.TAMBOURINE,
+    "tmb": Instrument.TAMBOURINE,
 }
 
 
@@ -114,6 +118,7 @@ NOTATION_PLACEMENT: dict[Instrument, NotationPlacement] = {
     Instrument.RIDE: NotationPlacement("F", 5, "x"),
     Instrument.RIDE_BELL: NotationPlacement("F", 5, "diamond"),
     Instrument.CRASH: NotationPlacement("A", 5, "x"),
+    Instrument.TAMBOURINE: NotationPlacement("E", 6, "x"),
 }
 
 

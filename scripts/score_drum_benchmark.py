@@ -30,6 +30,7 @@ MDB_CLASS = {
     "MID_TOM": "TT",
     "LOW_TOM": "TT",
     "FLOOR_TOM": "TT",
+    "TAMBOURINE": "OT",
 }
 CLASS_ORDER = ("KD", "SD", "HH", "TT", "CY", "OT")
 

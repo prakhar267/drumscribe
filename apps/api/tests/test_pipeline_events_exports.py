@@ -6,6 +6,8 @@ from fastapi.testclient import TestClient
 from drumscribe_api.enums import EventSource, Instrument
 from drumscribe_api.models import DrumEvent, Transcription
 from drumscribe_api.services.exports import _music_engine_events
+from drumscribe_api.services.pipeline import quantize_hits
+from drumscribe_api.services.pipeline_contracts import RawDrumHit
 
 from .conftest import (
     create_project,
@@ -63,6 +65,56 @@ def test_export_mapping_preserves_compound_meter_and_variable_tempo() -> None:
         assert converted[0].beat_position == Fraction(3)
         assert len(tempo_map.changes) == 2
         assert tempo_map.time_signatures[0].numerator == numerator
+
+
+def test_pipeline_quantization_preserves_offset_and_variable_tempo_map() -> None:
+    analysis = {
+        "tempoBpm": 90,
+        "timeSignatureNumerator": 4,
+        "timeSignatureDenominator": 4,
+        "confidence": 0.9,
+        "offsetSeconds": 0.25,
+        "tempoMap": [
+            {"startBeat": "0", "bpm": 120, "confidence": 0.9},
+            {"startBeat": "2", "bpm": 60, "confidence": 0.9},
+        ],
+        "timeSignatures": [
+            {
+                "startBeat": "0",
+                "numerator": 4,
+                "denominator": 4,
+                "confidence": 0.9,
+            }
+        ],
+    }
+    event = quantize_hits(
+        [RawDrumHit(Instrument.SNARE, 2.26, 110, 0.95)],
+        timing_analysis=analysis,
+    )[0]
+    assert event["onset_seconds"] == 2.26
+    assert event["quantized_onset"] == 2.25
+    assert event["measure_index"] == 0
+    assert event["beat_position"] == 3
+
+
+def test_pipeline_quantization_rehydrates_timestamped_commercial_beats() -> None:
+    analysis = {
+        "tempoBpm": 120,
+        "timeSignatureNumerator": 4,
+        "timeSignatureDenominator": 4,
+        "beats": [
+            {"timeSeconds": 0.2, "confidence": 0.95},
+            {"timeSeconds": 0.7, "confidence": 0.95},
+            {"timeSeconds": 1.3, "confidence": 0.95},
+            {"timeSeconds": 1.8, "confidence": 0.95},
+        ],
+    }
+    event = quantize_hits(
+        [RawDrumHit(Instrument.KICK, 1.29, 100, 0.9)],
+        timing_analysis=analysis,
+    )[0]
+    assert event["quantized_onset"] == 1.3
+    assert event["beat_position"] == 2
 
 
 def test_idempotent_processing_and_durable_stage_progress(client: TestClient, app) -> None:
