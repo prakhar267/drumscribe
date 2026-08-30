@@ -14,6 +14,7 @@ from drumscribe_api.main import create_app
 @pytest.fixture
 def settings(tmp_path: Path) -> Settings:
     return Settings(
+        _env_file=None,
         environment=Environment.TESTING,
         database_url=f"sqlite+aiosqlite:///{tmp_path / 'test.db'}",
         storage_backend="local",

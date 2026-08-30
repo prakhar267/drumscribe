@@ -70,9 +70,12 @@ class Settings(BaseSettings):
     )
     hsts_max_age_seconds: int = Field(default=31_536_000, ge=0)
     dev_expose_magic_link: bool = True
-    magic_link_delivery: Literal["development", "webhook"] = "development"
+    magic_link_delivery: Literal["development", "resend", "webhook"] = "development"
     magic_link_webhook_url: str | None = None
     magic_link_webhook_secret: SecretStr | None = None
+    resend_api_url: str = "https://api.resend.com"
+    resend_api_key: SecretStr | None = None
+    resend_from_email: str | None = None
 
     max_upload_bytes: int = 150 * 1024 * 1024
     max_audio_duration_seconds: float = 12 * 60
@@ -164,8 +167,14 @@ class Settings(BaseSettings):
                 raise ValueError("production session cookies must be secure")
             if self.dev_expose_magic_link:
                 raise ValueError("development magic-link delivery cannot be enabled in production")
-            if self.magic_link_delivery != "webhook" or not self.magic_link_webhook_url:
-                raise ValueError("production requires a configured magic-link delivery webhook")
+            if self.magic_link_delivery == "webhook":
+                if not self.magic_link_webhook_url:
+                    raise ValueError("production magic-link webhook URL is missing")
+            elif self.magic_link_delivery == "resend":
+                if not self.resend_api_key or not self.resend_from_email:
+                    raise ValueError("production Resend API key and sender are missing")
+            else:
+                raise ValueError("production requires Resend or webhook magic-link delivery")
             secret = self.session_secret.get_secret_value()
             if len(secret) < 32 or secret == "development-only-change-this-secret":
                 raise ValueError("production requires a strong SESSION_SECRET")

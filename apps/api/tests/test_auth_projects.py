@@ -1,4 +1,9 @@
+import json
+
+import httpx
+import pytest
 from fastapi.testclient import TestClient
+from pydantic import SecretStr
 
 from drumscribe_api.services.magic_links import MagicLinkDelivery
 
@@ -17,6 +22,38 @@ def test_health_and_security_headers(client: TestClient) -> None:
 def test_magic_link_delivery_targets_the_web_verification_route(settings) -> None:
     link = MagicLinkDelivery(settings).verification_url("opaque+/token")
     assert link == "http://testserver/auth/verify?token=opaque%2B%2Ftoken"
+
+
+@pytest.mark.asyncio
+async def test_resend_magic_link_delivery_uses_private_verification_link(settings) -> None:
+    captured: dict[str, object] = {}
+
+    async def send(request: httpx.Request) -> httpx.Response:
+        captured["url"] = str(request.url)
+        captured["authorization"] = request.headers.get("authorization")
+        captured["payload"] = json.loads(request.content)
+        return httpx.Response(200, json={"id": "email-1"})
+
+    configured = settings.model_copy(
+        update={
+            "magic_link_delivery": "resend",
+            "resend_api_key": SecretStr("resend-test-key"),
+            "resend_from_email": "DrumScribe <sign-in@drumscribe.test>",
+        }
+    )
+    async with httpx.AsyncClient(transport=httpx.MockTransport(send)) as http_client:
+        await MagicLinkDelivery(configured, http_client).deliver(
+            "drummer@example.com", "opaque+/token"
+        )
+
+    assert captured["url"] == "https://api.resend.com/emails"
+    assert captured["authorization"] == "Bearer resend-test-key"
+    payload = captured["payload"]
+    assert isinstance(payload, dict)
+    assert payload["to"] == ["drummer@example.com"]
+    assert payload["from"] == "DrumScribe <sign-in@drumscribe.test>"
+    assert "http://testserver/auth/verify?token=opaque%2B%2Ftoken" in str(payload["text"])
+    assert "opaque%2B%2Ftoken" in str(payload["html"])
 
 
 def test_user_a_cannot_read_or_mutate_user_b_project(client: TestClient) -> None:
