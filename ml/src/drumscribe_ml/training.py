@@ -22,6 +22,11 @@ class TrainingError(RuntimeError):
 
 
 TRAINING_CLASSES = tuple(Instrument)
+VALIDATION_METRIC_VERSION = 3
+EXCLUSIVE_INSTRUMENT_FAMILIES = (
+    (Instrument.CLOSED_HIHAT, Instrument.OPEN_HIHAT, Instrument.PEDAL_HIHAT),
+    (Instrument.RIDE, Instrument.RIDE_BELL),
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,6 +52,11 @@ class TrainingConfig:
     lr_decay_patience: int = 2
     lr_decay_factor: float = 0.5
     minimum_learning_rate: float = 0.000001
+    mixup_probability: float = 0.0
+    mixup_alpha: float = 0.2
+    family_classification_loss_weight: float = 0.0
+    positive_weight_exponent: float = 1.0
+    validation_family_competition: bool = False
 
     def __post_init__(self) -> None:
         if not self.model_version.strip() or "/" in self.model_version:
@@ -77,6 +87,18 @@ class TrainingConfig:
             raise TrainingError("learning-rate decay patience/factor are invalid")
         if not 0 < self.minimum_learning_rate <= self.learning_rate:
             raise TrainingError("minimum learning rate must be positive and at most learning_rate")
+        if not 0 <= self.mixup_probability <= 1 or self.mixup_alpha <= 0:
+            raise TrainingError("mixup probability/alpha are invalid")
+        if (
+            not math.isfinite(self.family_classification_loss_weight)
+            or not 0 <= self.family_classification_loss_weight <= 5
+        ):
+            raise TrainingError("family classification loss weight must be between zero and five")
+        if (
+            not math.isfinite(self.positive_weight_exponent)
+            or not 0 <= self.positive_weight_exponent <= 1
+        ):
+            raise TrainingError("positive weight exponent must be between zero and one")
 
     @classmethod
     def load(cls, path: Path) -> TrainingConfig:
@@ -244,12 +266,14 @@ def run_training(config: TrainingConfig) -> Path:
         patience=config.lr_decay_patience,
         min_lr=config.minimum_learning_rate,
     )
-    positive_weights = torch.from_numpy(_positive_class_weights(train_records)).to(device)
+    positive_weights = torch.from_numpy(
+        _positive_class_weights(train_records, exponent=config.positive_weight_exponent)
+    ).to(device)
     start_epoch = 0
     best_f1 = -1.0
     best_thresholds: dict[str, float] = {}
+    best_peak_distances: dict[str, int] = {}
     best_per_class: dict[str, float] = {}
-    resumed_state: dict[str, Any] | None = None
     resume_provenance: dict[str, Any] | None = None
     if config.resume_checkpoint:
         resume_path = Path(config.resume_checkpoint).resolve()
@@ -271,15 +295,11 @@ def run_training(config: TrainingConfig) -> Path:
             for parameter_group in optimizer.param_groups:
                 parameter_group["lr"] = config.resume_learning_rate
         start_epoch = int(checkpoint["epoch"]) + 1
-        if validation_compatible:
-            resumed_state = checkpoint
-            best_f1 = float(checkpoint.get("bestF1", -1))
-            best_thresholds = dict(checkpoint.get("validationThresholds", {}))
-            best_per_class = dict(checkpoint.get("validationPerClassF1", {}))
         resume_provenance = {
             "checkpointSha256": _sha256(resume_path),
             "checkpointEpoch": int(checkpoint["epoch"]),
-            "validationState": "carried" if validation_compatible else "reset",
+            "sourceValidationCompatible": validation_compatible,
+            "validationState": "recalibrated",
         }
         if config.resume_learning_rate is not None:
             resume_provenance["learningRateOverride"] = config.resume_learning_rate
@@ -291,19 +311,56 @@ def run_training(config: TrainingConfig) -> Path:
         payload,
         prepared_dataset_sha256=prepared_dataset_sha256,
     )
-    if resume_provenance:
+    metadata["validationMetricVersion"] = VALIDATION_METRIC_VERSION
+    metrics_path = output / "metrics.jsonl"
+    best_checkpoint = output / "best.pt"
+    if config.resume_checkpoint:
+        assert resume_provenance is not None
+        resumed_validation = _validation_metrics(
+            model,
+            validation_records,
+            tolerance_frames=config.onset_tolerance_frames,
+            device=device,
+            family_competition=config.validation_family_competition,
+        )
+        best_f1 = float(resumed_validation["macroF1"])
+        best_thresholds = dict(resumed_validation["thresholds"])
+        best_peak_distances = dict(resumed_validation["peakDistances"])
+        best_per_class = dict(resumed_validation["perClassF1"])
+        resumed_checkpoint = {
+            "epoch": start_epoch - 1,
+            "model": model.state_dict(),
+            "optimizer": optimizer.state_dict(),
+            "scheduler": scheduler.state_dict(),
+            "bestF1": best_f1,
+            "configuration": asdict(config),
+            "validationThresholds": best_thresholds,
+            "validationPeakDistances": best_peak_distances,
+            "validationPerClassF1": best_per_class,
+            "preparedDatasetSha256": prepared_dataset_sha256,
+            "validationMetricVersion": VALIDATION_METRIC_VERSION,
+        }
+        torch.save(resumed_checkpoint, best_checkpoint)
+        resume_provenance["recalibratedValidationMacroF1"] = best_f1
         metadata["resume"] = resume_provenance
+        metadata.update(
+            {
+                "modelSha256": _sha256(best_checkpoint),
+                "bestValidationMacroF1": best_f1,
+                "validationThresholds": best_thresholds,
+                "validationPeakDistances": best_peak_distances,
+                "validationPerClassF1": best_per_class,
+            }
+        )
     (output / "experiment.json").write_text(
         json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
-    metrics_path = output / "metrics.jsonl"
-    best_checkpoint = output / "best.pt"
-    if resumed_state is not None:
-        torch.save(resumed_state, best_checkpoint)
     stale_epochs = 0
     for epoch in range(start_epoch, config.epochs):
         model.train()
         train_losses = []
+        train_family_losses = []
+        mixup_rng = np.random.default_rng(config.seed + epoch)
         for record in _epoch_records(train_records, seed=config.seed, epoch=epoch):
             features, onset_targets, velocity_targets = _load_training_record(record)
             for (
@@ -318,6 +375,20 @@ def run_training(config: TrainingConfig) -> Path:
                 config.window_frames,
                 config.batch_size,
             ):
+                (
+                    feature_batch,
+                    onset_batch,
+                    velocity_batch,
+                    valid_batch,
+                ) = _mixup_training_batch(
+                    feature_batch,
+                    onset_batch,
+                    velocity_batch,
+                    valid_batch,
+                    probability=config.mixup_probability,
+                    alpha=config.mixup_alpha,
+                    rng=mixup_rng,
+                )
                 onset_logits, velocity = model(torch.from_numpy(feature_batch).to(device))
                 original_onsets = torch.from_numpy(onset_batch).to(device)
                 loss_onsets = torch.from_numpy(
@@ -340,17 +411,28 @@ def run_training(config: TrainingConfig) -> Path:
                     if mask.any()
                     else velocity.sum() * 0
                 )
-                loss = onset_loss + velocity_loss * 0.25
+                family_loss = (
+                    _family_classification_loss(onset_logits, original_onsets)
+                    if config.family_classification_loss_weight > 0
+                    else onset_logits.sum() * 0
+                )
+                loss = (
+                    onset_loss
+                    + velocity_loss * 0.25
+                    + family_loss * config.family_classification_loss_weight
+                )
                 optimizer.zero_grad()
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(model.parameters(), 5)
                 optimizer.step()
                 train_losses.append(float(loss.detach()))
+                train_family_losses.append(float(family_loss.detach()))
         validation = _validation_metrics(
             model,
             validation_records,
             tolerance_frames=config.onset_tolerance_frames,
             device=device,
+            family_competition=config.validation_family_competition,
         )
         validation_f1 = float(validation["macroF1"])
         learning_rate = float(optimizer.param_groups[0]["lr"])
@@ -358,8 +440,10 @@ def run_training(config: TrainingConfig) -> Path:
         metrics = {
             "epoch": epoch,
             "trainLoss": sum(train_losses) / len(train_losses),
+            "trainFamilyClassificationLoss": sum(train_family_losses) / len(train_family_losses),
             "validationMacroF1": validation_f1,
             "validationThresholds": validation["thresholds"],
+            "validationPeakDistances": validation["peakDistances"],
             "validationPerClassF1": validation["perClassF1"],
             "learningRate": learning_rate,
             "nextLearningRate": float(optimizer.param_groups[0]["lr"]),
@@ -374,13 +458,16 @@ def run_training(config: TrainingConfig) -> Path:
             "bestF1": max(best_f1, validation_f1),
             "configuration": asdict(config),
             "validationThresholds": validation["thresholds"],
+            "validationPeakDistances": validation["peakDistances"],
             "validationPerClassF1": validation["perClassF1"],
             "preparedDatasetSha256": prepared_dataset_sha256,
+            "validationMetricVersion": VALIDATION_METRIC_VERSION,
         }
         torch.save(state, output / f"checkpoint-{epoch:04d}.pt")
         if validation_f1 > best_f1:
             best_f1 = validation_f1
             best_thresholds = dict(validation["thresholds"])
+            best_peak_distances = dict(validation["peakDistances"])
             best_per_class = dict(validation["perClassF1"])
             stale_epochs = 0
             torch.save(state, best_checkpoint)
@@ -394,6 +481,7 @@ def run_training(config: TrainingConfig) -> Path:
             "modelSha256": digest,
             "bestValidationMacroF1": best_f1,
             "validationThresholds": best_thresholds,
+            "validationPeakDistances": best_peak_distances,
             "validationPerClassF1": best_per_class,
         }
     )
@@ -480,6 +568,9 @@ def _validation_metrics(
     *,
     tolerance_frames: int = 2,
     device: str = "cpu",
+    thresholds: dict[str, float] | None = None,
+    peak_distances: dict[str, int] | None = None,
+    family_competition: bool = False,
 ) -> dict[str, Any]:
     import torch
 
@@ -490,41 +581,121 @@ def _validation_metrics(
             features, targets, _ = _load_training_record(record)
             logits, _ = model(torch.from_numpy(features)[None].to(device))
             probabilities = torch.sigmoid(logits)[0].cpu().numpy()
+            if family_competition:
+                probabilities = _apply_family_competition(probabilities)
             evaluated.append((probabilities, targets))
 
-    threshold_candidates = np.linspace(0.05, 0.95, 19)
-    thresholds: dict[str, float] = {}
+    selected_thresholds: dict[str, float] = {}
+    selected_peak_distances: dict[str, int] = {}
     per_class: dict[str, float] = {}
     for index, instrument in enumerate(TRAINING_CLASSES):
         support = sum(int(targets[:, index].sum()) for _, targets in evaluated)
         if not support:
-            thresholds[instrument.value] = 0.99
+            selected_thresholds[instrument.value] = float(
+                thresholds.get(instrument.value, 0.99) if thresholds else 0.99
+            )
+            selected_peak_distances[instrument.value] = int(
+                peak_distances.get(instrument.value, 1) if peak_distances else 1
+            )
             continue
-        candidates: list[tuple[float, float]] = []
-        for threshold in threshold_candidates:
-            true_positive = false_positive = false_negative = 0
-            for probabilities, targets in evaluated:
-                references = np.flatnonzero(targets[:, index] > 0).tolist()
-                predictions = _peak_frames(probabilities[:, index], threshold=float(threshold))
-                tp, fp, fn = _match_frames(
-                    references,
-                    predictions,
-                    tolerance=tolerance_frames,
+        if thresholds is not None:
+            threshold = float(thresholds[instrument.value])
+            peak_distance = int(peak_distances.get(instrument.value, 1) if peak_distances else 1)
+            per_class[instrument.value] = _evaluated_class_f1(
+                evaluated,
+                class_index=index,
+                threshold=threshold,
+                peak_distance_frames=peak_distance,
+                tolerance_frames=tolerance_frames,
+            )
+            selected_thresholds[instrument.value] = threshold
+            selected_peak_distances[instrument.value] = peak_distance
+            continue
+        candidates: list[tuple[float, float, int]] = []
+        for peak_distance in _peak_distance_candidates():
+            for threshold in _threshold_candidates():
+                score = _evaluated_class_f1(
+                    evaluated,
+                    class_index=index,
+                    threshold=float(threshold),
+                    peak_distance_frames=int(peak_distance),
+                    tolerance_frames=tolerance_frames,
                 )
-                true_positive += tp
-                false_positive += fp
-                false_negative += fn
-            denominator = 2 * true_positive + false_positive + false_negative
-            score = 2 * true_positive / denominator if denominator else 0.0
-            candidates.append((score, float(threshold)))
-        score, threshold = max(candidates, key=lambda item: (item[0], -abs(item[1] - 0.5)))
-        thresholds[instrument.value] = threshold
+                candidates.append((score, float(threshold), int(peak_distance)))
+        score, threshold, peak_distance = max(
+            candidates,
+            key=lambda item: (item[0], -abs(item[1] - 0.5), -item[2]),
+        )
+        selected_thresholds[instrument.value] = threshold
+        selected_peak_distances[instrument.value] = peak_distance
         per_class[instrument.value] = score
     macro_f1 = sum(per_class.values()) / len(per_class) if per_class else 0.0
-    return {"macroF1": macro_f1, "thresholds": thresholds, "perClassF1": per_class}
+    return {
+        "macroF1": macro_f1,
+        "thresholds": selected_thresholds,
+        "peakDistances": selected_peak_distances,
+        "perClassF1": per_class,
+    }
 
 
-def _positive_class_weights(records: list[dict[str, Any]]) -> np.ndarray:
+def _threshold_candidates() -> np.ndarray:
+    """Cover the high-confidence range needed by class-balanced onset models."""
+    return np.concatenate(
+        (
+            np.linspace(0.05, 0.95, 19),
+            np.array([0.96, 0.97, 0.98, 0.99, 0.995], dtype=np.float64),
+        )
+    )
+
+
+def _peak_distance_candidates() -> tuple[int, ...]:
+    """Bound duplicate suppression to musically plausible sub-130 ms intervals."""
+    return (1, 2, 3, 4, 5, 6, 8)
+
+
+def _apply_family_competition(probabilities: np.ndarray) -> np.ndarray:
+    """Keep only the strongest articulation in physically exclusive drum families."""
+    output = probabilities.copy()
+    class_index = {instrument: index for index, instrument in enumerate(TRAINING_CLASSES)}
+    for family in EXCLUSIVE_INSTRUMENT_FAMILIES:
+        indices = np.array([class_index[instrument] for instrument in family])
+        family_probabilities = output[:, indices]
+        winners = np.argmax(family_probabilities, axis=1)
+        keep = np.zeros_like(family_probabilities, dtype=bool)
+        keep[np.arange(len(output)), winners] = True
+        output[:, indices] = np.where(keep, family_probabilities, 0)
+    return output
+
+
+def _evaluated_class_f1(
+    evaluated: list[tuple[np.ndarray, np.ndarray]],
+    *,
+    class_index: int,
+    threshold: float,
+    peak_distance_frames: int,
+    tolerance_frames: int,
+) -> float:
+    true_positive = false_positive = false_negative = 0
+    for probabilities, targets in evaluated:
+        references = np.flatnonzero(targets[:, class_index] > 0).tolist()
+        predictions = _peak_frames(
+            probabilities[:, class_index],
+            threshold=threshold,
+            minimum_distance_frames=peak_distance_frames,
+        )
+        tp, fp, fn = _match_frames(
+            references,
+            predictions,
+            tolerance=tolerance_frames,
+        )
+        true_positive += tp
+        false_positive += fp
+        false_negative += fn
+    denominator = 2 * true_positive + false_positive + false_negative
+    return 2 * true_positive / denominator if denominator else 0.0
+
+
+def _positive_class_weights(records: list[dict[str, Any]], *, exponent: float = 1.0) -> np.ndarray:
     positive = np.zeros(len(TRAINING_CLASSES), dtype=np.float64)
     frame_count = 0
     for record in records:
@@ -532,9 +703,8 @@ def _positive_class_weights(records: list[dict[str, Any]]) -> np.ndarray:
         positive += targets.sum(axis=0)
         frame_count += len(targets)
     negative = frame_count - positive
-    return np.where(positive > 0, np.clip(negative / np.maximum(positive, 1), 1, 100), 1).astype(
-        np.float32
-    )
+    ratio = negative / np.maximum(positive, 1)
+    return np.where(positive > 0, np.clip(ratio**exponent, 1, 100), 1).astype(np.float32)
 
 
 def _dilate_targets(targets: np.ndarray, tolerance: int) -> np.ndarray:
@@ -578,17 +748,72 @@ def _training_batches(
         yield feature_batch, onset_batch, velocity_batch, valid_batch
 
 
+def _mixup_training_batch(
+    features: np.ndarray,
+    onsets: np.ndarray,
+    velocities: np.ndarray,
+    valid: np.ndarray,
+    *,
+    probability: float,
+    alpha: float,
+    rng: np.random.Generator,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Deterministically mix shuffled windows without touching validation or test audio."""
+    if len(features) < 2 or probability <= 0 or rng.random() >= probability:
+        return features, onsets, velocities, valid
+    offset = int(rng.integers(1, len(features)))
+    permutation = np.roll(np.arange(len(features)), offset)
+    coefficient = float(rng.beta(alpha, alpha))
+    coefficient = max(coefficient, 1 - coefficient)
+    inverse = 1 - coefficient
+    mixed_features = coefficient * features + inverse * features[permutation]
+    mixed_onsets = coefficient * onsets + inverse * onsets[permutation]
+    mixed_velocities = coefficient * velocities + inverse * velocities[permutation]
+    mixed_valid = np.maximum(valid, valid[permutation])
+    return mixed_features, mixed_onsets, mixed_velocities, mixed_valid
+
+
 def _dilate_batched_targets(targets: np.ndarray, tolerance: int) -> np.ndarray:
     return np.stack([_dilate_targets(row, tolerance) for row in targets])
 
 
-def _peak_frames(probabilities: np.ndarray, *, threshold: float) -> list[int]:
+def _family_classification_loss(onset_logits, onset_targets):
+    """Teach mutually exclusive articulations only where one family label is present."""
+    import torch
+    import torch.nn.functional as functional
+
+    class_index = {instrument: index for index, instrument in enumerate(TRAINING_CLASSES)}
+    losses = []
+    for family in EXCLUSIVE_INSTRUMENT_FAMILIES:
+        indices = [class_index[instrument] for instrument in family]
+        family_targets = onset_targets[..., indices]
+        unambiguous = family_targets.sum(dim=-1) == 1
+        if bool(unambiguous.any()):
+            family_logits = onset_logits[..., indices][unambiguous]
+            target_indices = family_targets[unambiguous].argmax(dim=-1)
+            losses.append(functional.cross_entropy(family_logits, target_indices))
+    return torch.stack(losses).mean() if losses else onset_logits.sum() * 0
+
+
+def _peak_frames(
+    probabilities: np.ndarray, *, threshold: float, minimum_distance_frames: int = 1
+) -> list[int]:
     if not len(probabilities):
         return []
+    if minimum_distance_frames < 1:
+        raise TrainingError("minimum peak distance must be at least one frame")
     padded = np.pad(probabilities, (1, 1), constant_values=-np.inf)
-    return np.flatnonzero(
+    candidates = np.flatnonzero(
         (probabilities >= threshold) & (probabilities >= padded[:-2]) & (probabilities > padded[2:])
     ).tolist()
+    if minimum_distance_frames == 1:
+        return candidates
+    ranked = sorted(candidates, key=lambda frame: (-float(probabilities[frame]), frame))
+    selected: list[int] = []
+    for candidate in ranked:
+        if all(abs(candidate - existing) >= minimum_distance_frames for existing in selected):
+            selected.append(candidate)
+    return sorted(selected)
 
 
 def _match_frames(

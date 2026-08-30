@@ -1,5 +1,7 @@
 import json
+import random
 from dataclasses import asdict
+from itertools import pairwise
 from pathlib import Path
 
 import numpy as np
@@ -10,6 +12,8 @@ from drumscribe_ml.lifecycle import PreparationConfig, cache_log_mel, read_pcm_w
 from drumscribe_ml.one_shot_overlay import (
     OneShotOverlayConfig,
     OneShotOverlayError,
+    _choose_positions,
+    _minimum_overlay_duration,
     create_one_shot_overlays,
     create_one_shot_probe,
 )
@@ -176,6 +180,21 @@ def test_overlays_are_deterministic_training_only_and_use_partitioned_samples(tm
 
     with pytest.raises(OneShotOverlayError, match="already contains"):
         create_one_shot_overlays(first, catalog, library, tmp_path / "duplicate", config=config)
+
+
+def test_overlay_minimum_duration_accounts_for_every_requested_hit():
+    config = OneShotOverlayConfig(seed="duration", hits_per_class=2)
+    assert _minimum_overlay_duration(config, 3) == pytest.approx(1.85)
+
+
+def test_overlay_position_selection_finds_a_feasible_dense_pattern():
+    config = OneShotOverlayConfig(seed="dense", minimum_spacing_seconds=0.3)
+    positions = _choose_positions(1.86, [0.5, 1.0], 6, config, random.Random(7))
+    assert len(positions) == 6
+    assert all(
+        second - first >= config.minimum_spacing_seconds - 1e-9
+        for first, second in pairwise(positions)
+    )
 
 
 def test_probe_uses_only_source_validation_and_reserved_validation_samples(tmp_path):

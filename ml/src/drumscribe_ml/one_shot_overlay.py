@@ -95,7 +95,11 @@ def create_one_shot_overlays(
     generated: list[dict[str, Any]] = []
     generated_counts = {instrument.value: 0 for instrument in instruments}
     source_records = _selected_original_records(
-        records, split="train", seed=config.seed, limit=config.record_limit
+        records,
+        split="train",
+        seed=config.seed,
+        limit=config.record_limit,
+        minimum_duration_seconds=_minimum_overlay_duration(config, len(instruments)),
     )
     for record in source_records:
         for variant in range(1, config.variants_per_record + 1):
@@ -175,7 +179,11 @@ def create_one_shot_probe(
         raise OneShotOverlayError(f"no validation-partition samples for: {', '.join(missing)}")
 
     source_records = _selected_original_records(
-        records, split="validation", seed=config.seed, limit=config.record_limit
+        records,
+        split="validation",
+        seed=config.seed,
+        limit=config.record_limit,
+        minimum_duration_seconds=_minimum_overlay_duration(config, len(instruments)),
     )
     output = Path(output_root).resolve()
     output.mkdir(parents=True, exist_ok=False)
@@ -354,12 +362,19 @@ def _overlay_record(
 
 
 def _selected_original_records(
-    records: list[dict[str, Any]], *, split: str, seed: str, limit: int | None
+    records: list[dict[str, Any]],
+    *,
+    split: str,
+    seed: str,
+    limit: int | None,
+    minimum_duration_seconds: float = 0,
 ) -> list[dict[str, Any]]:
     eligible = [
         record
         for record in records
-        if record.get("split") == split and record.get("variant") == "original"
+        if record.get("split") == split
+        and record.get("variant") == "original"
+        and float(record.get("durationSeconds", 0)) >= minimum_duration_seconds
     ]
     ranked = sorted(
         eligible,
@@ -373,6 +388,11 @@ def _selected_original_records(
     return ranked if limit is None else ranked[:limit]
 
 
+def _minimum_overlay_duration(config: OneShotOverlayConfig, class_count: int) -> float:
+    request_count = class_count * config.hits_per_class
+    return 0.35 + max(0, request_count - 1) * config.minimum_spacing_seconds
+
+
 def _choose_positions(
     duration: float,
     occupied: list[float],
@@ -380,27 +400,23 @@ def _choose_positions(
     config: OneShotOverlayConfig,
     rng: random.Random,
 ) -> list[float]:
-    candidates = [
-        round(value, 3) for value in np.arange(0.25, max(0.25, duration - 0.1), 0.05).tolist()
-    ]
-    preferred = [
-        value
-        for value in candidates
-        if all(abs(value - existing) >= config.avoid_existing_seconds for existing in occupied)
-    ]
-    preferred_set = set(preferred)
-    fallback = [value for value in candidates if value not in preferred_set]
-    rng.shuffle(preferred)
-    rng.shuffle(fallback)
-    selected: list[float] = []
-    for candidate in [*preferred, *fallback]:
-        if all(
-            abs(candidate - existing) >= config.minimum_spacing_seconds for existing in selected
-        ):
-            selected.append(candidate)
-            if len(selected) == count:
-                break
-    return selected
+    if count == 0:
+        return []
+    span = (count - 1) * config.minimum_spacing_seconds
+    latest_start = duration - 0.1 - span
+    if latest_start < 0.25:
+        return []
+    patterns: list[tuple[int, float, list[float]]] = []
+    for start in np.arange(0.25, latest_start + 0.001, 0.05).tolist():
+        positions = [
+            round(start + index * config.minimum_spacing_seconds, 3) for index in range(count)
+        ]
+        collision_free = sum(
+            all(abs(position - existing) >= config.avoid_existing_seconds for existing in occupied)
+            for position in positions
+        )
+        patterns.append((collision_free, rng.random(), positions))
+    return max(patterns, key=lambda item: (item[0], item[1]))[2]
 
 
 def _load_one_shot(

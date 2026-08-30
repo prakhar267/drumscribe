@@ -23,6 +23,9 @@ uv run --project ml drumscribe-ml create-one-shot-probe ./prepared/prepared-data
   --classes LOW_TOM TAMBOURINE
 uv run --project ml --extra train drumscribe-ml evaluate-checkpoint ./best.pt \
   ./reserved-probe/prepared-probe.json ./reserved-probe/report.json
+uv run --project ml --extra train drumscribe-ml evaluate-checkpoint ./best.pt \
+  ./prepared/prepared-dataset.json ./sealed-test-report.json --split test \
+  --fixed-checkpoint-thresholds --family-competition
 uv sync --project ml --extra train
 uv run --project ml drumscribe-ml train training-config.json
 uv run --project ml drumscribe-benchmark benchmark-input.json --json report.json --html report.html
@@ -68,6 +71,22 @@ Evaluation-only probes use source validation recordings and only the reserved
 validation sample partition; the trainer rejects these probe manifests as input.
 Resumed experiments validate the prepared-manifest hash before carrying validation
 state and may set `resume_learning_rate` for an explicitly recorded fine-tune.
+Validation calibration searches through 0.995; sealed-test evaluation must use
+`--fixed-checkpoint-thresholds` so test labels cannot tune the decision thresholds.
+Validation also selects a bounded per-class minimum peak distance to suppress
+duplicate detections around one hit; these distances are stored in the checkpoint
+and `--fixed-checkpoint-thresholds` freezes both calibration layers on sealed test.
+`--family-competition` applies the same deterministic strongest-articulation rule
+to mutually exclusive hi-hat and ride families during validation and test.
+Training configs can enable deterministic, training-only shuffled MixUp with
+`mixup_probability` and `mixup_alpha`; `validation_family_competition` applies the
+production articulation rule during validation-based checkpoint selection.
+`family_classification_loss_weight` adds an auxiliary loss for unambiguous hi-hat
+and ride articulations, while `positive_weight_exponent` can temper rare-class
+pressure without changing validation or test labels. One-shot generation filters
+tracks that cannot fit the requested hit pattern and deterministically selects a
+maximum collision-free placement, so dense augmentation requests do not fail at
+random.
 No checkpoint is production-approved merely because this code can train it.
 
 Validation confidence can be calibrated from an NPZ containing `logits` and

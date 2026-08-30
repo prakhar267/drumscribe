@@ -8,6 +8,7 @@ import pytest
 from drumscribe_music import Instrument
 
 from drumscribe_ml.calibration import calibrate_confidence
+from drumscribe_ml.checkpoint_eval import _evidence_level
 from drumscribe_ml.lifecycle import (
     PreparationConfig,
     augmentation_recipe,
@@ -19,11 +20,17 @@ from drumscribe_ml.training import (
     TRAINING_CLASSES,
     TrainingConfig,
     TrainingError,
+    _apply_family_competition,
     _dilate_targets,
     _epoch_records,
+    _family_classification_loss,
     _match_frames,
+    _mixup_training_batch,
+    _peak_distance_candidates,
     _peak_frames,
+    _positive_class_weights,
     _resume_validation_compatible,
+    _threshold_candidates,
     _training_batches,
     experiment_metadata,
 )
@@ -170,6 +177,19 @@ def test_calibration_and_training_metadata_are_versioned(tmp_path):
             resume_checkpoint="best.pt",
             resume_learning_rate=0.001,
         )
+    targeted = TrainingConfig(
+        "prepared.json",
+        str(tmp_path),
+        "targeted",
+        family_classification_loss_weight=0.2,
+        positive_weight_exponent=0.5,
+    )
+    assert targeted.family_classification_loss_weight == pytest.approx(0.2)
+    assert targeted.positive_weight_exponent == pytest.approx(0.5)
+    with pytest.raises(TrainingError, match="positive weight exponent"):
+        TrainingConfig(
+            "prepared.json", str(tmp_path), "invalid-weight-exponent", positive_weight_exponent=2
+        )
 
 
 def test_training_targets_and_validation_are_onset_tolerant_and_multilabel():
@@ -181,6 +201,54 @@ def test_training_targets_and_validation_are_onset_tolerant_and_multilabel():
     assert _peak_frames(probabilities, threshold=0.5) == [2]
     assert _match_frames([4, 10], [5, 20], tolerance=2) == (1, 1, 1)
     assert set(TRAINING_CLASSES) == set(Instrument)
+    candidates = _threshold_candidates()
+    assert candidates[0] == pytest.approx(0.05)
+    assert candidates[-1] == pytest.approx(0.995)
+    assert len(candidates) == len(set(candidates.tolist()))
+    assert _peak_distance_candidates() == (1, 2, 3, 4, 5, 6, 8)
+
+
+def test_peak_frames_suppress_nearby_duplicates_by_probability():
+    probabilities = np.array([0.1, 0.8, 0.2, 0.9, 0.1, 0.7, 0.1])
+    assert _peak_frames(probabilities, threshold=0.5) == [1, 3, 5]
+    assert _peak_frames(probabilities, threshold=0.5, minimum_distance_frames=3) == [3]
+    with pytest.raises(TrainingError, match="minimum peak distance"):
+        _peak_frames(probabilities, threshold=0.5, minimum_distance_frames=0)
+
+
+def test_family_competition_keeps_strongest_hihat_and_ride_articulation():
+    probabilities = np.zeros((2, len(TRAINING_CLASSES)), dtype=np.float32)
+    class_index = {instrument: index for index, instrument in enumerate(TRAINING_CLASSES)}
+    probabilities[0, class_index[Instrument.CLOSED_HIHAT]] = 0.8
+    probabilities[0, class_index[Instrument.OPEN_HIHAT]] = 0.7
+    probabilities[0, class_index[Instrument.PEDAL_HIHAT]] = 0.6
+    probabilities[1, class_index[Instrument.RIDE]] = 0.4
+    probabilities[1, class_index[Instrument.RIDE_BELL]] = 0.9
+    probabilities[0, class_index[Instrument.KICK]] = 0.5
+    competed = _apply_family_competition(probabilities)
+    assert competed[0, class_index[Instrument.CLOSED_HIHAT]] == pytest.approx(0.8)
+    assert competed[0, class_index[Instrument.OPEN_HIHAT]] == 0
+    assert competed[0, class_index[Instrument.PEDAL_HIHAT]] == 0
+    assert competed[1, class_index[Instrument.RIDE]] == 0
+    assert competed[1, class_index[Instrument.RIDE_BELL]] == pytest.approx(0.9)
+    assert competed[0, class_index[Instrument.KICK]] == pytest.approx(0.5)
+
+
+def test_family_classification_loss_rewards_correct_articulation():
+    torch = pytest.importorskip("torch")
+    class_index = {instrument: index for index, instrument in enumerate(TRAINING_CLASSES)}
+    targets = torch.zeros((1, 2, len(TRAINING_CLASSES)))
+    targets[0, 0, class_index[Instrument.CLOSED_HIHAT]] = 1
+    targets[0, 1, class_index[Instrument.RIDE_BELL]] = 1
+    correct = torch.zeros_like(targets)
+    correct[0, 0, class_index[Instrument.CLOSED_HIHAT]] = 4
+    correct[0, 0, class_index[Instrument.OPEN_HIHAT]] = -4
+    correct[0, 1, class_index[Instrument.RIDE_BELL]] = 4
+    correct[0, 1, class_index[Instrument.RIDE]] = -4
+    incorrect = -correct
+    assert _family_classification_loss(correct, targets) < _family_classification_loss(
+        incorrect, targets
+    )
 
 
 def test_pcm_reader_decodes_signed_24_bit_audio(tmp_path):
@@ -199,6 +267,49 @@ def test_training_batches_pad_and_mask_only_real_frames():
     feature_batch, _, _, valid = batches[0]
     assert feature_batch.shape == (2, 3, 3)
     assert valid[:, :, 0].tolist() == [[1, 1, 1], [1, 1, 0]]
+
+
+def test_training_mixup_is_deterministic_training_only_composition():
+    features = np.array([[[1.0]], [[3.0]]], dtype=np.float32)
+    onsets = np.array([[[1.0]], [[0.0]]], dtype=np.float32)
+    velocities = np.array([[[0.8]], [[0.0]]], dtype=np.float32)
+    valid = np.ones((2, 1, 1), dtype=np.float32)
+    first = _mixup_training_batch(
+        features,
+        onsets,
+        velocities,
+        valid,
+        probability=1,
+        alpha=0.4,
+        rng=np.random.default_rng(42),
+    )
+    repeated = _mixup_training_batch(
+        features,
+        onsets,
+        velocities,
+        valid,
+        probability=1,
+        alpha=0.4,
+        rng=np.random.default_rng(42),
+    )
+    for actual, expected in zip(first, repeated, strict=True):
+        assert actual == pytest.approx(expected)
+    assert first[0][0, 0, 0] != pytest.approx(features[0, 0, 0])
+    assert first[1].min() >= 0 and first[1].max() <= 1
+
+
+def test_positive_weight_exponent_can_temper_rare_class_pressure(monkeypatch):
+    targets = np.zeros((101, len(TRAINING_CLASSES)), dtype=np.float32)
+    targets[0, 0] = 1
+    monkeypatch.setattr(
+        "drumscribe_ml.training._load_training_record",
+        lambda record: (np.zeros((101, 2), dtype=np.float32), targets, targets),
+    )
+    full = _positive_class_weights([{"trackId": "fixture"}], exponent=1)
+    tempered = _positive_class_weights([{"trackId": "fixture"}], exponent=0.5)
+    assert full[0] == pytest.approx(100)
+    assert tempered[0] == pytest.approx(10)
+    assert tempered[1] == pytest.approx(1)
 
 
 def test_training_record_order_is_epoch_specific_and_reproducible():
@@ -239,4 +350,14 @@ def test_resume_validation_state_requires_the_same_prepared_dataset(tmp_path):
         {"configuration": {"prepared_dataset": str(previous)}},
         prepared_path=current,
         prepared_dataset_sha256="same",
+    )
+
+
+def test_checkpoint_evidence_labels_keep_test_and_training_distinct():
+    assert _evidence_level(evaluation_only=False, split="test") == "natural_sealed_test"
+    assert _evidence_level(evaluation_only=False, split="validation") == "natural_validation"
+    assert _evidence_level(evaluation_only=False, split="train") == "natural_training_diagnostic"
+    assert (
+        _evidence_level(evaluation_only=True, split="validation")
+        == "synthetic_reserved_validation_probe"
     )

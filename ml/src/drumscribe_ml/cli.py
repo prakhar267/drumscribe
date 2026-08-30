@@ -98,6 +98,9 @@ def main(argv: list[str] | None = None) -> int:
     evaluate.add_argument("prepared_dataset", type=Path)
     evaluate.add_argument("output", type=Path)
     evaluate.add_argument("--device", default="auto")
+    evaluate.add_argument("--split", choices=("train", "validation", "test"))
+    evaluate.add_argument("--fixed-checkpoint-thresholds", action="store_true")
+    evaluate.add_argument("--family-competition", action="store_true")
     args = parser.parse_args(argv)
     if args.command == "prepare":
         destination = prepare_dataset(
@@ -243,6 +246,9 @@ def main(argv: list[str] | None = None) -> int:
             args.prepared_dataset,
             args.output,
             device=args.device,
+            split=args.split,
+            fixed_checkpoint_thresholds=args.fixed_checkpoint_thresholds,
+            family_competition=args.family_competition,
         )
         print(output.read_text(encoding="utf-8"), end="")
         return 0

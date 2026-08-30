@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "sourceArchive": "https://storage.googleapis.com/magentadata/datasets/e-gmd/v1.0.0/e-gmd-v1.0.0.zip",
+  "sourceMetadata": "https://storage.googleapis.com/magentadata/datasets/e-gmd/v1.0.0/e-gmd-v1.0.0.csv",
+  "sourceSplit": "train",
+  "selection": {
+    "groupCount": 100,
+    "groupStrategy": "first SHA-256(seed + NUL + performance id)",
+    "seed": "drumscribe-egmd-v1",
+    "kits": [
+      "Acoustic Kit",
+      "60s Rock",
+      "Modern Funk",
+      "Jazz",
+      "808 Simple",
+      "909 Simple",
+      "Tight Prog",
+      "Compact Lite (w/ Tambourine HH)"
+    ]
+  },
+  "importResult": {
+    "selectedPairs": 800,
+    "validTracks": 784,
+    "validPerformanceGroups": 98,
+    "validAudioHours": 7.2925874464600735,
+    "excludedAnnotationBeyondAudio": 16
+  },
+  "license": {
+    "identifier": "CC-BY-4.0",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "attribution": "Google LLC; Lee Callender, Curtis Hawthorne, and Jesse Engel; E-GMD contributing drummers"
+  }
+}

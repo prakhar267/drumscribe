@@ -25,6 +25,9 @@ def evaluate_checkpoint(
     output_path: Path,
     *,
     device: str = "auto",
+    split: str | None = None,
+    fixed_checkpoint_thresholds: bool = False,
+    family_competition: bool = False,
 ) -> Path:
     try:
         import torch
@@ -37,8 +40,35 @@ def evaluate_checkpoint(
     records = payload.get("records")
     if not isinstance(records, list) or not records:
         raise TrainingError("evaluation dataset must contain records")
+    if split is not None:
+        records = [record for record in records if record.get("split") == split]
+        if not records:
+            raise TrainingError(f"evaluation dataset contains no {split!r} records")
     state = torch.load(checkpoint, map_location="cpu", weights_only=True)
     config = TrainingConfig(**state["configuration"])
+    checkpoint_thresholds = dict(state.get("validationThresholds", {}))
+    checkpoint_peak_distances = dict(state.get("validationPeakDistances", {}))
+    if fixed_checkpoint_thresholds:
+        missing_thresholds = [
+            instrument.value
+            for instrument in TRAINING_CLASSES
+            if instrument.value not in checkpoint_thresholds
+        ]
+        if missing_thresholds:
+            raise TrainingError(
+                "checkpoint is missing fixed validation thresholds for: "
+                + ", ".join(missing_thresholds)
+            )
+        missing_peak_distances = [
+            instrument.value
+            for instrument in TRAINING_CLASSES
+            if instrument.value not in checkpoint_peak_distances
+        ]
+        if missing_peak_distances:
+            raise TrainingError(
+                "checkpoint is missing fixed validation peak distances for: "
+                + ", ".join(missing_peak_distances)
+            )
     selected_device = _training_device(torch, device)
     first_features = np.load(records[0]["featurePath"])["features"]
     model = build_model(
@@ -52,6 +82,9 @@ def evaluate_checkpoint(
         records,
         tolerance_frames=config.onset_tolerance_frames,
         device=selected_device,
+        thresholds=(checkpoint_thresholds if fixed_checkpoint_thresholds else None),
+        peak_distances=(checkpoint_peak_distances if fixed_checkpoint_thresholds else None),
+        family_competition=family_competition,
     )
     per_class = dict(metrics["perClassF1"])
     strict_scores = [float(per_class.get(instrument.value, 0.0)) for instrument in TRAINING_CLASSES]
@@ -67,6 +100,10 @@ def evaluate_checkpoint(
         "preparedDataset": str(prepared),
         "preparedDatasetSha256": _sha256(prepared),
         "recordCount": len(records),
+        "split": split,
+        "thresholdSource": "checkpoint" if fixed_checkpoint_thresholds else "tuned_on_evaluation",
+        "familyCompetition": family_competition,
+        "peakDistances": metrics["peakDistances"],
         "supportedClassCount": len(per_class),
         "supportedMacroF1": float(metrics["macroF1"]),
         "strict14ClassMacroF1": sum(strict_scores) / len(strict_scores),
@@ -74,9 +111,9 @@ def evaluate_checkpoint(
         "probeMacroF1": sum(probe_scores) / len(probe_scores) if probe_scores else None,
         "perClassF1": per_class,
         "thresholds": metrics["thresholds"],
-        "evidenceLevel": "synthetic_reserved_validation_probe"
-        if payload.get("evaluationOnly")
-        else "natural_validation",
+        "evidenceLevel": _evidence_level(
+            evaluation_only=bool(payload.get("evaluationOnly")), split=split
+        ),
     }
     destination = Path(output_path)
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -84,6 +121,18 @@ def evaluate_checkpoint(
         json.dump(report, handle, indent=2, sort_keys=True)
         handle.write("\n")
     return destination
+
+
+def _evidence_level(*, evaluation_only: bool, split: str | None) -> str:
+    if evaluation_only:
+        return "synthetic_reserved_validation_probe"
+    if split == "test":
+        return "natural_sealed_test"
+    if split == "validation":
+        return "natural_validation"
+    if split == "train":
+        return "natural_training_diagnostic"
+    return "natural_mixed_split_evaluation"
 
 
 def _sha256(path: Path) -> str:

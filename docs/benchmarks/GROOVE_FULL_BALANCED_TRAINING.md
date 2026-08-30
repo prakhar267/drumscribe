@@ -2,6 +2,11 @@
 
 Date completed: 2026-08-31
 
+Update: this experiment has been superseded by the validation-safe calibration and
+sealed-test work in `docs/benchmarks/GROOVE_90_TARGET_ACCURACY.md`. The newer result
+is 0.8505 validation macro F1 and 0.8463 on the one-time sealed test; it still does
+not meet the 0.90 target.
+
 Decision: accuracy improved materially, but the natural-validation result does not
 pass the requested 0.85 threshold or the production 0.99 release gate.
 

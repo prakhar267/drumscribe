@@ -34,8 +34,20 @@ full-corpus training and bounded lower-rate fine-tuning raised the best result t
 interim target and far below this release gate. A separate reserved synthetic probe
 measured 0.8534 across all 14 classes and 0.9937 for low tom plus tambourine, but it
 is not natural-performance evidence and is not substituted for the headline score.
-The official test split remains sealed. See
+At that stage, the official test split remained sealed. See
 `docs/benchmarks/GROOVE_FULL_BALANCED_TRAINING.md`.
+
+The subsequent 90% target experiment expanded validation calibration through 0.995,
+added deterministic family competition and selected per-class peak suppression on
+validation. The same epoch-12 model reached 0.8505 macro F1 across the 12 naturally
+supported classes. After the model and calibration were frozen, the official
+122-record test split was evaluated once and scored 0.8463; counting unsupported
+natural low tom and tambourine as zero gives 0.7254 across all 14 classes. Feature
+MixUp, a 300-record rights-cleared articulation overlay, auxiliary articulation
+loss, tempered class weights and a bounded 7.29-hour/eight-kit E-GMD fine-tune all
+failed to beat the protected validation result. The test split is now opened and
+must not be used for future tuning. See
+`docs/benchmarks/GROOVE_90_TARGET_ACCURACY.md`.
 
 ## Model path
 
