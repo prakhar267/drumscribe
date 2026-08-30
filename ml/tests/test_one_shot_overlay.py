@@ -11,6 +11,7 @@ from drumscribe_ml.one_shot_overlay import (
     OneShotOverlayConfig,
     OneShotOverlayError,
     create_one_shot_overlays,
+    create_one_shot_probe,
 )
 from drumscribe_ml.one_shots import one_shot_inventory, partition_one_shots
 
@@ -175,3 +176,29 @@ def test_overlays_are_deterministic_training_only_and_use_partitioned_samples(tm
 
     with pytest.raises(OneShotOverlayError, match="already contains"):
         create_one_shot_overlays(first, catalog, library, tmp_path / "duplicate", config=config)
+
+
+def test_probe_uses_only_source_validation_and_reserved_validation_samples(tmp_path):
+    prepared, catalog, library = _fixture(tmp_path)
+    config = OneShotOverlayConfig(seed="probe-v1", hits_per_class=1)
+    probe = create_one_shot_probe(prepared, catalog, library, tmp_path / "probe", config=config)
+    payload = json.loads(probe.read_text())
+    assert payload["evaluationOnly"] is True
+    assert payload["oneShotProbe"]["sourceSplit"] == "validation"
+    assert payload["oneShotProbe"]["excludedSourceSplits"] == ["train", "test"]
+    assert len(payload["records"]) == 1
+    assert payload["records"][0]["split"] == "probe"
+
+    events = json.loads(Path(payload["records"][0]["annotationPath"]).read_text())["events"]
+    overlay_events = [event for event in events if event["sourceMetadata"].get("syntheticOverlay")]
+    assert len(overlay_events) == 2
+    assert {event["sourceMetadata"]["partition"] for event in overlay_events} == {"validation"}
+    partitions = partition_one_shots(one_shot_inventory(catalog, library), seed=config.seed)
+    validation_paths = {
+        sample.relative_path
+        for instrument in ("LOW_TOM", "TAMBOURINE")
+        for sample in partitions[instrument]["validation"]
+    }
+    assert {event["sourceMetadata"]["sampleRelativePath"] for event in overlay_events} <= (
+        validation_paths
+    )

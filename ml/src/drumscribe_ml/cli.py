@@ -8,11 +8,16 @@ from pathlib import Path
 import numpy as np
 
 from .calibration import calibrate_confidence
+from .checkpoint_eval import evaluate_checkpoint
 from .egmd import import_egmd_dataset
 from .groove import import_groove_dataset
 from .lifecycle import PreparationConfig, prepare_dataset
 from .manifest import load_manifest, split_payload
-from .one_shot_overlay import OneShotOverlayConfig, create_one_shot_overlays
+from .one_shot_overlay import (
+    OneShotOverlayConfig,
+    create_one_shot_overlays,
+    create_one_shot_probe,
+)
 from .one_shots import audit_one_shot_catalog
 from .pilot import create_pilot_dataset
 from .quality import evaluate_accuracy_gate
@@ -78,6 +83,21 @@ def main(argv: list[str] | None = None) -> int:
     overlay.add_argument("--classes", nargs="+", default=["LOW_TOM", "TAMBOURINE"])
     overlay.add_argument("--variants-per-record", type=int, default=1)
     overlay.add_argument("--hits-per-class", type=int, default=1)
+    overlay.add_argument("--record-limit", type=int)
+    probe = command.add_parser("create-one-shot-probe")
+    probe.add_argument("prepared_dataset", type=Path)
+    probe.add_argument("catalog", type=Path)
+    probe.add_argument("library_root", type=Path)
+    probe.add_argument("output_root", type=Path)
+    probe.add_argument("--seed", required=True)
+    probe.add_argument("--classes", nargs="+", default=["LOW_TOM", "TAMBOURINE"])
+    probe.add_argument("--hits-per-class", type=int, default=1)
+    probe.add_argument("--record-limit", type=int)
+    evaluate = command.add_parser("evaluate-checkpoint")
+    evaluate.add_argument("checkpoint", type=Path)
+    evaluate.add_argument("prepared_dataset", type=Path)
+    evaluate.add_argument("output", type=Path)
+    evaluate.add_argument("--device", default="auto")
     args = parser.parse_args(argv)
     if args.command == "prepare":
         destination = prepare_dataset(
@@ -186,6 +206,7 @@ def main(argv: list[str] | None = None) -> int:
                 classes=tuple(args.classes),
                 variants_per_record=args.variants_per_record,
                 hits_per_class=args.hits_per_class,
+                record_limit=args.record_limit,
             ),
         )
         payload = json.loads(output.read_text(encoding="utf-8"))
@@ -199,6 +220,31 @@ def main(argv: list[str] | None = None) -> int:
                 }
             )
         )
+        return 0
+    if args.command == "create-one-shot-probe":
+        output = create_one_shot_probe(
+            args.prepared_dataset,
+            args.catalog,
+            args.library_root,
+            args.output_root,
+            config=OneShotOverlayConfig(
+                seed=args.seed,
+                classes=tuple(args.classes),
+                hits_per_class=args.hits_per_class,
+                record_limit=args.record_limit,
+            ),
+        )
+        payload = json.loads(output.read_text(encoding="utf-8"))
+        print(json.dumps({"output": str(output), **payload["oneShotProbe"]}))
+        return 0
+    if args.command == "evaluate-checkpoint":
+        output = evaluate_checkpoint(
+            args.checkpoint,
+            args.prepared_dataset,
+            args.output,
+            device=args.device,
+        )
+        print(output.read_text(encoding="utf-8"), end="")
         return 0
 
     manifest = load_manifest(args.input)

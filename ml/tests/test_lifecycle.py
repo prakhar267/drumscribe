@@ -20,8 +20,10 @@ from drumscribe_ml.training import (
     TrainingConfig,
     TrainingError,
     _dilate_targets,
+    _epoch_records,
     _match_frames,
     _peak_frames,
+    _resume_validation_compatible,
     _training_batches,
     experiment_metadata,
 )
@@ -152,6 +154,22 @@ def test_calibration_and_training_metadata_are_versioned(tmp_path):
             moe_experts=2,
             moe_top_k=3,
         )
+    resumed = TrainingConfig(
+        "prepared.json",
+        str(tmp_path),
+        "fine-tuned",
+        resume_checkpoint="best.pt",
+        resume_learning_rate=0.0001,
+    )
+    assert resumed.resume_learning_rate == pytest.approx(0.0001)
+    with pytest.raises(TrainingError, match="resume_learning_rate"):
+        TrainingConfig(
+            "prepared.json",
+            str(tmp_path),
+            "invalid-resume-rate",
+            resume_checkpoint="best.pt",
+            resume_learning_rate=0.001,
+        )
 
 
 def test_training_targets_and_validation_are_onset_tolerant_and_multilabel():
@@ -181,3 +199,44 @@ def test_training_batches_pad_and_mask_only_real_frames():
     feature_batch, _, _, valid = batches[0]
     assert feature_batch.shape == (2, 3, 3)
     assert valid[:, :, 0].tolist() == [[1, 1, 1], [1, 1, 0]]
+
+
+def test_training_record_order_is_epoch_specific_and_reproducible():
+    records = [
+        {"groupId": f"group-{index}", "trackId": f"track-{index}", "variant": "original"}
+        for index in range(12)
+    ]
+    first = _epoch_records(records, seed=42, epoch=3)
+    repeated = _epoch_records(records, seed=42, epoch=3)
+    next_epoch = _epoch_records(records, seed=42, epoch=4)
+    assert first == repeated
+    assert first != next_epoch
+    assert records == [
+        {"groupId": f"group-{index}", "trackId": f"track-{index}", "variant": "original"}
+        for index in range(12)
+    ]
+
+
+def test_resume_validation_state_requires_the_same_prepared_dataset(tmp_path):
+    current = tmp_path / "current.json"
+    previous = tmp_path / "previous.json"
+    assert _resume_validation_compatible(
+        {"preparedDatasetSha256": "same"},
+        prepared_path=current,
+        prepared_dataset_sha256="same",
+    )
+    assert not _resume_validation_compatible(
+        {"preparedDatasetSha256": "different"},
+        prepared_path=current,
+        prepared_dataset_sha256="same",
+    )
+    assert _resume_validation_compatible(
+        {"configuration": {"prepared_dataset": str(current)}},
+        prepared_path=current,
+        prepared_dataset_sha256="same",
+    )
+    assert not _resume_validation_compatible(
+        {"configuration": {"prepared_dataset": str(previous)}},
+        prepared_path=current,
+        prepared_dataset_sha256="same",
+    )

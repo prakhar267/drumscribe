@@ -16,7 +16,13 @@ uv run --project ml drumscribe-ml create-pilot ./prepared/prepared-dataset.json 
   --seed architecture-v1 --train-groups 100 --validation-groups 20
 uv run --project ml drumscribe-ml overlay-one-shots ./pilot.json ./one-shots.json \
   /licensed/sample-library ./pilot-with-overlays --seed overlays-v1 \
-  --classes LOW_TOM TAMBOURINE --variants-per-record 1 --hits-per-class 1
+  --classes LOW_TOM TAMBOURINE --variants-per-record 1 --hits-per-class 1 \
+  --record-limit 100
+uv run --project ml drumscribe-ml create-one-shot-probe ./prepared/prepared-dataset.json \
+  ./one-shots.json /licensed/sample-library ./reserved-probe --seed overlays-v1 \
+  --classes LOW_TOM TAMBOURINE
+uv run --project ml --extra train drumscribe-ml evaluate-checkpoint ./best.pt \
+  ./reserved-probe/prepared-probe.json ./reserved-probe/report.json
 uv sync --project ml --extra train
 uv run --project ml drumscribe-ml train training-config.json
 uv run --project ml drumscribe-benchmark benchmark-input.json --json report.json --html report.html
@@ -58,6 +64,10 @@ SHA-256 ranking, exclude the test split, and are hashed into experiment metadata
 Rights-cleared one-shot overlays use disjoint per-class sample partitions, append
 variants only to original training records, and preserve attribution plus corpus,
 partition, sample and prepared-manifest hashes in the resulting model lineage.
+Evaluation-only probes use source validation recordings and only the reserved
+validation sample partition; the trainer rejects these probe manifests as input.
+Resumed experiments validate the prepared-manifest hash before carrying validation
+state and may set `resume_learning_rate` for an explicitly recorded fine-tune.
 No checkpoint is production-approved merely because this code can train it.
 
 Validation confidence can be calibrated from an NPZ containing `logits` and

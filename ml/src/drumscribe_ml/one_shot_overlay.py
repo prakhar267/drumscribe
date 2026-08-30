@@ -32,6 +32,7 @@ class OneShotOverlayConfig:
     classes: tuple[str, ...] = ("LOW_TOM", "TAMBOURINE")
     variants_per_record: int = 1
     hits_per_class: int = 1
+    record_limit: int | None = None
     minimum_spacing_seconds: float = 0.3
     avoid_existing_seconds: float = 0.08
     maximum_sample_seconds: float = 2.0
@@ -43,6 +44,8 @@ class OneShotOverlayConfig:
             raise OneShotOverlayError("overlay seed and at least one class are required")
         if self.variants_per_record < 1 or self.hits_per_class < 1:
             raise OneShotOverlayError("overlay variant and hit counts must be positive")
+        if self.record_limit is not None and self.record_limit < 1:
+            raise OneShotOverlayError("overlay record limit must be positive when provided")
         if self.minimum_spacing_seconds <= 0 or self.avoid_existing_seconds < 0:
             raise OneShotOverlayError("overlay spacing values are invalid")
         if self.maximum_sample_seconds <= 0:
@@ -91,9 +94,10 @@ def create_one_shot_overlays(
     output.mkdir(parents=True, exist_ok=False)
     generated: list[dict[str, Any]] = []
     generated_counts = {instrument.value: 0 for instrument in instruments}
-    for record in records:
-        if record.get("split") != "train" or record.get("variant") != "original":
-            continue
+    source_records = _selected_original_records(
+        records, split="train", seed=config.seed, limit=config.record_limit
+    )
+    for record in source_records:
         for variant in range(1, config.variants_per_record + 1):
             augmented, counts = _overlay_record(
                 record,
@@ -129,11 +133,103 @@ def create_one_shot_overlays(
             for instrument in instruments
         },
         "generatedRecords": len(generated),
+        "selectedSourceGroups": len({str(record["groupId"]) for record in source_records}),
         "generatedEventCounts": generated_counts,
         "untouchedSplits": ["validation", "test"],
     }
     result["records"] = [*records, *generated]
     destination = output / "prepared-dataset.json"
+    destination.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return destination
+
+
+def create_one_shot_probe(
+    prepared_dataset: Path,
+    catalog_path: Path,
+    library_root: Path,
+    output_root: Path,
+    *,
+    config: OneShotOverlayConfig,
+) -> Path:
+    """Build an evaluation-only probe from validation audio and reserved validation sounds."""
+    source_path = Path(prepared_dataset).resolve()
+    payload = json.loads(source_path.read_text(encoding="utf-8"))
+    records = payload.get("records")
+    if payload.get("schemaVersion") != 1 or not isinstance(records, list):
+        raise OneShotOverlayError("prepared dataset must use schemaVersion 1 and list records")
+    preparation_payload = payload.get("configuration")
+    if not isinstance(preparation_payload, dict):
+        raise OneShotOverlayError("prepared dataset is missing its feature configuration")
+    preparation = PreparationConfig(**preparation_payload)
+    audit = audit_one_shot_catalog(catalog_path, library_root)
+    partitions = partition_one_shots(
+        one_shot_inventory(catalog_path, library_root), seed=config.seed
+    )
+    instruments = tuple(canonical_instrument(value) for value in config.classes)
+    probe_samples = {
+        instrument: partitions.get(instrument.value, {}).get("validation", ())
+        for instrument in instruments
+    }
+    missing = [instrument.value for instrument, rows in probe_samples.items() if not rows]
+    if missing:
+        raise OneShotOverlayError(f"no validation-partition samples for: {', '.join(missing)}")
+
+    source_records = _selected_original_records(
+        records, split="validation", seed=config.seed, limit=config.record_limit
+    )
+    output = Path(output_root).resolve()
+    output.mkdir(parents=True, exist_ok=False)
+    generated: list[dict[str, Any]] = []
+    generated_counts = {instrument.value: 0 for instrument in instruments}
+    for record in source_records:
+        augmented, counts = _overlay_record(
+            record,
+            output,
+            preparation,
+            config,
+            1,
+            instruments,
+            probe_samples,
+            audit["corpusSha256"],
+            sample_partition="validation",
+            output_split="probe",
+            variant_prefix="one-shot-probe",
+        )
+        generated.append(augmented)
+        for instrument, count in counts.items():
+            generated_counts[instrument] += count
+    if not generated:
+        raise OneShotOverlayError("prepared dataset contains no original validation records")
+
+    result = {
+        "schemaVersion": 1,
+        "evaluationOnly": True,
+        "dataset": payload.get("dataset"),
+        "datasetManifestHash": payload.get("datasetManifestHash"),
+        "sourcePreparedDatasetSha256": _sha256(source_path),
+        "configuration": preparation_payload,
+        "oneShotProbe": {
+            "schemaVersion": 1,
+            "configuration": asdict(config),
+            "corpusSha256": audit["corpusSha256"],
+            "sources": audit["sources"],
+            "samplePartition": "validation",
+            "samplePartitionHashes": {
+                instrument.value: _partition_hash(partitions[instrument.value]["validation"])
+                for instrument in instruments
+            },
+            "reservedTestPartitionHashes": {
+                instrument.value: _partition_hash(partitions[instrument.value]["test"])
+                for instrument in instruments
+            },
+            "generatedRecords": len(generated),
+            "generatedEventCounts": generated_counts,
+            "sourceSplit": "validation",
+            "excludedSourceSplits": ["train", "test"],
+        },
+        "records": generated,
+    }
+    destination = output / "prepared-probe.json"
     destination.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return destination
 
@@ -147,6 +243,10 @@ def _overlay_record(
     instruments: tuple[Instrument, ...],
     train_samples: dict[Instrument, tuple[OneShotSample, ...]],
     corpus_sha256: str,
+    *,
+    sample_partition: str = "train",
+    output_split: str = "train",
+    variant_prefix: str = "one-shot",
 ) -> tuple[dict[str, Any], dict[str, int]]:
     track_id = str(record["trackId"])
     audio, sample_rate = read_pcm_wav(Path(record["audioPath"]))
@@ -189,7 +289,7 @@ def _overlay_record(
             "sourceId": sample.source_id,
             "sampleRelativePath": sample.relative_path,
             "sampleSha256": sample.sha256,
-            "partition": "train",
+            "partition": sample_partition,
             "gainDb": gain_db,
         }
         event = {
@@ -206,7 +306,7 @@ def _overlay_record(
     peak = float(np.max(np.abs(audio)))
     if peak > 0.98:
         audio *= 0.98 / peak
-    relative = Path(track_id) / f"one-shot-{variant}"
+    relative = Path(track_id) / f"{variant_prefix}-{variant}"
     audio_path = output / "augmented" / relative.with_suffix(".wav")
     annotation_path = output / "canonical" / relative.with_suffix(".json")
     feature_path = output / "features" / relative.with_suffix(".npz")
@@ -231,14 +331,18 @@ def _overlay_record(
         {
             "trackId": track_id,
             "groupId": str(record["groupId"]),
-            "split": "train",
-            "variant": f"one-shot-{variant}",
+            "split": output_split,
+            "variant": f"{variant_prefix}-{variant}",
             "audioPath": str(audio_path),
             "audioSha256": sha256_file(audio_path),
             "annotationPath": str(annotation_path),
             "featurePath": str(feature_path),
             "augmentation": {
-                "kind": "rights-cleared-one-shot-overlay",
+                "kind": (
+                    "rights-cleared-one-shot-overlay"
+                    if output_split == "train"
+                    else "rights-cleared-one-shot-probe"
+                ),
                 "seed": config.seed,
                 "corpusSha256": corpus_sha256,
                 "events": overlay_events,
@@ -247,6 +351,26 @@ def _overlay_record(
         },
         counts,
     )
+
+
+def _selected_original_records(
+    records: list[dict[str, Any]], *, split: str, seed: str, limit: int | None
+) -> list[dict[str, Any]]:
+    eligible = [
+        record
+        for record in records
+        if record.get("split") == split and record.get("variant") == "original"
+    ]
+    ranked = sorted(
+        eligible,
+        key=lambda record: (
+            hashlib.sha256(
+                f"{seed}\0{record.get('groupId', '')}\0{record.get('trackId', '')}".encode()
+            ).digest(),
+            str(record.get("trackId", "")),
+        ),
+    )
+    return ranked if limit is None else ranked[:limit]
 
 
 def _choose_positions(

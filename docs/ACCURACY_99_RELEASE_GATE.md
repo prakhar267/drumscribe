@@ -26,6 +26,17 @@ The licensed-data pipeline imported 1,076 valid Groove MIDI Dataset recordings w
 
 A subsequent training-only one-shot pilot added 100 low-tom and 100 tambourine events from disjoint, hashed FreePats sample partitions. The existing 12-class natural-validation macro F1 changed from 0.674 to 0.681, but open hi-hat regressed from 0.691 to 0.551 and the two added classes still had no natural validation support. The augmentation machinery is accepted; its recipe and checkpoint are not production-approved. See `docs/benchmarks/GROOVE_ONE_SHOT_OVERLAY_PILOT.md`.
 
+The scaled local run used all 834 original Groove training records, 100 balanced
+one-shot variants and all 120 untouched official validation records. Re-evaluating
+the starting checkpoint on that full validation split produced 0.6220 macro F1;
+full-corpus training and bounded lower-rate fine-tuning raised the best result to
+0.8311 across the 12 naturally supported classes. This is below the requested 0.85
+interim target and far below this release gate. A separate reserved synthetic probe
+measured 0.8534 across all 14 classes and 0.9937 for low tom plus tambourine, but it
+is not natural-performance evidence and is not substituted for the headline score.
+The official test split remains sealed. See
+`docs/benchmarks/GROOVE_FULL_BALANCED_TRAINING.md`.
+
 ## Model path
 
 1. Import E-GMD through `drumscribe-ml import-egmd` on dedicated training compute. Its official train, validation and test assignments are preserved, and every kit rendering of one performance stays in the same leakage group.

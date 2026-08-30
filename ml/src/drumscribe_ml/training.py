@@ -39,10 +39,14 @@ class TrainingConfig:
     batch_size: int = 8
     seed: int = 20260829
     resume_checkpoint: str | None = None
+    resume_learning_rate: float | None = None
     device: str = "auto"
     architecture: Literal["crnn", "spectral_moe"] = "crnn"
     moe_experts: int = 8
     moe_top_k: int = 2
+    lr_decay_patience: int = 2
+    lr_decay_factor: float = 0.5
+    minimum_learning_rate: float = 0.000001
 
     def __post_init__(self) -> None:
         if not self.model_version.strip() or "/" in self.model_version:
@@ -53,6 +57,14 @@ class TrainingConfig:
             raise TrainingError("onset tolerance and training window are invalid")
         if not math.isfinite(self.learning_rate) or self.learning_rate <= 0:
             raise TrainingError("learning_rate must be positive and finite")
+        if self.resume_learning_rate is not None and (
+            not math.isfinite(self.resume_learning_rate)
+            or not self.minimum_learning_rate <= self.resume_learning_rate <= self.learning_rate
+        ):
+            raise TrainingError(
+                "resume_learning_rate must be finite and between minimum_learning_rate "
+                "and learning_rate"
+            )
         if not 0 <= self.dropout < 1:
             raise TrainingError("dropout must be between zero and one")
         if self.device not in {"auto", "cpu", "cuda", "mps"}:
@@ -61,6 +73,10 @@ class TrainingConfig:
             raise TrainingError("architecture must be crnn or spectral_moe")
         if self.moe_experts < 2 or not 1 <= self.moe_top_k <= self.moe_experts:
             raise TrainingError("MoE expert count or top-k routing is invalid")
+        if self.lr_decay_patience < 1 or not 0 < self.lr_decay_factor < 1:
+            raise TrainingError("learning-rate decay patience/factor are invalid")
+        if not 0 < self.minimum_learning_rate <= self.learning_rate:
+            raise TrainingError("minimum learning rate must be positive and at most learning_rate")
 
     @classmethod
     def load(cls, path: Path) -> TrainingConfig:
@@ -204,6 +220,9 @@ def run_training(config: TrainingConfig) -> Path:
     device = _training_device(torch, config.device)
     prepared_path = Path(config.prepared_dataset).resolve()
     payload = json.loads(prepared_path.read_text(encoding="utf-8"))
+    if payload.get("evaluationOnly"):
+        raise TrainingError("evaluation-only datasets cannot be used for training")
+    prepared_dataset_sha256 = _sha256(prepared_path)
     records = payload.get("records", [])
     train_records = [record for record in records if record["split"] == "train"]
     validation_records = [record for record in records if record["split"] == "validation"]
@@ -218,37 +237,74 @@ def run_training(config: TrainingConfig) -> Path:
     )
     model.to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=config.learning_rate)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer,
+        mode="max",
+        factor=config.lr_decay_factor,
+        patience=config.lr_decay_patience,
+        min_lr=config.minimum_learning_rate,
+    )
     positive_weights = torch.from_numpy(_positive_class_weights(train_records)).to(device)
     start_epoch = 0
     best_f1 = -1.0
     best_thresholds: dict[str, float] = {}
     best_per_class: dict[str, float] = {}
+    resumed_state: dict[str, Any] | None = None
+    resume_provenance: dict[str, Any] | None = None
     if config.resume_checkpoint:
-        checkpoint = torch.load(config.resume_checkpoint, map_location=device, weights_only=True)
+        resume_path = Path(config.resume_checkpoint).resolve()
+        checkpoint = torch.load(resume_path, map_location=device, weights_only=True)
         model.load_state_dict(checkpoint["model"])
         optimizer.load_state_dict(checkpoint["optimizer"])
+        validation_compatible = _resume_validation_compatible(
+            checkpoint,
+            prepared_path=prepared_path,
+            prepared_dataset_sha256=prepared_dataset_sha256,
+        )
+        if (
+            validation_compatible
+            and config.resume_learning_rate is None
+            and checkpoint.get("scheduler")
+        ):
+            scheduler.load_state_dict(checkpoint["scheduler"])
+        if config.resume_learning_rate is not None:
+            for parameter_group in optimizer.param_groups:
+                parameter_group["lr"] = config.resume_learning_rate
         start_epoch = int(checkpoint["epoch"]) + 1
-        best_f1 = float(checkpoint.get("bestF1", -1))
-        best_thresholds = dict(checkpoint.get("validationThresholds", {}))
-        best_per_class = dict(checkpoint.get("validationPerClassF1", {}))
+        if validation_compatible:
+            resumed_state = checkpoint
+            best_f1 = float(checkpoint.get("bestF1", -1))
+            best_thresholds = dict(checkpoint.get("validationThresholds", {}))
+            best_per_class = dict(checkpoint.get("validationPerClassF1", {}))
+        resume_provenance = {
+            "checkpointSha256": _sha256(resume_path),
+            "checkpointEpoch": int(checkpoint["epoch"]),
+            "validationState": "carried" if validation_compatible else "reset",
+        }
+        if config.resume_learning_rate is not None:
+            resume_provenance["learningRateOverride"] = config.resume_learning_rate
 
     output = Path(config.output_root).resolve() / config.model_version
     output.mkdir(parents=True, exist_ok=False)
     metadata = experiment_metadata(
         config,
         payload,
-        prepared_dataset_sha256=_sha256(prepared_path),
+        prepared_dataset_sha256=prepared_dataset_sha256,
     )
+    if resume_provenance:
+        metadata["resume"] = resume_provenance
     (output / "experiment.json").write_text(
         json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
     metrics_path = output / "metrics.jsonl"
     best_checkpoint = output / "best.pt"
+    if resumed_state is not None:
+        torch.save(resumed_state, best_checkpoint)
     stale_epochs = 0
     for epoch in range(start_epoch, config.epochs):
         model.train()
         train_losses = []
-        for record in train_records:
+        for record in _epoch_records(train_records, seed=config.seed, epoch=epoch):
             features, onset_targets, velocity_targets = _load_training_record(record)
             for (
                 feature_batch,
@@ -297,12 +353,16 @@ def run_training(config: TrainingConfig) -> Path:
             device=device,
         )
         validation_f1 = float(validation["macroF1"])
+        learning_rate = float(optimizer.param_groups[0]["lr"])
+        scheduler.step(validation_f1)
         metrics = {
             "epoch": epoch,
             "trainLoss": sum(train_losses) / len(train_losses),
             "validationMacroF1": validation_f1,
             "validationThresholds": validation["thresholds"],
             "validationPerClassF1": validation["perClassF1"],
+            "learningRate": learning_rate,
+            "nextLearningRate": float(optimizer.param_groups[0]["lr"]),
         }
         with metrics_path.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(metrics, sort_keys=True) + "\n")
@@ -310,10 +370,12 @@ def run_training(config: TrainingConfig) -> Path:
             "epoch": epoch,
             "model": model.state_dict(),
             "optimizer": optimizer.state_dict(),
+            "scheduler": scheduler.state_dict(),
             "bestF1": max(best_f1, validation_f1),
             "configuration": asdict(config),
             "validationThresholds": validation["thresholds"],
             "validationPerClassF1": validation["perClassF1"],
+            "preparedDatasetSha256": prepared_dataset_sha256,
         }
         torch.save(state, output / f"checkpoint-{epoch:04d}.pt")
         if validation_f1 > best_f1:
@@ -347,6 +409,33 @@ def _sha256(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def _epoch_records(records: list[dict[str, Any]], *, seed: int, epoch: int) -> list[dict[str, Any]]:
+    """Return a deterministic epoch-specific order without mutating the manifest list."""
+    return sorted(
+        records,
+        key=lambda record: (
+            hashlib.sha256(
+                (
+                    f"{seed}\0{epoch}\0{record.get('groupId', '')}\0"
+                    f"{record.get('trackId', '')}\0{record.get('variant', '')}"
+                ).encode()
+            ).digest(),
+            str(record.get("trackId", "")),
+            str(record.get("variant", "")),
+        ),
+    )
+
+
+def _resume_validation_compatible(
+    checkpoint: dict[str, Any], *, prepared_path: Path, prepared_dataset_sha256: str
+) -> bool:
+    checkpoint_hash = checkpoint.get("preparedDatasetSha256")
+    if checkpoint_hash:
+        return checkpoint_hash == prepared_dataset_sha256
+    checkpoint_dataset = checkpoint.get("configuration", {}).get("prepared_dataset")
+    return bool(checkpoint_dataset) and Path(checkpoint_dataset).resolve() == prepared_path
 
 
 def _load_training_record(record: dict[str, Any]) -> tuple[np.ndarray, np.ndarray, np.ndarray]:

@@ -1,0 +1,22 @@
+{
+  "architecture": "spectral_moe",
+  "batch_size": 8,
+  "device": "auto",
+  "dropout": 0.2,
+  "early_stopping_patience": 4,
+  "epochs": 12,
+  "hidden_size": 64,
+  "learning_rate": 0.0003,
+  "lr_decay_factor": 0.5,
+  "lr_decay_patience": 2,
+  "minimum_learning_rate": 0.000001,
+  "model_version": "groove-spectral-moe-full-balanced-v1",
+  "moe_experts": 4,
+  "moe_top_k": 2,
+  "onset_tolerance_frames": 2,
+  "output_root": "data/licensed-corpus/experiments",
+  "prepared_dataset": "data/licensed-corpus/groove-full-oneshot-balanced-v1/prepared-dataset.json",
+  "resume_checkpoint": "data/licensed-corpus/experiments/groove-spectral-moe-oneshot-pilot-v1/best.pt",
+  "seed": 20260830,
+  "window_frames": 1024
+}
