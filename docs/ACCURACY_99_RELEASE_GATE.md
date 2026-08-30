@@ -24,13 +24,15 @@ These figures are research diagnostics, not production generalization evidence. 
 
 The licensed-data pipeline imported 1,076 valid Groove MIDI Dataset recordings while preserving Google's source train/validation/test assignments; 14 audio/annotation pairs with out-of-bounds labels were excluded in full. A controlled three-epoch pilot over a deterministically selected, hashed 100-training/20-validation subset compared the original CRNN (0.597 validation macro F1) with the clean-room spectral MoE (0.674). The 13.0% relative gain advances spectral MoE to scaled experimentation, not production. Thresholds were tuned on validation, all 122 official test recordings remain sealed, and the source corpus contains no low-tom or tambourine labels. Those classes remain explicit blockers rather than being omitted from the release average. See `docs/benchmarks/GROOVE_ARCHITECTURE_PILOT.md`.
 
+A subsequent training-only one-shot pilot added 100 low-tom and 100 tambourine events from disjoint, hashed FreePats sample partitions. The existing 12-class natural-validation macro F1 changed from 0.674 to 0.681, but open hi-hat regressed from 0.691 to 0.551 and the two added classes still had no natural validation support. The augmentation machinery is accepted; its recipe and checkpoint are not production-approved. See `docs/benchmarks/GROOVE_ONE_SHOT_OVERLAY_PILOT.md`.
+
 ## Model path
 
 1. Import E-GMD through `drumscribe-ml import-egmd` on dedicated training compute. Its official train, validation and test assignments are preserved, and every kit rendering of one performance stays in the same leakage group.
 2. Prepare only the training split with augmentation. Validation and test files remain unchanged.
 3. Train the multi-label CRNN over all canonical DrumScribe instruments using class-balanced, onset-tolerant loss and bounded windows.
 4. Calibrate each class on validation data, freeze the model and thresholds, and evaluate once on the held-out test split.
-5. Add the audited rights-cleared MuldjordKit and FreePats one-shot catalog for tambourine, four-way tom distinctions, hi-hat articulations and cymbal robustness. Preserve its content hash and attribution in every experiment/model card.
+5. Use the audited rights-cleared MuldjordKit and FreePats one-shot catalog for training-only class balancing. Preserve disjoint sample partitions, content hashes and attribution in every experiment/model card; do not substitute synthetic probes for the natural held-out release set.
 6. Evaluate full mixes after separation and run the browser upload/editor/export/delete journey.
 7. Keep production blocked until the gate passes and model, weights, data, attribution and deployment licenses are approved.
 

@@ -62,8 +62,10 @@ score and materially helps cymbal/hi-hat articulation. Do not promote the pilot
 checkpoint: its kick and mid-tom results regressed, ride/hi-hat scores remain weak,
 and low tom/tambourine have no source examples.
 
-The next training experiment must add rights-cleared one-shot overlays for low tom,
-tambourine and articulation balancing to training records only. After that smoke
-test passes, run the same architecture on E-GMD using dedicated x86/Linux training
-compute, tune exclusively on validation, and open the held-out test split once for
-the documented 0.99 release gate.
+The rights-cleared low-tom/tambourine overlay smoke test is documented in
+`docs/benchmarks/GROOVE_ONE_SHOT_OVERLAY_PILOT.md`. Its pipeline passed, but the
+recipe is not yet selected because low tom/tambourine remain unmeasured on natural
+performances and open-hi-hat validation regressed. After a held-out synthetic probe
+and class-balance sweep, run the same architecture on E-GMD using dedicated
+x86/Linux training compute, tune exclusively on validation, and open the held-out
+test split once for the documented 0.99 release gate.

@@ -12,6 +12,7 @@ from .egmd import import_egmd_dataset
 from .groove import import_groove_dataset
 from .lifecycle import PreparationConfig, prepare_dataset
 from .manifest import load_manifest, split_payload
+from .one_shot_overlay import OneShotOverlayConfig, create_one_shot_overlays
 from .one_shots import audit_one_shot_catalog
 from .pilot import create_pilot_dataset
 from .quality import evaluate_accuracy_gate
@@ -68,6 +69,15 @@ def main(argv: list[str] | None = None) -> int:
     pilot.add_argument("--seed", required=True)
     pilot.add_argument("--train-groups", type=int, default=100)
     pilot.add_argument("--validation-groups", type=int, default=20)
+    overlay = command.add_parser("overlay-one-shots")
+    overlay.add_argument("prepared_dataset", type=Path)
+    overlay.add_argument("catalog", type=Path)
+    overlay.add_argument("library_root", type=Path)
+    overlay.add_argument("output_root", type=Path)
+    overlay.add_argument("--seed", required=True)
+    overlay.add_argument("--classes", nargs="+", default=["LOW_TOM", "TAMBOURINE"])
+    overlay.add_argument("--variants-per-record", type=int, default=1)
+    overlay.add_argument("--hits-per-class", type=int, default=1)
     args = parser.parse_args(argv)
     if args.command == "prepare":
         destination = prepare_dataset(
@@ -161,6 +171,31 @@ def main(argv: list[str] | None = None) -> int:
                         payload["pilotSelection"]["selectedGroups"]["validation"]
                     ),
                     "testRecords": 0,
+                }
+            )
+        )
+        return 0
+    if args.command == "overlay-one-shots":
+        output = create_one_shot_overlays(
+            args.prepared_dataset,
+            args.catalog,
+            args.library_root,
+            args.output_root,
+            config=OneShotOverlayConfig(
+                seed=args.seed,
+                classes=tuple(args.classes),
+                variants_per_record=args.variants_per_record,
+                hits_per_class=args.hits_per_class,
+            ),
+        )
+        payload = json.loads(output.read_text(encoding="utf-8"))
+        print(
+            json.dumps(
+                {
+                    "output": str(output),
+                    "generatedRecords": payload["oneShotOverlay"]["generatedRecords"],
+                    "generatedEventCounts": payload["oneShotOverlay"]["generatedEventCounts"],
+                    "untouchedSplits": payload["oneShotOverlay"]["untouchedSplits"],
                 }
             )
         )

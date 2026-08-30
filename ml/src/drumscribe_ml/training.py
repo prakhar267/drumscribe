@@ -186,6 +186,8 @@ def experiment_metadata(
         metadata["preparedDatasetSha256"] = prepared_dataset_sha256
     if dataset_payload.get("pilotSelection"):
         metadata["pilotSelection"] = dataset_payload["pilotSelection"]
+    if dataset_payload.get("oneShotOverlay"):
+        metadata["oneShotOverlay"] = dataset_payload["oneShotOverlay"]
     return metadata
 
 

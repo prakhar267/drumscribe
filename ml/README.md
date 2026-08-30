@@ -14,6 +14,9 @@ uv run --project ml drumscribe-ml manifest split dataset.json split.json --seed 
 uv run --project ml drumscribe-ml prepare dataset.json /licensed/data ./prepared --seed release-v1
 uv run --project ml drumscribe-ml create-pilot ./prepared/prepared-dataset.json ./pilot.json \
   --seed architecture-v1 --train-groups 100 --validation-groups 20
+uv run --project ml drumscribe-ml overlay-one-shots ./pilot.json ./one-shots.json \
+  /licensed/sample-library ./pilot-with-overlays --seed overlays-v1 \
+  --classes LOW_TOM TAMBOURINE --variants-per-record 1 --hits-per-class 1
 uv sync --project ml --extra train
 uv run --project ml drumscribe-ml train training-config.json
 uv run --project ml drumscribe-benchmark benchmark-input.json --json report.json --html report.html
@@ -52,6 +55,9 @@ velocity head, checkpoint/resume, early stopping, metric logs, experiment IDs,
 Git/dataset/config provenance, and model hashes. PyTorch is an explicit optional
 extra. Pilot manifests select complete train/validation groups by deterministic
 SHA-256 ranking, exclude the test split, and are hashed into experiment metadata.
+Rights-cleared one-shot overlays use disjoint per-class sample partitions, append
+variants only to original training records, and preserve attribution plus corpus,
+partition, sample and prepared-manifest hashes in the resulting model lineage.
 No checkpoint is production-approved merely because this code can train it.
 
 Validation confidence can be calibrated from an NPZ containing `logits` and
