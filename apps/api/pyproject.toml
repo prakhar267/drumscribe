@@ -33,7 +33,7 @@ drumscribe-music = { path = "../../packages/music-engine", editable = true }
 [dependency-groups]
 dev = [
   "mypy>=1.14,<2",
-  "pytest>=8.3,<9",
+  "pytest>=8.3,<10",
   "pytest-asyncio>=0.25,<1",
   "pytest-cov>=6,<7",
   "ruff>=0.9,<1",
