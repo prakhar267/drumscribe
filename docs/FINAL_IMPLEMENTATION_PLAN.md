@@ -126,7 +126,7 @@ This plan continues the existing architecture. It does not rebuild the applicati
 
 - [x] Provide `./scripts/ci.sh` and `make ci` parity for formatting, lint, typing, unit/integration tests, build, migrations and dependency audits.
 - [x] Keep GitHub workflows aligned with the local command.
-- [ ] Resolve the owner account’s GitHub billing/spending-limit block, then rerun hosted CI.
+- [x] Move the repository to public visibility, unblock hosted GitHub Actions, enable secret scanning/push protection and rerun hosted CI.
 - [x] Require opt-in `RUN_LIVE_ML_TESTS=1` for credentialed provider tests.
 - [ ] Require a staging acceptance record naming real provider requests/model versions before launch.
 

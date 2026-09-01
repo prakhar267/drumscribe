@@ -15,7 +15,7 @@ This is the non-secret source of truth for DrumScribe's pre-launch service topol
 | Public web | Cloudflare Workers, `drumscribe-web` | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_DEMO_MODE`, `API_ORIGIN` | Vinext production build and live Workers deployment are verified at `https://drumscribe-web.prakhargupta267.workers.dev`. It remains in explicit pre-launch demo mode until the public API URL exists. |
 | Public API, worker, and scheduler | Northflank Sandbox | Container environment variables and TLS hostname | Deployment is prepared but blocked on the account owner's GitHub passkey confirmation. Sandbox is suitable for a free pre-launch beta, not an SLA production launch. Oracle is no longer in the selected topology. |
 | Logs and uptime | Better Stack | Deployment log drain and public health URLs | Account is connected, but sources and monitors wait for the public API URL. |
-| Source and CI | GitHub `prakhar267/drumscribe` | Repository secrets and workflows | CLI access and repository push are working. Hosted Actions are externally blocked by the account billing/spending limit; the equivalent local suite is required before push. |
+| Source and CI | Public GitHub repository `prakhar267/drumscribe` | Repository secrets and workflows | Hosted Actions are enabled on the public repository. Secret scanning, push protection, vulnerability alerts, and Dependabot security updates are enabled; the local parity suite remains required before push. |
 
 ## Neon boundary
 
