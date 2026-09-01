@@ -68,6 +68,18 @@ estimate optimistic, and no fresh sealed test exists. This is not a “90% in ev
 aspect” claim and does not change the 99% production gate. See
 `docs/benchmarks/GROOVE_STACKED_ARTICULATION_V16.md`.
 
+The clean-room `kit-adaptive-corpus-v20` experiment then added dense 20 ms
+candidate discovery, multi-label simultaneous-hit decoding, diverse licensed
+Groove/E-GMD training, separation-domain adaptation, and validation-calibrated
+per-class duplicate suppression. It reached 81.49% event-level micro F1 at 50 ms
+on the development calibration population and 88.86% on the first now-unsealed
+metal development song. On a second excluded performance mixed with newly
+generated metal backing, its single frozen end-to-end run scored 65.40%
+class-aware F1, 76.20% onset-only F1, and 51.97% exact notation F1. This confirms
+that the remaining blocker is cross-performance snare/hi-hat generalization, not
+only duplicate decoding. See
+`docs/benchmarks/KIT_ADAPTIVE_V20_EXCLUDED_METAL.md`.
+
 ## Model path
 
 1. Import E-GMD through `drumscribe-ml import-egmd` on dedicated training compute. Its official train, validation and test assignments are preserved, and every kit rendering of one performance stays in the same leakage group.
