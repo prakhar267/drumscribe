@@ -87,6 +87,9 @@ services:
       DRUMSCRIBE_S3_BUCKET: ${DRUMSCRIBE_S3_BUCKET:-drumscribe-private}
       DRUMSCRIBE_S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY:-drumscribe-local}
       DRUMSCRIBE_S3_SECRET_ACCESS_KEY: ${S3_SECRET_KEY:-local-development-only}
+      # Local MinIO has no KMS configured. Production R2/Neon storage encrypts
+      # objects at rest without requiring the AWS SSE request header.
+      DRUMSCRIBE_S3_SERVER_SIDE_ENCRYPTION: "none"
       # The current MinIO image rejects S3 PutBucketCors; its container-level exact
       # origin is configured above. Managed production storage keeps this enabled.
       DRUMSCRIBE_S3_CONFIGURE_BUCKET_CORS: "false"
@@ -128,6 +131,7 @@ services:
       DRUMSCRIBE_S3_BUCKET: ${DRUMSCRIBE_S3_BUCKET:-drumscribe-private}
       DRUMSCRIBE_S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY:-drumscribe-local}
       DRUMSCRIBE_S3_SECRET_ACCESS_KEY: ${S3_SECRET_KEY:-local-development-only}
+      DRUMSCRIBE_S3_SERVER_SIDE_ENCRYPTION: "none"
       DRUMSCRIBE_SESSION_SECRET: ${DRUMSCRIBE_SESSION_SECRET:-local-development-secret-change-before-deploying}
     command: ["celery", "-A", "drumscribe_api.tasks:celery_app", "worker", "--beat", "--loglevel=INFO", "--concurrency=1"]
     depends_on:
