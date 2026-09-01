@@ -38,6 +38,7 @@ services:
     environment:
       MINIO_ROOT_USER: ${S3_ACCESS_KEY:-drumscribe-local}
       MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-local-development-only}
+      MINIO_API_CORS_ALLOW_ORIGIN: http://localhost:3000
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:9000/minio/health/live"]
       interval: 5s
@@ -86,8 +87,8 @@ services:
       DRUMSCRIBE_S3_BUCKET: ${DRUMSCRIBE_S3_BUCKET:-drumscribe-private}
       DRUMSCRIBE_S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY:-drumscribe-local}
       DRUMSCRIBE_S3_SECRET_ACCESS_KEY: ${S3_SECRET_KEY:-local-development-only}
-      # MinIO applies permissive browser CORS itself and does not implement
-      # S3 PutBucketCors. Managed production storage keeps this enabled.
+      # The current MinIO image rejects S3 PutBucketCors; its container-level exact
+      # origin is configured above. Managed production storage keeps this enabled.
       DRUMSCRIBE_S3_CONFIGURE_BUCKET_CORS: "false"
       DRUMSCRIBE_PUBLIC_API_URL: http://localhost:8000
       DRUMSCRIBE_WEB_ORIGINS: '["http://localhost:3000"]'
