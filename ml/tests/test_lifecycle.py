@@ -13,7 +13,10 @@ from drumscribe_ml.ensemble import (
     CheckpointReference,
     EnsembleConfig,
     EnsembleRule,
+    StackedEnsembleConfig,
+    StackedEnsembleRule,
     blend_probabilities,
+    blend_stacked_probabilities,
     decode_probabilities,
 )
 from drumscribe_ml.lifecycle import (
@@ -199,6 +202,27 @@ def test_calibration_and_training_metadata_are_versioned(tmp_path):
     with pytest.raises(TrainingError, match="positive weight exponent"):
         TrainingConfig(
             "prepared.json", str(tmp_path), "invalid-weight-exponent", positive_weight_exponent=2
+        )
+    focused = TrainingConfig(
+        "prepared.json",
+        str(tmp_path),
+        "focused",
+        onset_class_loss_multipliers={"PEDAL_HIHAT": 2.5},
+    )
+    assert focused.onset_class_loss_multipliers == {"PEDAL_HIHAT": 2.5}
+    with pytest.raises(TrainingError, match="unknown onset loss multiplier"):
+        TrainingConfig(
+            "prepared.json",
+            str(tmp_path),
+            "invalid-focused-class",
+            onset_class_loss_multipliers={"COWBELL": 2},
+        )
+    with pytest.raises(TrainingError, match="in \\(0, 10\\]"):
+        TrainingConfig(
+            "prepared.json",
+            str(tmp_path),
+            "invalid-focused-weight",
+            onset_class_loss_multipliers={"PEDAL_HIHAT": 0},
         )
 
 
@@ -443,4 +467,73 @@ def test_ensemble_config_requires_rules_for_every_class():
             primary=reference,
             secondary=reference,
             rules={},
+        )
+
+
+def test_stacked_ensemble_fuses_named_models_and_temporal_scores():
+    shape = (5, len(TRAINING_CLASSES))
+    first = np.full(shape, 0.1, dtype=np.float32)
+    second = np.full(shape, 0.2, dtype=np.float32)
+    first[2, 0] = 0.8
+    second[2, 0] = 0.6
+    rules = {
+        instrument.value: StackedEnsembleRule(
+            strategy="convex",
+            model_weights={"first": 1},
+            threshold=0.5,
+            peak_distance_frames=1,
+        )
+        for instrument in TRAINING_CLASSES
+    }
+    rules[TRAINING_CLASSES[0].value] = StackedEnsembleRule(
+        strategy="convex",
+        model_weights={"first": 0.5, "second": 0.5},
+        threshold=0.2,
+        peak_distance_frames=1,
+        temporal_kernel=(1, 2, 1),
+        temporal_blend=1,
+    )
+    rules[TRAINING_CLASSES[1].value] = StackedEnsembleRule(
+        strategy="logit",
+        model_weights={"first": 1.5, "second": -0.5},
+        threshold=0.1,
+        peak_distance_frames=1,
+    )
+    rules[TRAINING_CLASSES[2].value] = StackedEnsembleRule(
+        strategy="maximum",
+        model_weights={"first": 1, "second": 1},
+        threshold=0.1,
+        peak_distance_frames=1,
+    )
+    output = blend_stacked_probabilities({"first": first, "second": second}, rules)
+    assert output[2, 0] == pytest.approx(0.425)
+    expected_logit = 1 / (1 + np.exp(-(1.5 * np.log(0.1 / 0.9) - 0.5 * np.log(0.2 / 0.8))))
+    assert output[0, 1] == pytest.approx(expected_logit)
+    assert output[0, 2] == pytest.approx(0.2)
+
+
+def test_stacked_ensemble_config_rejects_unknown_models_and_invalid_kernels():
+    reference = CheckpointReference(model_version="fixture", sha256="0" * 64)
+    rules = {
+        instrument.value: StackedEnsembleRule(
+            strategy="convex",
+            model_weights={"missing": 1},
+            threshold=0.5,
+            peak_distance_frames=1,
+        )
+        for instrument in TRAINING_CLASSES
+    }
+    with pytest.raises(TrainingError, match="unknown models"):
+        StackedEnsembleConfig(
+            model_version="fixture-stack",
+            models={"available": reference},
+            rules=rules,
+        )
+    with pytest.raises(TrainingError, match="odd-length"):
+        StackedEnsembleRule(
+            strategy="convex",
+            model_weights={"available": 1},
+            threshold=0.5,
+            peak_distance_frames=1,
+            temporal_kernel=(1, 1),
         )

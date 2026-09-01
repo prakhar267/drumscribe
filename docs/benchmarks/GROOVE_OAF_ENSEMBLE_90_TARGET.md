@@ -2,6 +2,11 @@
 
 Date completed: 2026-08-31
 
+> Follow-up (2026-09-01): the schema-v2 stacked articulation ensemble reaches
+> 0.9001 event-weighted micro F1 and 0.8967 supported-class macro F1 on the same
+> validation population. It still lacks a fresh sealed test and does not pass the
+> class-balanced 0.90 target. See `GROOVE_STACKED_ARTICULATION_V16.md`.
+
 Decision: **the strongest reproducible natural-validation result is 0.8845 macro
 F1, so DrumScribe still does not meet the 0.90 target.** This is a 3.40-point
 absolute improvement over the prior 0.8505 validation baseline and leaves a

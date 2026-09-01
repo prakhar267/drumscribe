@@ -91,6 +91,9 @@ pressure without changing validation or test labels. One-shot generation filters
 tracks that cannot fit the requested hit pattern and deterministically selects a
 maximum collision-free placement, so dense augmentation requests do not fail at
 random.
+`onset_class_loss_multipliers` can up-weight named canonical classes for bounded
+specialist fine-tunes; unknown classes and non-positive or extreme multipliers are
+rejected before training.
 
 Training also supports `oaf_cnn`, a clean-room frequency-aware 2D CNN plus
 bidirectional LSTM onset architecture. It is trained only on the configured
@@ -104,6 +107,13 @@ canonical class, freezes thresholds and peak distances, and pins both checkpoint
 SHA-256 hashes. Evaluation never fits calibration on the requested split. The
 current ensemble is validation evidence only; it has not been evaluated on a new
 sealed test set and is not production-approved.
+
+Schema-v2 stacked ensembles generalize that evaluator to named, hash-pinned
+checkpoints, per-class convex/linear/log-odds/maximum/noisy-OR fusion, and fixed
+odd-length temporal kernels. Run `evaluate-stacked-ensemble` with one repeated
+`--checkpoint NAME=PATH` argument for every model in the config. The evaluator
+rejects missing, extra, and hash-mismatched checkpoints and never calibrates on
+the requested split.
 No checkpoint is production-approved merely because this code can train it.
 
 Validation confidence can be calibrated from an NPZ containing `logits` and

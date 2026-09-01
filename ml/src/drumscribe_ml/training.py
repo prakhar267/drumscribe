@@ -57,6 +57,7 @@ class TrainingConfig:
     family_classification_loss_weight: float = 0.0
     positive_weight_exponent: float = 1.0
     validation_family_competition: bool = False
+    onset_class_loss_multipliers: dict[str, float] | None = None
 
     def __post_init__(self) -> None:
         if not self.model_version.strip() or "/" in self.model_version:
@@ -99,6 +100,16 @@ class TrainingConfig:
             or not 0 <= self.positive_weight_exponent <= 1
         ):
             raise TrainingError("positive weight exponent must be between zero and one")
+        if self.onset_class_loss_multipliers is not None:
+            valid_classes = {instrument.value for instrument in TRAINING_CLASSES}
+            unknown = sorted(set(self.onset_class_loss_multipliers) - valid_classes)
+            if unknown:
+                raise TrainingError(f"unknown onset loss multiplier classes: {unknown}")
+            if any(
+                not math.isfinite(value) or not 0 < value <= 10
+                for value in self.onset_class_loss_multipliers.values()
+            ):
+                raise TrainingError("onset class loss multipliers must be finite and in (0, 10]")
 
     @classmethod
     def load(cls, path: Path) -> TrainingConfig:
@@ -319,6 +330,14 @@ def run_training(config: TrainingConfig) -> Path:
     positive_weights = torch.from_numpy(
         _positive_class_weights(train_records, exponent=config.positive_weight_exponent)
     ).to(device)
+    onset_class_loss_multipliers = torch.tensor(
+        [
+            (config.onset_class_loss_multipliers or {}).get(instrument.value, 1.0)
+            for instrument in TRAINING_CLASSES
+        ],
+        dtype=torch.float32,
+        device=device,
+    )
     start_epoch = 0
     best_f1 = -1.0
     best_thresholds: dict[str, float] = {}
@@ -452,6 +471,7 @@ def run_training(config: TrainingConfig) -> Path:
                     pos_weight=positive_weights,
                     reduction="none",
                 )
+                onset_losses = onset_losses * onset_class_loss_multipliers
                 onset_loss = (onset_losses * valid_tensor).sum() / (
                     valid_tensor.sum() * len(TRAINING_CLASSES)
                 )

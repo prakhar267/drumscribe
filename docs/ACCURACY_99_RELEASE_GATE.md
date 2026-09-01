@@ -59,6 +59,15 @@ approved for a production accuracy claim or paid launch. Low tom and tambourine
 still lack natural validation support. See
 `docs/benchmarks/GROOVE_OAF_ENSEMBLE_90_TARGET.md`.
 
+A subsequent hash-pinned seven-checkpoint stack adds articulation specialists,
+log-odds fusion and fixed temporal kernels. It reproduces 0.9001 event-weighted
+micro F1 and 0.8967 supported-class macro F1 on the same 120 validation records.
+The micro aggregate has crossed 90%, but the class-balanced target has not; low
+tom and tambourine remain unsupported, repeated validation selection makes the
+estimate optimistic, and no fresh sealed test exists. This is not a “90% in every
+aspect” claim and does not change the 99% production gate. See
+`docs/benchmarks/GROOVE_STACKED_ARTICULATION_V16.md`.
+
 ## Model path
 
 1. Import E-GMD through `drumscribe-ml import-egmd` on dedicated training compute. Its official train, validation and test assignments are preserved, and every kit rendering of one performance stays in the same leakage group.

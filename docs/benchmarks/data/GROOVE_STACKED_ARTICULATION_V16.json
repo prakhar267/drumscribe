@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "modelVersion": "groove-stacked-articulation-v16",
+  "preparedDatasetSha256": "9ef041078b1ffd41965b9fabf1933606b5bc86185f28c5f3c57f1348afaf1426",
+  "split": "validation",
+  "recordCount": 120,
+  "supportedClassCount": 12,
+  "supportedMacroF1": 0.8967130053187501,
+  "strict14ClassMacroF1": 0.7686111474160715,
+  "microF1": 0.9001066477070743,
+  "microCounts": {"tp": 34182, "fp": 2166, "fn": 5421},
+  "testStatus": "not_evaluated_no_fresh_sealed_set",
+  "perClassF1": {
+    "CLOSED_HIHAT": 0.880786946678117,
+    "CRASH": 0.8578352180936996,
+    "CROSS_STICK": 0.9652351738241309,
+    "FLOOR_TOM": 0.9615124915597569,
+    "HIGH_TOM": 0.9646897497428866,
+    "KICK": 0.9533840452506339,
+    "MID_TOM": 0.976897689768977,
+    "OPEN_HIHAT": 0.8144938952343442,
+    "PEDAL_HIHAT": 0.7568392925308564,
+    "RIDE": 0.8238133547868061,
+    "RIDE_BELL": 0.8822269807280514,
+    "SNARE": 0.922841225626741
+  },
+  "checkpointSha256": {
+    "c14": "52d5ac17883fe384b18e4020f9d431a5f07b23805e7b897a134bf7399b655157",
+    "e3": "7c05b837d033206e80aa638261dfa633caf7e1d60029acfa77f7150dbd1fea81",
+    "e4": "d193330ccaa794b042599889d99e3c6479e2cb970ca0454a64234e337c7a5bcd",
+    "s15": "89538ed53ad0395c8b41f1aba2a1ea0b5a6228e04ed441ffdb1b08550e3345e8",
+    "v10": "23a9057d2df6bccde14bce72c280f0bbdbe23236ed4c6e785f2e3496f198ff00",
+    "v12": "57873926129a421d265b4102727f886b68dfbb5b1ea7c10f98280591e588c182",
+    "v7": "b98fe251d7c269fb18dd3474be0109aef1bd6c16b4ee9412308388eae1343625"
+  }
+}

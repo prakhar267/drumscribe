@@ -10,7 +10,7 @@ import numpy as np
 from .calibration import calibrate_confidence
 from .checkpoint_eval import evaluate_checkpoint
 from .egmd import import_egmd_dataset
-from .ensemble import evaluate_ensemble
+from .ensemble import evaluate_ensemble, evaluate_stacked_ensemble
 from .groove import import_groove_dataset
 from .lifecycle import PreparationConfig, prepare_dataset
 from .manifest import load_manifest, split_payload
@@ -110,6 +110,19 @@ def main(argv: list[str] | None = None) -> int:
     evaluate_ensemble_parser.add_argument("output", type=Path)
     evaluate_ensemble_parser.add_argument("--device", default="auto")
     evaluate_ensemble_parser.add_argument("--split", choices=("train", "validation", "test"))
+    evaluate_stack_parser = command.add_parser("evaluate-stacked-ensemble")
+    evaluate_stack_parser.add_argument("config", type=Path)
+    evaluate_stack_parser.add_argument("prepared_dataset", type=Path)
+    evaluate_stack_parser.add_argument("output", type=Path)
+    evaluate_stack_parser.add_argument(
+        "--checkpoint",
+        action="append",
+        required=True,
+        metavar="NAME=PATH",
+        help="named checkpoint from the stack config; repeat for every model",
+    )
+    evaluate_stack_parser.add_argument("--device", default="auto")
+    evaluate_stack_parser.add_argument("--split", choices=("train", "validation", "test"))
     args = parser.parse_args(argv)
     if args.command == "prepare":
         destination = prepare_dataset(
@@ -273,6 +286,17 @@ def main(argv: list[str] | None = None) -> int:
         )
         print(output.read_text(encoding="utf-8"), end="")
         return 0
+    if args.command == "evaluate-stacked-ensemble":
+        output = evaluate_stacked_ensemble(
+            args.config,
+            _named_checkpoints(args.checkpoint),
+            args.prepared_dataset,
+            args.output,
+            device=args.device,
+            split=args.split,
+        )
+        print(output.read_text(encoding="utf-8"), end="")
+        return 0
 
     manifest = load_manifest(args.input)
     if args.manifest_command == "validate":
@@ -293,6 +317,18 @@ def main(argv: list[str] | None = None) -> int:
         handle.write("\n")
     print(json.dumps({"output": str(args.output), "tracks": len(manifest.tracks)}))
     return 0
+
+
+def _named_checkpoints(values: list[str]) -> dict[str, Path]:
+    checkpoints: dict[str, Path] = {}
+    for value in values:
+        name, separator, raw_path = value.partition("=")
+        if not separator or not name.strip() or not raw_path.strip():
+            raise ValueError("stacked checkpoint arguments must use NAME=PATH")
+        if name in checkpoints:
+            raise ValueError(f"duplicate stacked checkpoint name: {name}")
+        checkpoints[name] = Path(raw_path)
+    return checkpoints
 
 
 if __name__ == "__main__":

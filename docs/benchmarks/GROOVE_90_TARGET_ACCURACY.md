@@ -2,10 +2,11 @@
 
 Date completed: 2026-08-31
 
-> Follow-up: the frequency-aware OaF-style experiment and frozen two-model
-> ensemble raised natural-validation macro F1 from 0.8505 to 0.8845. It still
-> misses 0.90 and has no fresh sealed-test result. See
-> `docs/benchmarks/GROOVE_OAF_ENSEMBLE_90_TARGET.md`.
+> Follow-up: the schema-v2 stacked articulation ensemble reaches 0.9001
+> event-weighted micro F1 and 0.8967 supported-class macro F1 on the same natural
+> validation set. It therefore crosses 90% only on the event-weighted aggregate,
+> still misses the class-balanced target, and has no fresh sealed-test result.
+> See `docs/benchmarks/GROOVE_STACKED_ARTICULATION_V16.md`.
 
 Decision: **the model does not meet the 90% target and is not approved for a
 production accuracy claim or paid launch.** The strongest validation result is
