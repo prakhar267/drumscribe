@@ -38,7 +38,9 @@ def generate_pdf(
         grouped[position.measure_index].append((position.beat_in_measure, event))
         last_measure = max(last_measure, position.measure_index)
     measure_count = last_measure + 1
-    measures_per_page = 12
+    # Dense metal charts need enough horizontal room for sixteenth/32nd-note voices,
+    # and cymbal stems must not collide with the repeated page title.
+    measures_per_page = 8
     page_streams: list[bytes] = []
     for page_start in range(0, measure_count, measures_per_page):
         commands: list[str] = []
@@ -56,11 +58,11 @@ def generate_pdf(
             measure_index = page_start + local_index
             if measure_index >= measure_count:
                 break
-            row = local_index // 3
-            column = local_index % 3
-            x = 54 + column * 168
-            y = 670 - row * 145
-            width = 150
+            row = local_index // 2
+            column = local_index % 2
+            x = 54 + column * 252
+            y = 620 - row * 145
+            width = 234
             _text(commands, x, y + 18, 8, str(measure_index + 1))
             for staff_line in range(5):
                 line_y = y + staff_line * 8

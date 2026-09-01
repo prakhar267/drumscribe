@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "benchmark": "sealed-original-metal-v1",
+  "track": "Forged in Silence",
+  "modelVersion": "groove-stacked-articulation-v16",
+  "referenceEvents": 655,
+  "predictedEvents": 445,
+  "classAware50ms": {
+    "precision": 0.5775280898876405,
+    "recall": 0.39236641221374047,
+    "f1": 0.4672727272727273,
+    "truePositive": 257,
+    "falsePositive": 188,
+    "falseNegative": 398
+  },
+  "onsetOnly50ms": {
+    "precision": 0.9191011235955057,
+    "recall": 0.6244274809160305,
+    "f1": 0.7436363636363637,
+    "truePositive": 409,
+    "falsePositive": 36,
+    "falseNegative": 246
+  },
+  "notationClassAndSlotExact": {
+    "precision": 0.46741573033707867,
+    "recall": 0.31755725190839695,
+    "f1": 0.37818181818181823,
+    "truePositive": 208,
+    "falsePositive": 237,
+    "falseNegative": 447
+  },
+  "supportedMacroF1At50ms": 0.25708692311941783,
+  "perClassF1At50ms": {
+    "KICK": 0.8804347826086957,
+    "SNARE": 0.6782608695652174,
+    "CROSS_STICK": 0.0,
+    "CLOSED_HIHAT": 0.10294117647058823,
+    "OPEN_HIHAT": 0.33009708737864074,
+    "PEDAL_HIHAT": 0.1111111111111111,
+    "RIDE": 0.14084507042253522,
+    "RIDE_BELL": 0.8235294117647058,
+    "CRASH": 0.0,
+    "HIGH_TOM": 0.0,
+    "MID_TOM": 0.14285714285714288,
+    "LOW_TOM": 0.23529411764705882,
+    "FLOOR_TOM": 0.15384615384615385,
+    "TAMBOURINE": 0.0
+  },
+  "separation": {
+    "siSdrDb": 13.419974475927866,
+    "correlation": 0.9779984666269811,
+    "comparedSeconds": 34.5
+  },
+  "tempo": {
+    "referenceBpm": 180.0,
+    "estimatedFirstBpm": 176.47058823529412,
+    "meter": "4/4",
+    "offsetSeconds": 0.0
+  },
+  "timingsSeconds": {
+    "transcription": 7.804904791992158,
+    "beatTracking": 3.3602102079894394,
+    "total": 11.253156916995067
+  },
+  "testProtocol": {
+    "predictionRunCount": 1,
+    "referenceNotAvailableToPredictPhase": true,
+    "postTestTuning": false,
+    "rightsCleared": true
+  },
+  "sha256": {
+    "sealedSong": "3c836d09f090c35a6dbfc86d2b0fb4035d84a0f62f41b5bbc9021c7503cf1aa2",
+    "predictionEvents": "5cd168f18bfda1fbd76601cf27454c478d21e367df8eb52566e794770df4f9a9",
+    "rawBenchmarkResult": "d8150ef6f5ce5ee8593646fc88ada8609f9c8607bc490fda529d582c3fb24c22",
+    "referencePdf": "31287254ec9591c905d9dcdf42f043e8670fc912ac1b663b3c68a13b4c687f8d",
+    "predictionPdf": "f085d4f2631ee38369efd0486086a757b69154cde6bb9877ee66368aa52bfac9"
+  },
+  "decision": "accuracy_gate_failed_do_not_claim_90_percent"
+}

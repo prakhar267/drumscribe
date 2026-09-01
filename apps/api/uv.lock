@@ -899,6 +899,7 @@ audio = [
 demucs = [
     { name = "demucs", version = "4.0.1", source = { registry = "https://pypi.org/simple" }, marker = "platform_machine == 'x86_64' and sys_platform == 'darwin'" },
     { name = "demucs", version = "4.1.0", source = { registry = "https://pypi.org/simple" }, marker = "platform_machine != 'x86_64' or sys_platform != 'darwin'" },
+    { name = "numpy" },
 ]
 pdf = [
     { name = "reportlab" },
@@ -910,6 +911,7 @@ requires-dist = [
     { name = "demucs", marker = "extra == 'demucs'", specifier = ">=4.0.1,<5" },
     { name = "librosa", marker = "extra == 'audio'", specifier = ">=0.10.2,<1" },
     { name = "numpy", marker = "extra == 'audio'", specifier = ">=2.0,<3" },
+    { name = "numpy", marker = "extra == 'demucs'", specifier = ">=2.0,<3" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.3,<9" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=5,<7" },
     { name = "reportlab", marker = "extra == 'pdf'", specifier = ">=4.2,<5" },
