@@ -8,7 +8,7 @@ export default defineConfig({
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
   reporter: "html",
-  snapshotPathTemplate: "{testDir}/__screenshots__/{arg}{ext}",
+  snapshotPathTemplate: "{testDir}/__screenshots__/{arg}-{platform}{ext}",
   use: {
     baseURL: fullStack ? "http://localhost:3000" : "http://127.0.0.1:3100",
     trace: "on-first-retry",

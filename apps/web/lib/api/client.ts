@@ -144,8 +144,9 @@ async function request<T>(path: string, init?: RequestInit, retryAuth = true): P
   return response.json() as Promise<T>;
 }
 
-function isDemoUnavailable(error: unknown) {
-  return error instanceof TypeError;
+function isDemoUnavailable(error: unknown, includeMissingRoute = false) {
+  return error instanceof TypeError
+    || (error instanceof ApiError && ([502, 503, 504].includes(error.status) || (includeMissingRoute && error.status === 404)));
 }
 
 function demoTiming(project: DrumProject): TimingMap {
@@ -419,7 +420,7 @@ export const api = {
       });
       return { projectId: project.id, jobId: job.id };
     } catch (error) {
-      if (!projectCreated && DEMO_MODE && isDemoUnavailable(error)) return { projectId: demoProject.id, jobId: "demo-job" };
+      if (!projectCreated && DEMO_MODE && isDemoUnavailable(error, true)) return { projectId: demoProject.id, jobId: "demo-job" };
       throw error;
     }
   },

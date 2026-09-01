@@ -14,11 +14,20 @@ test("editor adds, deletes, undoes, loops, saves and exports", async ({ page }) 
   expect(initialCount).toBeGreaterThan(40);
 
   const grid = page.getByTestId("drum-grid");
-  const box = await grid.boundingBox();
-  if (!box) throw new Error("Grid is not visible");
-  // An early off-beat on the ride-bell row is empty in the deterministic fixture
-  // and remains inside the visible portion of the horizontally zoomed canvas.
-  await page.mouse.click(box.x + box.width * 0.2, box.y + 30 * 2.5);
+  const emptyCell = await grid.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    const right = Math.min(rect.right, window.innerWidth) - 12;
+    const bottom = Math.min(rect.bottom, window.innerHeight) - 12;
+    for (let y = rect.top + 15; y <= bottom; y += 30) {
+      for (let x = rect.left + 12; x <= right; x += 18) {
+        const target = document.elementFromPoint(x, y);
+        if (target?.closest('[data-testid="drum-grid"]') === element && !target.closest(".grid-hit")) return { x, y };
+      }
+    }
+    return null;
+  });
+  if (!emptyCell) throw new Error("No visible empty grid cell was found");
+  await page.mouse.click(emptyCell.x, emptyCell.y);
   await expect(hits).toHaveCount(initialCount + 1);
   await page.keyboard.press("Delete");
   await expect(hits).toHaveCount(initialCount);

@@ -62,6 +62,15 @@ describe("versioned API client", () => {
     await expect(api.getProject("not-a-real-project")).rejects.toThrow("Project not found");
   });
 
+  it("uses the demo upload when the optional local API route is absent", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(json({ detail: "Not found" }, 404)));
+    const file = new File([new Uint8Array([82, 73, 70, 70])], "groove.wav", { type: "audio/wav" });
+    await expect(api.createAndProcessUpload({ file, rightsConfirmed: true })).resolves.toEqual({
+      projectId: "demo-groove",
+      jobId: "demo-job",
+    });
+  });
+
   it("persists canonical timing and selective requantization options", async () => {
     const fetchMock = vi.fn().mockResolvedValue(json({
       timingVersion: 3,

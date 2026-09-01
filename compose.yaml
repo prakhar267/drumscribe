@@ -86,7 +86,9 @@ services:
       DRUMSCRIBE_S3_BUCKET: ${DRUMSCRIBE_S3_BUCKET:-drumscribe-private}
       DRUMSCRIBE_S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY:-drumscribe-local}
       DRUMSCRIBE_S3_SECRET_ACCESS_KEY: ${S3_SECRET_KEY:-local-development-only}
-      DRUMSCRIBE_S3_CONFIGURE_BUCKET_CORS: "true"
+      # MinIO applies permissive browser CORS itself and does not implement
+      # S3 PutBucketCors. Managed production storage keeps this enabled.
+      DRUMSCRIBE_S3_CONFIGURE_BUCKET_CORS: "false"
       DRUMSCRIBE_PUBLIC_API_URL: http://localhost:8000
       DRUMSCRIBE_WEB_ORIGINS: '["http://localhost:3000"]'
       DRUMSCRIBE_SESSION_SECRET: ${DRUMSCRIBE_SESSION_SECRET:-local-development-secret-change-before-deploying}
