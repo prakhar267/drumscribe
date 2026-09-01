@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "modelVersion": "supported-kit-oaf-v24",
+  "architecture": "clean-room frequency-aware CNN plus bidirectional LSTM",
+  "checkpoint": "ml/models/supported-kit-oaf-v24.pt",
+  "checkpointSha256": "5615181475f36b3bad0888977333db739b1ddae425579c53797c6a816f8fc027",
+  "canonicalClassCount": 14,
+  "trainingData": {
+    "name": "MuldjordKit synthetic full-kit v1",
+    "preparedDatasetSha256": "57f4655a9458c8ec1c803e981cab71bbf049311899937c6f3d7b14f16e2a17c4",
+    "trainRecords": 96,
+    "validationRecords": 24,
+    "kitLicense": "CC BY 4.0"
+  },
+  "validation": {
+    "evidenceLevel": "synthetic_validation",
+    "strict14ClassMacroF1": 0.9040192052060397,
+    "recordCount": 24
+  },
+  "postFreezeTest": {
+    "title": "Rivet Storm",
+    "songIndex": 10000,
+    "cleanStemMacroF1": 0.9211115401281468,
+    "cleanStemMicroF1": 0.908315565031983,
+    "demucsFullMixMacroF1": 0.9027934520850415,
+    "demucsFullMixMicroF1": 0.8840262582056893,
+    "postTestTuning": false
+  },
+  "scope": "MuldjordKit supported-kit research beta with steady assisted tempo",
+  "accuracyGate": "conditional_macro_pass_micro_full_pipeline_fail",
+  "productionApproved": false,
+  "licenseStatus": "needs_final_attribution_and_model_card_review"
+}

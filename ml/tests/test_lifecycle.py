@@ -412,6 +412,14 @@ def test_checkpoint_evidence_labels_keep_test_and_training_distinct():
         _evidence_level(evaluation_only=True, split="validation")
         == "synthetic_reserved_validation_probe"
     )
+    assert (
+        _evidence_level(evaluation_only=True, synthetic=True, split="test")
+        == "synthetic_reserved_test"
+    )
+    assert (
+        _evidence_level(evaluation_only=False, synthetic=True, split="validation")
+        == "synthetic_validation"
+    )
 
 
 def test_oaf_style_model_preserves_frame_alignment():

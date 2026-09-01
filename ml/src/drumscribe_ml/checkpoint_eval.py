@@ -112,7 +112,9 @@ def evaluate_checkpoint(
         "perClassF1": per_class,
         "thresholds": metrics["thresholds"],
         "evidenceLevel": _evidence_level(
-            evaluation_only=bool(payload.get("evaluationOnly")), split=split
+            evaluation_only=bool(payload.get("evaluationOnly")),
+            synthetic=_is_synthetic(payload),
+            split=split,
         ),
     }
     destination = Path(output_path)
@@ -123,7 +125,22 @@ def evaluate_checkpoint(
     return destination
 
 
-def _evidence_level(*, evaluation_only: bool, split: str | None) -> str:
+def _is_synthetic(payload: dict[str, Any]) -> bool:
+    dataset = payload.get("dataset", {})
+    if not isinstance(dataset, dict):
+        return False
+    source_type = str(dataset.get("sourceType", "")).lower()
+    name = str(dataset.get("name", "")).lower()
+    return source_type == "synthetic" or "synthetic" in name
+
+
+def _evidence_level(*, evaluation_only: bool, synthetic: bool = False, split: str | None) -> str:
+    if synthetic and evaluation_only and split == "test":
+        return "synthetic_reserved_test"
+    if synthetic and split == "validation":
+        return "synthetic_validation"
+    if synthetic:
+        return "synthetic_evaluation"
     if evaluation_only:
         return "synthetic_reserved_validation_probe"
     if split == "test":

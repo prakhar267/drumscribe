@@ -80,6 +80,16 @@ that the remaining blocker is cross-performance snare/hi-hat generalization, not
 only duplicate decoding. See
 `docs/benchmarks/KIT_ADAPTIVE_V20_EXCLUDED_METAL.md`.
 
+The subsequent one-kit frequency-aware experiment trains a clean-room 2D CNN
+plus bidirectional LSTM on 96 generated MuldjordKit performances. Its frozen v24
+checkpoint reaches 90.40% strict 14-class macro F1 on 24 synthetic validation
+songs. A new post-freeze song reaches 92.11% macro and 90.83% micro F1 on the
+clean drum stem; after metal backing and `htdemucs_ft` isolation it reaches
+90.28% macro but only 88.40% micro F1. This passes a narrow supported-kit macro
+target, not the product release gate: the population is synthetic and single-kit,
+the full-pipeline micro metric is below 90%, and closed hi-hat/cross-stick remain
+weak. See `docs/benchmarks/SUPPORTED_KIT_OAF_V24_90_TARGET.md`.
+
 ## Model path
 
 1. Import E-GMD through `drumscribe-ml import-egmd` on dedicated training compute. Its official train, validation and test assignments are preserved, and every kit rendering of one performance stays in the same leakage group.
