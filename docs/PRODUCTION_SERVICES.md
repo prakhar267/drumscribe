@@ -14,7 +14,7 @@ This is the non-secret source of truth for DrumScribe's pre-launch service topol
 | Web error monitoring | Sentry `drumscribe-web` | `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_DSN`, sample-rate variables | Next.js client, server, edge, global-error, and build integration are complete; lint, type checking, tests, and production build pass. Source-map upload needs a CI auth token at deployment time. |
 | Public web | Cloudflare Workers, `drumscribe-web` | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_DEMO_MODE`, `API_ORIGIN` | Vinext production build and live Workers deployment are verified at `https://drumscribe-web.prakhargupta267.workers.dev`. It remains in explicit pre-launch demo mode until the public API URL exists. |
 | Public API, worker, and scheduler | Northflank Sandbox | Container environment variables and TLS hostname | Deployment is prepared but blocked on the account owner's GitHub passkey confirmation. Sandbox is suitable for a free pre-launch beta, not an SLA production launch. Oracle is no longer in the selected topology. |
-| Logs and uptime | Better Stack | Deployment log drain and public health URLs | Account is connected, but sources and monitors wait for the public API URL. |
+| Logs and uptime | GitHub Actions scheduled probe plus Sentry | `PUBLIC_WEB_URL`, `PUBLIC_API_HEALTH_URL`, and the Sentry variables above | The public web is checked every 15 minutes by `.github/workflows/uptime.yml`; failed runs use the repository owner's GitHub Actions notification settings. The API readiness check activates when its public URL is added as a repository variable. Better Stack remains optional. |
 | Source and CI | Public GitHub repository `prakhar267/drumscribe` | Repository secrets and workflows | Hosted Actions are enabled on the public repository. Secret scanning, push protection, vulnerability alerts, and Dependabot security updates are enabled; the local parity suite remains required before push. |
 
 ## Neon boundary
@@ -43,7 +43,7 @@ DrumScribe uses Neon PostgreSQL and Neon Object Storage. Other Neon primitives s
 
 1. Complete the GitHub passkey confirmation, deploy the API and worker on Northflank, run the migration job, and switch the Worker from demo mode to the generated public API hostname.
 2. Verify a customer sending domain in Resend and publish its SPF/DKIM records.
-3. Attach Better Stack logs and uptime checks to the deployed health endpoints and document alert recipients.
+3. Add the deployed `/api/v1/health/ready` URL as the `PUBLIC_API_HEALTH_URL` repository variable. The scheduled probe and Sentry integrations are already configured; a separate Better Stack account is optional.
 4. Obtain the commercial provider credentials, contractual approval, retention/training terms, and rights evidence required by the fail-closed production validator. The local Demucs/research path is validated for research only and is never accepted by the production safety gate.
 5. Move off Northflank Sandbox to an SLA-capable paid/runtime tier before the production launch.
 6. Complete legal-entity/address decisions and qualified review of the customer-facing legal text.

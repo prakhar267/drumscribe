@@ -1,0 +1,33 @@
+name: Production uptime
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-uptime
+  cancel-in-progress: true
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    env:
+      PUBLIC_WEB_URL: ${{ vars.PUBLIC_WEB_URL || 'https://drumscribe-web.prakhargupta267.workers.dev/' }}
+      PUBLIC_API_HEALTH_URL: ${{ vars.PUBLIC_API_HEALTH_URL }}
+    steps:
+      - name: Check public web
+        run: >-
+          curl --fail --show-error --silent --location
+          --max-time 20 --retry 2 --retry-all-errors
+          --output /dev/null "$PUBLIC_WEB_URL"
+      - name: Check public API readiness
+        if: env.PUBLIC_API_HEALTH_URL != ''
+        run: >-
+          curl --fail --show-error --silent --location
+          --max-time 20 --retry 2 --retry-all-errors
+          --output /dev/null "$PUBLIC_API_HEALTH_URL"

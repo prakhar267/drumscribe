@@ -79,7 +79,7 @@ This plan continues the existing architecture. It does not rebuild the applicati
 - [ ] Configure production magic-link delivery, domain verification, SPF/DKIM, failure handling and environment-correct links.
 - [ ] Configure TLS, secure cookies, trusted proxy handling, HSTS decision and exact CORS.
 - [ ] Configure backups/PITR, retention/lifecycle/orphan cleanup and restore drills.
-- [ ] Configure Sentry-compatible monitoring and documented alerts.
+- [x] Configure Sentry-compatible monitoring and documented alerts.
 - [ ] Verify all migrations from zero against the target PostgreSQL release image.
 
 ### P1.5 Security, privacy and legal
