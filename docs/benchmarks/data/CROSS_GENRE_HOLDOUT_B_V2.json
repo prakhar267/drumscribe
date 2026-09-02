@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-09-02",
+  "benchmark": {
+    "name": "cross-genre-holdout2-v2",
+    "trackCount": 12,
+    "windowSeconds": 20,
+    "rightsCleared": true,
+    "referenceFrozenBeforePrediction": true,
+    "implementationFrozenBeforePrediction": true,
+    "drumSamples": {
+      "name": "MuldjordKit FreePats",
+      "license": "CC BY 4.0"
+    }
+  },
+  "metric": {
+    "primary": "family6 event-level micro F1",
+    "onsetToleranceMilliseconds": 20
+  },
+  "aggregate": {
+    "drumscribe": {
+      "family6F1": 0.9734754024030832,
+      "family6Precision": 0.9898570769940065,
+      "family6Recall": 0.9576271186440678,
+      "detailed14F1": 0.9680344593062797,
+      "family6MacroF1": 0.9535885155502655,
+      "detailed14MacroF1": 0.8476601004357128,
+      "meanAbsoluteTimingErrorMilliseconds": 1.9264846662587287
+    },
+    "drum2notes": {
+      "family6F1": 0.6554416788677404,
+      "family6Precision": 0.7235991379310345,
+      "family6Recall": 0.5990187332738626,
+      "detailed14F1": 0.5744265495363592,
+      "meanAbsoluteTimingErrorMilliseconds": 10.335051540686583
+    }
+  },
+  "tracks": [
+    {"slug":"01-soft-pop","genre":"soft-pop","bpm":87.0,"seed":113101,"referenceEvents":98,"drumscribeFamily6F1":0.9738219895287958,"drumscribeDetailed14F1":0.9738219895287958,"drum2notesFamily6F1":0.5851063829787234,"drum2notesResultId":"67af2c49-669a-4613-aa3b-fd289adbaae0"},
+    {"slug":"02-rock","genre":"rock","bpm":121.0,"seed":113202,"referenceEvents":158,"drumscribeFamily6F1":0.9936708860759493,"drumscribeDetailed14F1":0.9936708860759493,"drum2notesFamily6F1":0.8013698630136986,"drum2notesResultId":"2943a3b2-2719-47d5-b15f-92ac49c9f47d"},
+    {"slug":"03-hard-rock","genre":"hard-rock","bpm":148.0,"seed":113303,"referenceEvents":213,"drumscribeFamily6F1":0.9858490566037735,"drumscribeDetailed14F1":0.9764150943396226,"drum2notesFamily6F1":0.8825065274151436,"drum2notesResultId":"0e8fa9ca-4e6e-4875-a81a-374b1c041c8b"},
+    {"slug":"04-metal","genre":"metal","bpm":193.0,"seed":113404,"referenceEvents":356,"drumscribeFamily6F1":0.9802816901408451,"drumscribeDetailed14F1":0.9802816901408451,"drum2notesFamily6F1":0.5816023738872403,"drum2notesResultId":"8826a90c-8bbc-49ec-8d9e-20c4d13ebbcb"},
+    {"slug":"05-punk","genre":"punk","bpm":177.0,"seed":113505,"referenceEvents":399,"drumscribeFamily6F1":0.9936948297604036,"drumscribeDetailed14F1":0.9936948297604036,"drum2notesFamily6F1":0.8005908419497785,"drum2notesResultId":"2c13f1f7-157f-4329-9a59-600b5f9f50e9"},
+    {"slug":"06-funk","genre":"funk","bpm":108.0,"seed":113606,"referenceEvents":226,"drumscribeFamily6F1":0.9681818181818181,"drumscribeDetailed14F1":0.9681818181818181,"drum2notesFamily6F1":0.8416075650118203,"drum2notesResultId":"06933817-0e4b-4c41-9d3d-f44ca63f3fb8"},
+    {"slug":"07-disco","genre":"disco","bpm":123.0,"seed":113707,"referenceEvents":155,"drumscribeFamily6F1":0.9652996845425867,"drumscribeDetailed14F1":0.9589905362776026,"drum2notesFamily6F1":0.6099290780141844,"drum2notesResultId":"399bf847-e43b-4c57-8033-a833b552844b"},
+    {"slug":"08-hip-hop","genre":"hip-hop","bpm":89.0,"seed":113808,"referenceEvents":111,"drumscribeFamily6F1":0.958139534883721,"drumscribeDetailed14F1":0.958139534883721,"drum2notesFamily6F1":0.0,"drum2notesResultId":"da4d1fa4-d5fc-4589-ba5a-8076098548d9"},
+    {"slug":"09-rnb","genre":"rnb","bpm":78.0,"seed":113909,"referenceEvents":92,"drumscribeFamily6F1":0.9047619047619048,"drumscribeDetailed14F1":0.9047619047619048,"drum2notesFamily6F1":0.631578947368421,"drum2notesResultId":"3910fd88-be3d-4a32-84c2-79a82d88d9ff"},
+    {"slug":"10-jazz","genre":"jazz","bpm":143.0,"seed":114010,"referenceEvents":173,"drumscribeFamily6F1":0.9130434782608695,"drumscribeDetailed14F1":0.9130434782608695,"drum2notesFamily6F1":0.26143790849673204,"drum2notesResultId":"fa393cb5-e89d-43d3-bd68-af23d9e8e1a2"},
+    {"slug":"11-country","genre":"country","bpm":109.0,"seed":114111,"referenceEvents":131,"drumscribeFamily6F1":0.980544747081712,"drumscribeDetailed14F1":0.9105058365758755,"drum2notesFamily6F1":0.7692307692307693,"drum2notesResultId":"2c648bb2-7e3a-4357-af98-1736f8e7a9bd"},
+    {"slug":"12-electronic","genre":"electronic","bpm":128.0,"seed":114212,"referenceEvents":130,"drumscribeFamily6F1":0.9922480620155039,"drumscribeDetailed14F1":0.9922480620155039,"drum2notesFamily6F1":0.6850393700787402,"drum2notesResultId":"ab6a873b-8044-4794-abe2-43c264e720ee"}
+  ],
+  "limitations": [
+    "Deterministic synthetic arrangements",
+    "Single drum kit",
+    "Regular-grid rhythm completion is favored by this fixture family",
+    "Not a broad commercial-recording accuracy estimate"
+  ]
+}

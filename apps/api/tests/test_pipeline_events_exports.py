@@ -1,12 +1,13 @@
 import uuid
 from fractions import Fraction
 
+import pytest
 from fastapi.testclient import TestClient
 
 from drumscribe_api.enums import EventSource, Instrument
 from drumscribe_api.models import DrumEvent, Transcription
 from drumscribe_api.services.exports import _music_engine_events
-from drumscribe_api.services.pipeline import quantize_hits
+from drumscribe_api.services.pipeline import _quantize_hits_with_tempo, quantize_hits
 from drumscribe_api.services.pipeline_contracts import RawDrumHit
 
 from .conftest import (
@@ -115,6 +116,38 @@ def test_pipeline_quantization_rehydrates_timestamped_commercial_beats() -> None
     )[0]
     assert event["quantized_onset"] == 1.3
     assert event["beat_position"] == 2
+
+
+def test_pipeline_rhythm_completion_is_explicitly_gated() -> None:
+    analysis = {
+        "tempoBpm": 120,
+        "timeSignatureNumerator": 4,
+        "timeSignatureDenominator": 4,
+        "offsetSeconds": 0.30,
+    }
+    hits = [
+        *[
+            RawDrumHit(Instrument.KICK, 0.24 + index * 0.125, 100, 0.95)
+            for index in (0, 8, 16, 24, 32, 40)
+        ],
+        *[
+            RawDrumHit(Instrument.CLOSED_HIHAT, 0.24 + index * 0.125, 80, 0.9)
+            for index in (0, 4, 8, 16, 20, 28, 32, 36, 40)
+        ],
+    ]
+
+    baseline = quantize_hits(hits, timing_analysis=analysis)
+    completed, completed_tempo, applied = _quantize_hits_with_tempo(
+        hits,
+        timing_analysis=analysis,
+        rhythm_completion=True,
+    )
+
+    assert len(baseline) == len(hits)
+    assert len(completed) > len(baseline)
+    assert applied is True
+    assert completed_tempo.offset_seconds == pytest.approx(0.24836880645161298)
+    assert completed[0]["quantized_onset"] == pytest.approx(0.24836880645161298)
 
 
 def test_idempotent_processing_and_durable_stage_progress(client: TestClient, app) -> None:

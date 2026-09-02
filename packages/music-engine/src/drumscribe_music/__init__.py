@@ -68,6 +68,11 @@ from .quantization import (
     deduplicate_raw_hits,
     quantize_hits,
 )
+from .rhythm_completion import (
+    RhythmCompletionResult,
+    RhythmCompletionSettings,
+    complete_rhythm,
+)
 from .tempo import MusicalPosition, TempoChange, TempoMap, TimeSignature, as_fraction
 
 __all__ = [
@@ -107,6 +112,8 @@ __all__ = [
     "ResearchBeatThisTrackingProvider",
     "ResearchDependencyError",
     "ResearchDrumTranscriptionProvider",
+    "RhythmCompletionResult",
+    "RhythmCompletionSettings",
     "SourceSeparationProvider",
     "StandardNotationProvider",
     "TempoChange",
@@ -117,6 +124,7 @@ __all__ = [
     "YourMT3PlusTranscriptionProvider",
     "as_fraction",
     "canonical_instrument",
+    "complete_rhythm",
     "deduplicate_raw_hits",
     "generate_midi",
     "generate_musicxml",

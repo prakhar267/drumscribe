@@ -532,15 +532,16 @@ def development_hits(duration: float) -> list[RawDrumHit]:
     return hits
 
 
-def quantize_hits(
+def _quantize_hits_with_tempo(
     hits: Iterable[RawDrumHit],
     bpm: float = 120.0,
     numerator: int = 4,
     denominator: int = 4,
     *,
     timing_analysis: dict[str, Any] | None = None,
-) -> list[dict[str, Any]]:
-    """Quantize without flattening an observed beat grid to one global BPM."""
+    rhythm_completion: bool = False,
+) -> tuple[list[dict[str, Any]], Any, bool]:
+    """Quantize and retain the exact tempo map used for the resulting notation."""
 
     engine = importlib.import_module("drumscribe_music")
     analysis = timing_analysis or {
@@ -559,6 +560,12 @@ def quantize_hits(
         )
         for hit in hits
     ]
+    completion_applied = False
+    if rhythm_completion:
+        completion = engine.complete_rhythm(engine_hits, tempo_map)
+        engine_hits = list(completion.hits)
+        tempo_map = completion.tempo_map
+        completion_applied = completion.applied
     subdivision_names = {
         engine.GridSubdivision.QUARTER: "1/4",
         engine.GridSubdivision.EIGHTH: "1/8",
@@ -600,7 +607,54 @@ def quantize_hits(
                 "manually_edited": False,
             }
         )
-    return output
+    return output, tempo_map, completion_applied
+
+
+def quantize_hits(
+    hits: Iterable[RawDrumHit],
+    bpm: float = 120.0,
+    numerator: int = 4,
+    denominator: int = 4,
+    *,
+    timing_analysis: dict[str, Any] | None = None,
+    rhythm_completion: bool = False,
+) -> list[dict[str, Any]]:
+    """Quantize without flattening an observed beat grid to one global BPM."""
+
+    quantized, _, _ = _quantize_hits_with_tempo(
+        hits,
+        bpm,
+        numerator,
+        denominator,
+        timing_analysis=timing_analysis,
+        rhythm_completion=rhythm_completion,
+    )
+    return quantized
+
+
+def _serialize_engine_tempo_map(tempo_map: Any) -> list[dict[str, Any]]:
+    return [
+        *[
+            {
+                "kind": "tempo",
+                "startBeat": str(change.start_beat),
+                "bpm": float(change.bpm),
+                "confidence": float(change.confidence),
+            }
+            for change in tempo_map.changes
+        ],
+        *[
+            {
+                "kind": "timeSignature",
+                "startBeat": str(signature.start_beat),
+                "numerator": int(signature.numerator),
+                "denominator": int(signature.denominator),
+                "confidence": float(signature.confidence),
+            }
+            for signature in tempo_map.time_signatures
+        ],
+        {"kind": "offset", "offsetSeconds": float(tempo_map.offset_seconds)},
+    ]
 
 
 def _tempo_map_from_analysis(analysis: dict[str, Any], engine: Any) -> Any:
@@ -1007,27 +1061,34 @@ class PipelineService:
             bpm = float(checkpoint_analysis["tempoBpm"])
             numerator = int(checkpoint_analysis["timeSignatureNumerator"])
             denominator = int(checkpoint_analysis["timeSignatureDenominator"])
-            quantized = quantize_hits(
+            quantized, notation_tempo_map, completion_applied = _quantize_hits_with_tempo(
                 checkpoint_hits,
                 bpm,
                 numerator,
                 denominator,
                 timing_analysis=checkpoint_analysis,
+                rhythm_completion=run.model_name.casefold() == "drumscribe_hybrid",
             )
             low_confidence = sum(1 for item in quantized if (item["confidence"] or 0) < 0.75)
-            timing_map = [
-                *list(checkpoint_analysis.get("tempoMap", [])),
-                *list(checkpoint_analysis.get("timeSignatures", [])),
-                *[
-                    {"kind": "beat", **item}
-                    for item in checkpoint_analysis.get("beats", [])
-                    if isinstance(item, dict)
-                ],
-                {
-                    "kind": "offset",
-                    "offsetSeconds": float(checkpoint_analysis.get("offsetSeconds", 0)),
-                },
-            ]
+            if completion_applied:
+                bpm = float(notation_tempo_map.changes[0].bpm)
+                numerator = int(notation_tempo_map.time_signatures[0].numerator)
+                denominator = int(notation_tempo_map.time_signatures[0].denominator)
+                timing_map = _serialize_engine_tempo_map(notation_tempo_map)
+            else:
+                timing_map = [
+                    *list(checkpoint_analysis.get("tempoMap", [])),
+                    *list(checkpoint_analysis.get("timeSignatures", [])),
+                    *[
+                        {"kind": "beat", **item}
+                        for item in checkpoint_analysis.get("beats", [])
+                        if isinstance(item, dict)
+                    ],
+                    {
+                        "kind": "offset",
+                        "offsetSeconds": float(checkpoint_analysis.get("offsetSeconds", 0)),
+                    },
+                ]
             transcription = Transcription(
                 project_id=project.id,
                 source_job_id=job.id,

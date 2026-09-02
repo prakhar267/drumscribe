@@ -90,6 +90,15 @@ target, not the product release gate: the population is synthetic and single-kit
 the full-pipeline micro metric is below 90%, and closed hi-hat/cross-stick remain
 weak. See `docs/benchmarks/SUPPORTED_KIT_OAF_V24_90_TARGET.md`.
 
+The confidence-gated rhythm-completion hybrid subsequently reached 97.35%
+six-family micro F1 and 96.80% detailed-class micro F1 at 20 ms on a new
+post-freeze 12-genre Holdout B. Every per-genre micro score was above 90%, and
+the same files scored 65.54% with Drum2Notes. However, the detailed-class macro
+F1 is 84.77%; crash, cross-stick, individual toms and open hi-hat remain below
+90%. The suite is deterministic, synthetic and single-kit, so it is a lab
+regression gate rather than a broad commercial-song estimate. See
+`docs/benchmarks/CROSS_GENRE_HOLDOUT_B_V2.md`.
+
 ## Model path
 
 1. Import E-GMD through `drumscribe-ml import-egmd` on dedicated training compute. Its official train, validation and test assignments are preserved, and every kit rendering of one performance stays in the same leakage group.
