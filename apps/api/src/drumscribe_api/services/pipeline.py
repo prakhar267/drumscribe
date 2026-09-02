@@ -195,6 +195,11 @@ class MusicEngineAdapter:
                 self.settings.adtof_command,
                 self.settings.adtof_model_version,
             ),
+            "drumscribe_hybrid": (
+                "DrumScribeHybridTranscriptionProvider",
+                self.settings.hybrid_command,
+                self.settings.hybrid_model_version,
+            ),
         }
         if selected in external:
             class_name, command, version = external[selected]

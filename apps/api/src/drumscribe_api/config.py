@@ -36,6 +36,8 @@ class Settings(BaseSettings):
     oaf_drums_model_version: str = "e-gmd-checkpoint"
     adtof_command: str | None = None
     adtof_model_version: str = "local-research"
+    hybrid_command: str | None = None
+    hybrid_model_version: str = "drumscribe-hybrid-v1"
 
     audioshake_api_url: str = "https://api.audioshake.ai"
     audioshake_api_key: SecretStr | None = None

@@ -1,0 +1,58 @@
+{
+  "createdAt": "2026-09-02T12:06:07.132148+00:00",
+  "policyFrozenBeforeHoldoutGeneration": true,
+  "referenceFilesRead": false,
+  "schemaVersion": 1,
+  "tracks": [
+    {
+      "events": 220,
+      "predictionSha256": "c589de789173425b175d289ce48b0692658093b4642b1bd60c9051335e4cf01d",
+      "track": "01-blackened-engine"
+    },
+    {
+      "events": 111,
+      "predictionSha256": "880ece6387e21c1323086dac0ee69ff2fe390f9424ca0fc4c255e9e8fb304e4a",
+      "track": "02-faultline"
+    },
+    {
+      "events": 172,
+      "predictionSha256": "17bccdb75a1fdf9999557375590a5a6a32d84dd3db288048e4e4468f02c93d13",
+      "track": "03-glass-hammer"
+    },
+    {
+      "events": 313,
+      "predictionSha256": "fd28027e5896a10d8ec6c273af39a135980f2aa1f089dcde1b41410ba133ed6e",
+      "track": "04-redline-blast"
+    },
+    {
+      "events": 41,
+      "predictionSha256": "acc1a8b2cdec7ac52347dc2fb8d62e698a9a55a72d02d5cf688eae2da83fab9e",
+      "track": "05-sunken-mass"
+    },
+    {
+      "events": 138,
+      "predictionSha256": "dfb61aa2bf3a591640b4813db2693c1a123bcfdf4ca79c6a3c92db157a2c12f6",
+      "track": "06-forged-groove"
+    },
+    {
+      "events": 209,
+      "predictionSha256": "f20e6ce35a7e0f6c1588799e0d939a493a6fb5a0bb4c9a8358c8b36810edc008",
+      "track": "07-static-foundry"
+    },
+    {
+      "events": 126,
+      "predictionSha256": "4100f926b85cf2164cd9290ee4d76ac02a8f8bff780c5720ac2e05b7f968da9e",
+      "track": "08-shifting-axis"
+    },
+    {
+      "events": 263,
+      "predictionSha256": "406865929ccb7917204df0836665b2a23466e9d119f4f1a0abf0b281b2f8649a",
+      "track": "09-ember-gallop"
+    },
+    {
+      "events": 199,
+      "predictionSha256": "2e738507661022ce768535a8d355878e7ae4228be1bf106796410807e7b23967",
+      "track": "10-cinder-dbeat"
+    }
+  ]
+}

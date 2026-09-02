@@ -179,3 +179,21 @@ class ADTOFResearchTranscriptionProvider(ExternalModelTranscriptionProvider):
         distribution_restrictions="Non-commercial use only; production activation is prohibited.",
         decision="Local accuracy experiments only; never a production provider.",
     )
+
+
+class DrumScribeHybridTranscriptionProvider(ExternalModelTranscriptionProvider):
+    """Frozen first-party ensemble/OaF hybrid for isolated drum stems."""
+
+    provider_id = "drumscribe-hybrid-v1"
+    license = ProviderLicense(
+        provider_id=provider_id,
+        status=LicenseStatus.UNRESOLVED,
+        code_license="proprietary DrumScribe clean-room implementation",
+        weights_license="first-party checkpoints; final model-card review pending",
+        training_data_license="Groove Dataset and MuldjordKit-derived licensed corpora",
+        attribution_required=True,
+        distribution_restrictions=(
+            "Research beta only until every training-data attribution and model card is approved."
+        ),
+        decision="Application-integrated research beta; production remains fail-closed.",
+    )

@@ -433,7 +433,7 @@ def generate_suite(args: argparse.Namespace) -> None:
         output / "suite-manifest.json",
         {
             "schemaVersion": 1,
-            "suite": "hard-metal-originals-v1",
+            "suite": getattr(args, "suite_name", "hard-metal-originals-v1"),
             "sealedAt": datetime.now(UTC).isoformat(),
             "referenceFrozenBeforePrediction": True,
             "rightsCleared": True,

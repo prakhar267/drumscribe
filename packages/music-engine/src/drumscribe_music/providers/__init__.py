@@ -2,6 +2,7 @@ from .commercial import CommercialProviderConfig
 from .demucs import DemucsAdapter
 from .external import (
     ADTOFResearchTranscriptionProvider,
+    DrumScribeHybridTranscriptionProvider,
     ExternalModelError,
     ExternalModelTranscriptionProvider,
     OaFDrumsTranscriptionProvider,
@@ -23,6 +24,7 @@ __all__ = [
     "CommercialProviderConfig",
     "DemucsAdapter",
     "ADTOFResearchTranscriptionProvider",
+    "DrumScribeHybridTranscriptionProvider",
     "ExternalModelError",
     "ExternalModelTranscriptionProvider",
     "MockBeatTrackingProvider",

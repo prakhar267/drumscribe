@@ -5,6 +5,7 @@ from types import SimpleNamespace
 import pytest
 from drumscribe_music import (
     ADTOFResearchTranscriptionProvider,
+    DrumScribeHybridTranscriptionProvider,
     OaFDrumsTranscriptionProvider,
     YourMT3PlusTranscriptionProvider,
 )
@@ -19,6 +20,7 @@ def research_engine() -> SimpleNamespace:
         YourMT3PlusTranscriptionProvider=YourMT3PlusTranscriptionProvider,
         OaFDrumsTranscriptionProvider=OaFDrumsTranscriptionProvider,
         ADTOFResearchTranscriptionProvider=ADTOFResearchTranscriptionProvider,
+        DrumScribeHybridTranscriptionProvider=DrumScribeHybridTranscriptionProvider,
     )
 
 
@@ -28,6 +30,12 @@ def research_engine() -> SimpleNamespace:
         ("yourmt3_plus", "yourmt3_command", YourMT3PlusTranscriptionProvider, "full_mix"),
         ("oaf_drums", "oaf_drums_command", OaFDrumsTranscriptionProvider, "drum_stem"),
         ("adtof", "adtof_command", ADTOFResearchTranscriptionProvider, "drum_stem"),
+        (
+            "drumscribe_hybrid",
+            "hybrid_command",
+            DrumScribeHybridTranscriptionProvider,
+            "drum_stem",
+        ),
     ],
 )
 def test_research_model_selection_uses_argv_without_a_shell(

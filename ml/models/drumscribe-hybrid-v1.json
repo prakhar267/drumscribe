@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "modelVersion": "drumscribe-hybrid-v1",
+  "architecture": "family-routed frozen ensemble plus clean-room supported-kit OaF",
+  "components": {
+    "continuousMetalFamilies": {
+      "families": ["CYMBAL", "HIHAT"],
+      "config": "ml/configs/groove-stacked-articulation-v16.json",
+      "configSha256": "bd2e0301ead04db134f556bd810314843d66b2b4dbd06189ee016b69ad07d6c9"
+    },
+    "discreteDrumFamilies": {
+      "families": ["KICK", "SNARE", "TAMBOURINE", "TOM"],
+      "checkpoint": "ml/models/supported-kit-oaf-v24.pt",
+      "checkpointSha256": "5615181475f36b3bad0888977333db739b1ddae425579c53797c6a816f8fc027",
+      "decoder": "ml/models/supported-kit-oaf-v24-demucs-subframe-decoder.json",
+      "decoderSha256": "54f5a02b463e5038a755ba2ef1425d6aca8e0f90b16564d1507804885369a779"
+    }
+  },
+  "calibration": {
+    "recordCount": 1,
+    "groupId": "ashes-opened-demucs-dev",
+    "referenceFilesFromHoldoutRead": false,
+    "purpose": "class-specific sub-frame onset correction after htdemucs_ft"
+  },
+  "freshHoldout": {
+    "suite": "supported-kit-hybrid-holdout-v1",
+    "suiteManifestSha256": "2bf3d8b1a1ec7f968b12b861ad2edb621f375c390f754cae91d6675027e8082d",
+    "predictionManifestSha256": "e3dcd03cd8f9e76010d4d06f8dd09f678896798c0136e7c2e31289fef3894804",
+    "resultSha256": "e600a19a57d8be2cb70d6442cba4308b43da68e0494f359490f9f6541aeca064",
+    "trackCount": 10,
+    "referenceEvents": 2391,
+    "family6MicroF1At20ms": 0.781257470714798,
+    "family6MacroF1At20ms": 0.752285799667853,
+    "family6MicroF1At50ms": 0.8085106382978723,
+    "comparisonTargetF1At20ms": 0.7464319695528069,
+    "comparisonTargetMet": true,
+    "marginPercentagePoints": 3.4825501161991124,
+    "postTestTuning": false
+  },
+  "scope": "MuldjordKit synthetic hard-metal full mixes after htdemucs_ft separation",
+  "productionApproved": false,
+  "licenseStatus": "needs_final_attribution_model_card_and_demucs_review",
+  "limitations": [
+    "This is a supported-kit synthetic holdout result, not an arbitrary commercial-song estimate.",
+    "The strict family score is 78.13%, not 90% or 99%.",
+    "Hi-hat recall remains the largest accuracy bottleneck.",
+    "The htdemucs_ft checkpoint and its training-data provenance are not commercially approved in this repository."
+  ]
+}

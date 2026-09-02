@@ -9,6 +9,7 @@ from drumscribe_music import (
     ADTOFResearchTranscriptionProvider,
     CommercialProviderConfig,
     DemucsAdapter,
+    DrumScribeHybridTranscriptionProvider,
     ExternalModelError,
     MockBeatTrackingProvider,
     MockDrumTranscriptionProvider,
@@ -205,6 +206,7 @@ def test_provider_registry_rejects_duplicate_ids():
         (YourMT3PlusTranscriptionProvider, "unresolved", "full_mix"),
         (OaFDrumsTranscriptionProvider, "unresolved", "drum_stem"),
         (ADTOFResearchTranscriptionProvider, "non_commercial", "drum_stem"),
+        (DrumScribeHybridTranscriptionProvider, "unresolved", "drum_stem"),
     ],
 )
 def test_external_research_models_are_license_gated(provider_class, license_status, input_kind):
