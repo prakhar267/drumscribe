@@ -37,6 +37,18 @@
     "marginPercentagePoints": 3.4825501161991124,
     "postTestTuning": false
   },
+  "postFreezeSoftSongProbe": {
+    "title": "Quiet Horizon",
+    "style": "soft-pop-ballad",
+    "result": "output/soft-song-holdout-v1-2026-09-02/benchmark-result.json",
+    "resultSha256": "4fadbef232b3e563216ca53439336d9578903168708523b235906c28ba5dead4",
+    "diagnosticSha256": "076df2f7c23bc560894a5be7875650c8341eadd54009d78250b5705a01bd9914",
+    "family6MicroF1At20ms": 0.5185185185185185,
+    "family6MicroF1At50ms": 0.562962962962963,
+    "cleanStemDiagnosticF1At20ms": 0.759493670886076,
+    "postTestTuning": false,
+    "assessment": "fails comparison target; quiet separation recall is the primary regression"
+  },
   "scope": "MuldjordKit synthetic hard-metal full mixes after htdemucs_ft separation",
   "productionApproved": false,
   "licenseStatus": "needs_final_attribution_model_card_and_demucs_review",

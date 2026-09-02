@@ -1,0 +1,558 @@
+{
+  "benchmark": {
+    "limitations": [
+      "This is one original synthetic soft-pop song rendered with the supported MuldjordKit.",
+      "One song is a regression probe, not a population estimate for commercial soft music.",
+      "Demucs checkpoint licensing remains unresolved for a commercial production launch."
+    ],
+    "name": "Quiet Horizon sealed original soft-pop holdout",
+    "postTestTuning": false,
+    "predictionManifestReferenceFilesRead": false,
+    "referenceFrozenBeforePrediction": true,
+    "rightsCleared": true,
+    "status": "sealed_post_freeze_holdout"
+  },
+  "createdAt": "2026-09-02T12:49:52.407529+00:00",
+  "hashes": {
+    "prediction": "642924ca93353c42bfe4ff03754619ba1e5f9d095dc2b1e8baf8635b1d416c47",
+    "predictionManifest": "ba01d49e5d037e478c9191e7b6aa0d898523df6eaed85cbea9cf0f5019d5d4c9",
+    "reference": "ede95f022c2c6dd9e24b651a6b2f590698ec5242a95e6da128dca118679d5a02",
+    "suiteManifest": "549bd1b9440ec67ad7397e70cb83d5c6483b3061c33ce2aa9c68228b11a64645"
+  },
+  "predictedEvents": 41,
+  "referenceEvents": 94,
+  "schemaVersion": 1,
+  "scores": {
+    "20ms": {
+      "core3": {
+        "classAgnostic": {
+          "f1": 0.5420560747663551,
+          "fn": 44,
+          "fp": 5,
+          "precision": 0.8529411764705882,
+          "recall": 0.3972602739726027,
+          "tp": 29
+        },
+        "meanAbsoluteTimingErrorMs": 10.803487684729166,
+        "medianAbsoluteTimingErrorMs": 10.358428571428657,
+        "micro": {
+          "f1": 0.5420560747663551,
+          "fn": 44,
+          "fp": 5,
+          "precision": 0.8529411764705882,
+          "recall": 0.3972602739726027,
+          "tp": 29
+        },
+        "perClass": {
+          "HIHAT": {
+            "f1": 0.32653061224489793,
+            "fn": 32,
+            "fp": 1,
+            "meanAbsoluteTimingErrorMs": 5.555517857142922,
+            "precision": 0.8888888888888888,
+            "recall": 0.2,
+            "support": 40,
+            "tp": 8
+          },
+          "KICK": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "meanAbsoluteTimingErrorMs": 11.932952380952505,
+            "precision": 1.0,
+            "recall": 1.0,
+            "support": 18,
+            "tp": 18
+          },
+          "SNARE": {
+            "f1": 0.2727272727272727,
+            "fn": 12,
+            "fp": 4,
+            "meanAbsoluteTimingErrorMs": 18.021285714285778,
+            "precision": 0.42857142857142855,
+            "recall": 0.2,
+            "support": 15,
+            "tp": 3
+          }
+        },
+        "predictedEvents": 34,
+        "referenceEvents": 73,
+        "supportedClassCount": 3,
+        "supportedMacroF1": 0.5330859616573902
+      },
+      "detailed14": {
+        "classAgnostic": {
+          "f1": 0.5481481481481482,
+          "fn": 57,
+          "fp": 4,
+          "precision": 0.9024390243902439,
+          "recall": 0.39361702127659576,
+          "tp": 37
+        },
+        "meanAbsoluteTimingErrorMs": 10.28842857142867,
+        "medianAbsoluteTimingErrorMs": 10.471642857143193,
+        "micro": {
+          "f1": 0.4444444444444444,
+          "fn": 64,
+          "fp": 11,
+          "precision": 0.7317073170731707,
+          "recall": 0.3191489361702128,
+          "tp": 30
+        },
+        "perClass": {
+          "CLOSED_HIHAT": {
+            "f1": 0.14634146341463414,
+            "fn": 35,
+            "fp": 0,
+            "meanAbsoluteTimingErrorMs": 5.253142857142734,
+            "precision": 1.0,
+            "recall": 0.07894736842105263,
+            "support": 38,
+            "tp": 3
+          },
+          "CRASH": {
+            "f1": 0.8,
+            "fn": 0,
+            "fp": 1,
+            "meanAbsoluteTimingErrorMs": 2.721285714285218,
+            "precision": 0.6666666666666666,
+            "recall": 1.0,
+            "support": 2,
+            "tp": 2
+          },
+          "CROSS_STICK": {
+            "f1": 0.0,
+            "fn": 1,
+            "fp": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "support": 1,
+            "tp": 0
+          },
+          "HIGH_TOM": {
+            "f1": 0.0,
+            "fn": 1,
+            "fp": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "support": 1,
+            "tp": 0
+          },
+          "KICK": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "meanAbsoluteTimingErrorMs": 11.932952380952505,
+            "precision": 1.0,
+            "recall": 1.0,
+            "support": 18,
+            "tp": 18
+          },
+          "LOW_TOM": {
+            "f1": 0.0,
+            "fn": 1,
+            "fp": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "support": 1,
+            "tp": 0
+          },
+          "MID_TOM": {
+            "f1": 0.0,
+            "fn": 1,
+            "fp": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "support": 1,
+            "tp": 0
+          },
+          "OPEN_HIHAT": {
+            "f1": 0.0,
+            "fn": 2,
+            "fp": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "support": 2,
+            "tp": 0
+          },
+          "PEDAL_HIHAT": {
+            "f1": 0.0,
+            "fn": 0,
+            "fp": 6,
+            "precision": 0.0,
+            "recall": 0.0,
+            "support": 0,
+            "tp": 0
+          },
+          "RIDE": {
+            "f1": 0.4,
+            "fn": 12,
+            "fp": 0,
+            "meanAbsoluteTimingErrorMs": 4.6484642857147485,
+            "precision": 1.0,
+            "recall": 0.25,
+            "support": 16,
+            "tp": 4
+          },
+          "SNARE": {
+            "f1": 0.2857142857142857,
+            "fn": 11,
+            "fp": 4,
+            "meanAbsoluteTimingErrorMs": 18.021285714285778,
+            "precision": 0.42857142857142855,
+            "recall": 0.21428571428571427,
+            "support": 14,
+            "tp": 3
+          }
+        },
+        "predictedEvents": 41,
+        "referenceEvents": 94,
+        "supportedClassCount": 10,
+        "supportedMacroF1": 0.263205574912892
+      },
+      "family6": {
+        "classAgnostic": {
+          "f1": 0.5481481481481482,
+          "fn": 57,
+          "fp": 4,
+          "precision": 0.9024390243902439,
+          "recall": 0.39361702127659576,
+          "tp": 37
+        },
+        "meanAbsoluteTimingErrorMs": 9.63821632653072,
+        "medianAbsoluteTimingErrorMs": 9.63700000000145,
+        "micro": {
+          "f1": 0.5185185185185185,
+          "fn": 59,
+          "fp": 6,
+          "precision": 0.8536585365853658,
+          "recall": 0.3723404255319149,
+          "tp": 35
+        },
+        "perClass": {
+          "CYMBAL": {
+            "f1": 0.48,
+            "fn": 12,
+            "fp": 1,
+            "meanAbsoluteTimingErrorMs": 4.0060714285715715,
+            "precision": 0.8571428571428571,
+            "recall": 0.3333333333333333,
+            "support": 18,
+            "tp": 6
+          },
+          "HIHAT": {
+            "f1": 0.32653061224489793,
+            "fn": 32,
+            "fp": 1,
+            "meanAbsoluteTimingErrorMs": 5.555517857142922,
+            "precision": 0.8888888888888888,
+            "recall": 0.2,
+            "support": 40,
+            "tp": 8
+          },
+          "KICK": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "meanAbsoluteTimingErrorMs": 11.932952380952505,
+            "precision": 1.0,
+            "recall": 1.0,
+            "support": 18,
+            "tp": 18
+          },
+          "SNARE": {
+            "f1": 0.2727272727272727,
+            "fn": 12,
+            "fp": 4,
+            "meanAbsoluteTimingErrorMs": 18.021285714285778,
+            "precision": 0.42857142857142855,
+            "recall": 0.2,
+            "support": 15,
+            "tp": 3
+          },
+          "TOM": {
+            "f1": 0.0,
+            "fn": 3,
+            "fp": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "support": 3,
+            "tp": 0
+          }
+        },
+        "predictedEvents": 41,
+        "referenceEvents": 94,
+        "supportedClassCount": 5,
+        "supportedMacroF1": 0.41585157699443415
+      }
+    },
+    "50ms": {
+      "core3": {
+        "classAgnostic": {
+          "f1": 0.616822429906542,
+          "fn": 40,
+          "fp": 1,
+          "precision": 0.9705882352941176,
+          "recall": 0.4520547945205479,
+          "tp": 33
+        },
+        "meanAbsoluteTimingErrorMs": 11.905330357142978,
+        "medianAbsoluteTimingErrorMs": 11.265000000000303,
+        "micro": {
+          "f1": 0.5981308411214953,
+          "fn": 41,
+          "fp": 2,
+          "precision": 0.9411764705882353,
+          "recall": 0.4383561643835616,
+          "tp": 32
+        },
+        "perClass": {
+          "HIHAT": {
+            "f1": 0.32653061224489793,
+            "fn": 32,
+            "fp": 1,
+            "meanAbsoluteTimingErrorMs": 5.555517857142922,
+            "precision": 0.8888888888888888,
+            "recall": 0.2,
+            "support": 40,
+            "tp": 8
+          },
+          "KICK": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "meanAbsoluteTimingErrorMs": 11.932952380952505,
+            "precision": 1.0,
+            "recall": 1.0,
+            "support": 18,
+            "tp": 18
+          },
+          "SNARE": {
+            "f1": 0.5454545454545454,
+            "fn": 9,
+            "fp": 1,
+            "meanAbsoluteTimingErrorMs": 20.288880952381128,
+            "precision": 0.8571428571428571,
+            "recall": 0.4,
+            "support": 15,
+            "tp": 6
+          }
+        },
+        "predictedEvents": 34,
+        "referenceEvents": 73,
+        "supportedClassCount": 3,
+        "supportedMacroF1": 0.6239950525664811
+      },
+      "detailed14": {
+        "classAgnostic": {
+          "f1": 0.6074074074074074,
+          "fn": 53,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 0.43617021276595747,
+          "tp": 41
+        },
+        "meanAbsoluteTimingErrorMs": 11.403705627705742,
+        "medianAbsoluteTimingErrorMs": 11.224714285713588,
+        "micro": {
+          "f1": 0.4888888888888889,
+          "fn": 61,
+          "fp": 8,
+          "precision": 0.8048780487804879,
+          "recall": 0.35106382978723405,
+          "tp": 33
+        },
+        "perClass": {
+          "CLOSED_HIHAT": {
+            "f1": 0.14634146341463414,
+            "fn": 35,
+            "fp": 0,
+            "meanAbsoluteTimingErrorMs": 5.253142857142734,
+            "precision": 1.0,
+            "recall": 0.07894736842105263,
+            "support": 38,
+            "tp": 3
+          },
+          "CRASH": {
+            "f1": 0.8,
+            "fn": 0,
+            "fp": 1,
+            "meanAbsoluteTimingErrorMs": 2.721285714285218,
+            "precision": 0.6666666666666666,
+            "recall": 1.0,
+            "support": 2,
+            "tp": 2
+          },
+          "CROSS_STICK": {
+            "f1": 0.0,
+            "fn": 1,
+            "fp": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "support": 1,
+            "tp": 0
+          },
+          "HIGH_TOM": {
+            "f1": 0.0,
+            "fn": 1,
+            "fp": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "support": 1,
+            "tp": 0
+          },
+          "KICK": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "meanAbsoluteTimingErrorMs": 11.932952380952505,
+            "precision": 1.0,
+            "recall": 1.0,
+            "support": 18,
+            "tp": 18
+          },
+          "LOW_TOM": {
+            "f1": 0.0,
+            "fn": 1,
+            "fp": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "support": 1,
+            "tp": 0
+          },
+          "MID_TOM": {
+            "f1": 0.0,
+            "fn": 1,
+            "fp": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "support": 1,
+            "tp": 0
+          },
+          "OPEN_HIHAT": {
+            "f1": 0.0,
+            "fn": 2,
+            "fp": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "support": 2,
+            "tp": 0
+          },
+          "PEDAL_HIHAT": {
+            "f1": 0.0,
+            "fn": 0,
+            "fp": 6,
+            "precision": 0.0,
+            "recall": 0.0,
+            "support": 0,
+            "tp": 0
+          },
+          "RIDE": {
+            "f1": 0.4,
+            "fn": 12,
+            "fp": 0,
+            "meanAbsoluteTimingErrorMs": 4.6484642857147485,
+            "precision": 1.0,
+            "recall": 0.25,
+            "support": 16,
+            "tp": 4
+          },
+          "SNARE": {
+            "f1": 0.5714285714285714,
+            "fn": 8,
+            "fp": 1,
+            "meanAbsoluteTimingErrorMs": 20.288880952381128,
+            "precision": 0.8571428571428571,
+            "recall": 0.42857142857142855,
+            "support": 14,
+            "tp": 6
+          }
+        },
+        "predictedEvents": 41,
+        "referenceEvents": 94,
+        "supportedClassCount": 10,
+        "supportedMacroF1": 0.29177700348432056
+      },
+      "family6": {
+        "classAgnostic": {
+          "f1": 0.6074074074074074,
+          "fn": 53,
+          "fp": 0,
+          "precision": 1.0,
+          "recall": 0.43617021276595747,
+          "tp": 41
+        },
+        "meanAbsoluteTimingErrorMs": 10.658078947368544,
+        "medianAbsoluteTimingErrorMs": 10.358285714285875,
+        "micro": {
+          "f1": 0.562962962962963,
+          "fn": 56,
+          "fp": 3,
+          "precision": 0.926829268292683,
+          "recall": 0.40425531914893614,
+          "tp": 38
+        },
+        "perClass": {
+          "CYMBAL": {
+            "f1": 0.48,
+            "fn": 12,
+            "fp": 1,
+            "meanAbsoluteTimingErrorMs": 4.0060714285715715,
+            "precision": 0.8571428571428571,
+            "recall": 0.3333333333333333,
+            "support": 18,
+            "tp": 6
+          },
+          "HIHAT": {
+            "f1": 0.32653061224489793,
+            "fn": 32,
+            "fp": 1,
+            "meanAbsoluteTimingErrorMs": 5.555517857142922,
+            "precision": 0.8888888888888888,
+            "recall": 0.2,
+            "support": 40,
+            "tp": 8
+          },
+          "KICK": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "meanAbsoluteTimingErrorMs": 11.932952380952505,
+            "precision": 1.0,
+            "recall": 1.0,
+            "support": 18,
+            "tp": 18
+          },
+          "SNARE": {
+            "f1": 0.5454545454545454,
+            "fn": 9,
+            "fp": 1,
+            "meanAbsoluteTimingErrorMs": 20.288880952381128,
+            "precision": 0.8571428571428571,
+            "recall": 0.4,
+            "support": 15,
+            "tp": 6
+          },
+          "TOM": {
+            "f1": 0.0,
+            "fn": 3,
+            "fp": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "support": 3,
+            "tp": 0
+          }
+        },
+        "predictedEvents": 41,
+        "referenceEvents": 94,
+        "supportedClassCount": 5,
+        "supportedMacroF1": 0.47039703153988865
+      }
+    }
+  },
+  "track": {
+    "bpm": 84.0,
+    "slug": "quiet-horizon-soft-ballad",
+    "title": "Quiet Horizon"
+  }
+}

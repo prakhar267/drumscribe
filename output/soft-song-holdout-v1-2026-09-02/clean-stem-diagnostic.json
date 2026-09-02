@@ -1,0 +1,550 @@
+{
+  "createdAt": "2026-09-02T12:50:29.473370+00:00",
+  "hashes": {
+    "prediction": "b22a9e966b55a15cc7dc5e959828af6d2d4a81ef3b7b1387356e3d24d5a0dbfb",
+    "reference": "ede95f022c2c6dd9e24b651a6b2f590698ec5242a95e6da128dca118679d5a02"
+  },
+  "kind": "post-score-clean-stem-diagnostic",
+  "modelOrDecoderChanged": false,
+  "notPrimaryHoldoutScore": true,
+  "performedAfterPrimaryScore": true,
+  "predictedEvents": 64,
+  "referenceEvents": 94,
+  "schemaVersion": 1,
+  "scores": {
+    "20ms": {
+      "core3": {
+        "classAgnostic": {
+          "f1": 0.7058823529411765,
+          "fn": 31,
+          "fp": 4,
+          "precision": 0.9130434782608695,
+          "recall": 0.5753424657534246,
+          "tp": 42
+        },
+        "meanAbsoluteTimingErrorMs": 8.958394557823189,
+        "medianAbsoluteTimingErrorMs": 9.503714285713727,
+        "micro": {
+          "f1": 0.7058823529411765,
+          "fn": 31,
+          "fp": 4,
+          "precision": 0.9130434782608695,
+          "recall": 0.5753424657534246,
+          "tp": 42
+        },
+        "perClass": {
+          "HIHAT": {
+            "f1": 0.48148148148148145,
+            "fn": 27,
+            "fp": 1,
+            "meanAbsoluteTimingErrorMs": 5.939241758241975,
+            "precision": 0.9285714285714286,
+            "recall": 0.325,
+            "support": 40,
+            "tp": 13
+          },
+          "KICK": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "meanAbsoluteTimingErrorMs": 9.715730158730402,
+            "precision": 1.0,
+            "recall": 1.0,
+            "support": 18,
+            "tp": 18
+          },
+          "SNARE": {
+            "f1": 0.7586206896551724,
+            "fn": 4,
+            "fp": 3,
+            "meanAbsoluteTimingErrorMs": 11.287207792207367,
+            "precision": 0.7857142857142857,
+            "recall": 0.7333333333333333,
+            "support": 15,
+            "tp": 11
+          }
+        },
+        "predictedEvents": 46,
+        "referenceEvents": 73,
+        "supportedClassCount": 3,
+        "supportedMacroF1": 0.746700723712218
+      },
+      "detailed14": {
+        "classAgnostic": {
+          "f1": 0.7721518987341772,
+          "fn": 33,
+          "fp": 3,
+          "precision": 0.953125,
+          "recall": 0.648936170212766,
+          "tp": 61
+        },
+        "meanAbsoluteTimingErrorMs": 7.457005714285659,
+        "medianAbsoluteTimingErrorMs": 6.7824285714293,
+        "micro": {
+          "f1": 0.6329113924050633,
+          "fn": 44,
+          "fp": 14,
+          "precision": 0.78125,
+          "recall": 0.5319148936170213,
+          "tp": 50
+        },
+        "perClass": {
+          "CLOSED_HIHAT": {
+            "f1": 0.1,
+            "fn": 36,
+            "fp": 0,
+            "meanAbsoluteTimingErrorMs": 3.061214285713376,
+            "precision": 1.0,
+            "recall": 0.05263157894736842,
+            "support": 38,
+            "tp": 2
+          },
+          "CRASH": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "meanAbsoluteTimingErrorMs": 2.721285714285218,
+            "precision": 1.0,
+            "recall": 1.0,
+            "support": 2,
+            "tp": 2
+          },
+          "CROSS_STICK": {
+            "f1": 0.0,
+            "fn": 1,
+            "fp": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "support": 1,
+            "tp": 0
+          },
+          "HIGH_TOM": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "meanAbsoluteTimingErrorMs": 9.863714285714309,
+            "precision": 1.0,
+            "recall": 1.0,
+            "support": 1,
+            "tp": 1
+          },
+          "KICK": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "meanAbsoluteTimingErrorMs": 9.715730158730402,
+            "precision": 1.0,
+            "recall": 1.0,
+            "support": 18,
+            "tp": 18
+          },
+          "LOW_TOM": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "meanAbsoluteTimingErrorMs": 1.9278571428564817,
+            "precision": 1.0,
+            "recall": 1.0,
+            "support": 1,
+            "tp": 1
+          },
+          "MID_TOM": {
+            "f1": 0.0,
+            "fn": 1,
+            "fp": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "support": 1,
+            "tp": 0
+          },
+          "OPEN_HIHAT": {
+            "f1": 0.6666666666666666,
+            "fn": 1,
+            "fp": 0,
+            "meanAbsoluteTimingErrorMs": 6.462285714286864,
+            "precision": 1.0,
+            "recall": 0.5,
+            "support": 2,
+            "tp": 1
+          },
+          "PEDAL_HIHAT": {
+            "f1": 0.0,
+            "fn": 0,
+            "fp": 11,
+            "precision": 0.0,
+            "recall": 0.0,
+            "support": 0,
+            "tp": 0
+          },
+          "RIDE": {
+            "f1": 0.9333333333333333,
+            "fn": 2,
+            "fp": 0,
+            "meanAbsoluteTimingErrorMs": 3.1420714285714166,
+            "precision": 1.0,
+            "recall": 0.875,
+            "support": 16,
+            "tp": 14
+          },
+          "SNARE": {
+            "f1": 0.7857142857142857,
+            "fn": 3,
+            "fp": 3,
+            "meanAbsoluteTimingErrorMs": 11.287207792207367,
+            "precision": 0.7857142857142857,
+            "recall": 0.7857142857142857,
+            "support": 14,
+            "tp": 11
+          }
+        },
+        "predictedEvents": 64,
+        "referenceEvents": 94,
+        "supportedClassCount": 10,
+        "supportedMacroF1": 0.6485714285714286
+      },
+      "family6": {
+        "classAgnostic": {
+          "f1": 0.7721518987341772,
+          "fn": 33,
+          "fp": 3,
+          "precision": 0.953125,
+          "recall": 0.648936170212766,
+          "tp": 61
+        },
+        "meanAbsoluteTimingErrorMs": 7.2912619047619165,
+        "medianAbsoluteTimingErrorMs": 6.7824285714293,
+        "micro": {
+          "f1": 0.759493670886076,
+          "fn": 34,
+          "fp": 4,
+          "precision": 0.9375,
+          "recall": 0.6382978723404256,
+          "tp": 60
+        },
+        "perClass": {
+          "CYMBAL": {
+            "f1": 0.9411764705882353,
+            "fn": 2,
+            "fp": 0,
+            "meanAbsoluteTimingErrorMs": 3.089473214285642,
+            "precision": 1.0,
+            "recall": 0.8888888888888888,
+            "support": 18,
+            "tp": 16
+          },
+          "HIHAT": {
+            "f1": 0.48148148148148145,
+            "fn": 27,
+            "fp": 1,
+            "meanAbsoluteTimingErrorMs": 5.939241758241975,
+            "precision": 0.9285714285714286,
+            "recall": 0.325,
+            "support": 40,
+            "tp": 13
+          },
+          "KICK": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "meanAbsoluteTimingErrorMs": 9.715730158730402,
+            "precision": 1.0,
+            "recall": 1.0,
+            "support": 18,
+            "tp": 18
+          },
+          "SNARE": {
+            "f1": 0.7586206896551724,
+            "fn": 4,
+            "fp": 3,
+            "meanAbsoluteTimingErrorMs": 11.287207792207367,
+            "precision": 0.7857142857142857,
+            "recall": 0.7333333333333333,
+            "support": 15,
+            "tp": 11
+          },
+          "TOM": {
+            "f1": 0.8,
+            "fn": 1,
+            "fp": 0,
+            "meanAbsoluteTimingErrorMs": 5.895785714285395,
+            "precision": 1.0,
+            "recall": 0.6666666666666666,
+            "support": 3,
+            "tp": 2
+          }
+        },
+        "predictedEvents": 64,
+        "referenceEvents": 94,
+        "supportedClassCount": 5,
+        "supportedMacroF1": 0.7962557283449778
+      }
+    },
+    "50ms": {
+      "core3": {
+        "classAgnostic": {
+          "f1": 0.7394957983193278,
+          "fn": 29,
+          "fp": 2,
+          "precision": 0.9565217391304348,
+          "recall": 0.6027397260273972,
+          "tp": 44
+        },
+        "meanAbsoluteTimingErrorMs": 9.686428571428634,
+        "medianAbsoluteTimingErrorMs": 9.59650000000023,
+        "micro": {
+          "f1": 0.7394957983193278,
+          "fn": 29,
+          "fp": 2,
+          "precision": 0.9565217391304348,
+          "recall": 0.6027397260273972,
+          "tp": 44
+        },
+        "perClass": {
+          "HIHAT": {
+            "f1": 0.48148148148148145,
+            "fn": 27,
+            "fp": 1,
+            "meanAbsoluteTimingErrorMs": 5.939241758241975,
+            "precision": 0.9285714285714286,
+            "recall": 0.325,
+            "support": 40,
+            "tp": 13
+          },
+          "KICK": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "meanAbsoluteTimingErrorMs": 9.715730158730402,
+            "precision": 1.0,
+            "recall": 1.0,
+            "support": 18,
+            "tp": 18
+          },
+          "SNARE": {
+            "f1": 0.896551724137931,
+            "fn": 2,
+            "fp": 1,
+            "meanAbsoluteTimingErrorMs": 13.393043956043615,
+            "precision": 0.9285714285714286,
+            "recall": 0.8666666666666667,
+            "support": 15,
+            "tp": 13
+          }
+        },
+        "predictedEvents": 46,
+        "referenceEvents": 73,
+        "supportedClassCount": 3,
+        "supportedMacroF1": 0.7926777352064709
+      },
+      "detailed14": {
+        "classAgnostic": {
+          "f1": 0.7974683544303798,
+          "fn": 31,
+          "fp": 1,
+          "precision": 0.984375,
+          "recall": 0.6702127659574468,
+          "tp": 63
+        },
+        "meanAbsoluteTimingErrorMs": 8.13078021978017,
+        "medianAbsoluteTimingErrorMs": 7.235857142857238,
+        "micro": {
+          "f1": 0.6582278481012658,
+          "fn": 42,
+          "fp": 12,
+          "precision": 0.8125,
+          "recall": 0.5531914893617021,
+          "tp": 52
+        },
+        "perClass": {
+          "CLOSED_HIHAT": {
+            "f1": 0.1,
+            "fn": 36,
+            "fp": 0,
+            "meanAbsoluteTimingErrorMs": 3.061214285713376,
+            "precision": 1.0,
+            "recall": 0.05263157894736842,
+            "support": 38,
+            "tp": 2
+          },
+          "CRASH": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "meanAbsoluteTimingErrorMs": 2.721285714285218,
+            "precision": 1.0,
+            "recall": 1.0,
+            "support": 2,
+            "tp": 2
+          },
+          "CROSS_STICK": {
+            "f1": 0.0,
+            "fn": 1,
+            "fp": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "support": 1,
+            "tp": 0
+          },
+          "HIGH_TOM": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "meanAbsoluteTimingErrorMs": 9.863714285714309,
+            "precision": 1.0,
+            "recall": 1.0,
+            "support": 1,
+            "tp": 1
+          },
+          "KICK": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "meanAbsoluteTimingErrorMs": 9.715730158730402,
+            "precision": 1.0,
+            "recall": 1.0,
+            "support": 18,
+            "tp": 18
+          },
+          "LOW_TOM": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "meanAbsoluteTimingErrorMs": 1.9278571428564817,
+            "precision": 1.0,
+            "recall": 1.0,
+            "support": 1,
+            "tp": 1
+          },
+          "MID_TOM": {
+            "f1": 0.0,
+            "fn": 1,
+            "fp": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "support": 1,
+            "tp": 0
+          },
+          "OPEN_HIHAT": {
+            "f1": 0.6666666666666666,
+            "fn": 1,
+            "fp": 0,
+            "meanAbsoluteTimingErrorMs": 6.462285714286864,
+            "precision": 1.0,
+            "recall": 0.5,
+            "support": 2,
+            "tp": 1
+          },
+          "PEDAL_HIHAT": {
+            "f1": 0.0,
+            "fn": 0,
+            "fp": 11,
+            "precision": 0.0,
+            "recall": 0.0,
+            "support": 0,
+            "tp": 0
+          },
+          "RIDE": {
+            "f1": 0.9333333333333333,
+            "fn": 2,
+            "fp": 0,
+            "meanAbsoluteTimingErrorMs": 3.1420714285714166,
+            "precision": 1.0,
+            "recall": 0.875,
+            "support": 16,
+            "tp": 14
+          },
+          "SNARE": {
+            "f1": 0.9285714285714286,
+            "fn": 1,
+            "fp": 1,
+            "meanAbsoluteTimingErrorMs": 13.393043956043615,
+            "precision": 0.9285714285714286,
+            "recall": 0.9285714285714286,
+            "support": 14,
+            "tp": 13
+          }
+        },
+        "predictedEvents": 64,
+        "referenceEvents": 94,
+        "supportedClassCount": 10,
+        "supportedMacroF1": 0.6628571428571428
+      },
+      "family6": {
+        "classAgnostic": {
+          "f1": 0.7974683544303798,
+          "fn": 31,
+          "fp": 1,
+          "precision": 0.984375,
+          "recall": 0.6702127659574468,
+          "tp": 63
+        },
+        "meanAbsoluteTimingErrorMs": 7.861709677419371,
+        "medianAbsoluteTimingErrorMs": 6.988571428571788,
+        "micro": {
+          "f1": 0.7848101265822784,
+          "fn": 32,
+          "fp": 2,
+          "precision": 0.96875,
+          "recall": 0.6595744680851063,
+          "tp": 62
+        },
+        "perClass": {
+          "CYMBAL": {
+            "f1": 0.9411764705882353,
+            "fn": 2,
+            "fp": 0,
+            "meanAbsoluteTimingErrorMs": 3.089473214285642,
+            "precision": 1.0,
+            "recall": 0.8888888888888888,
+            "support": 18,
+            "tp": 16
+          },
+          "HIHAT": {
+            "f1": 0.48148148148148145,
+            "fn": 27,
+            "fp": 1,
+            "meanAbsoluteTimingErrorMs": 5.939241758241975,
+            "precision": 0.9285714285714286,
+            "recall": 0.325,
+            "support": 40,
+            "tp": 13
+          },
+          "KICK": {
+            "f1": 1.0,
+            "fn": 0,
+            "fp": 0,
+            "meanAbsoluteTimingErrorMs": 9.715730158730402,
+            "precision": 1.0,
+            "recall": 1.0,
+            "support": 18,
+            "tp": 18
+          },
+          "SNARE": {
+            "f1": 0.896551724137931,
+            "fn": 2,
+            "fp": 1,
+            "meanAbsoluteTimingErrorMs": 13.393043956043615,
+            "precision": 0.9285714285714286,
+            "recall": 0.8666666666666667,
+            "support": 15,
+            "tp": 13
+          },
+          "TOM": {
+            "f1": 0.8,
+            "fn": 1,
+            "fp": 0,
+            "meanAbsoluteTimingErrorMs": 5.895785714285395,
+            "precision": 1.0,
+            "recall": 0.6666666666666666,
+            "support": 3,
+            "tp": 2
+          }
+        },
+        "predictedEvents": 64,
+        "referenceEvents": 94,
+        "supportedClassCount": 5,
+        "supportedMacroF1": 0.8238419352415296
+      }
+    }
+  }
+}

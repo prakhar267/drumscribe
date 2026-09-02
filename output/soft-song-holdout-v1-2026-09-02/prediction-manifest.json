@@ -1,0 +1,8 @@
+{
+  "createdAt": "2026-09-02T12:49:48.714943+00:00",
+  "drumStemSha256": "41fdf79adeff67685ebddd226922124f1065fae14ab06cb10b4666dca80706e7",
+  "modelPolicyChangedAfterPreviousHoldout": false,
+  "predictionSha256": "642924ca93353c42bfe4ff03754619ba1e5f9d095dc2b1e8baf8635b1d416c47",
+  "referenceFilesRead": false,
+  "schemaVersion": 1
+}
