@@ -233,7 +233,7 @@ def test_calibration_and_training_metadata_are_versioned(tmp_path):
 
 
 def test_binary_focal_loss_preserves_bce_at_zero_and_downweights_easy_frames():
-    import torch
+    torch = pytest.importorskip("torch")
     import torch.nn.functional as functional
 
     logits = torch.tensor([[5.0, -5.0], [0.2, -0.2]])
