@@ -58,6 +58,7 @@ class TrainingConfig:
     positive_weight_exponent: float = 1.0
     validation_family_competition: bool = False
     onset_class_loss_multipliers: dict[str, float] | None = None
+    onset_focal_gamma: float = 0.0
 
     def __post_init__(self) -> None:
         if not self.model_version.strip() or "/" in self.model_version:
@@ -110,6 +111,8 @@ class TrainingConfig:
                 for value in self.onset_class_loss_multipliers.values()
             ):
                 raise TrainingError("onset class loss multipliers must be finite and in (0, 10]")
+        if not math.isfinite(self.onset_focal_gamma) or not 0 <= self.onset_focal_gamma <= 5:
+            raise TrainingError("onset focal gamma must be between zero and five")
 
     @classmethod
     def load(cls, path: Path) -> TrainingConfig:
@@ -465,11 +468,11 @@ def run_training(config: TrainingConfig) -> Path:
                 ).to(device)
                 velocity_tensor = torch.from_numpy(velocity_batch).to(device)
                 valid_tensor = torch.from_numpy(valid_batch).to(device)
-                onset_losses = functional.binary_cross_entropy_with_logits(
+                onset_losses = _binary_focal_loss_with_logits(
                     onset_logits,
                     loss_onsets,
                     pos_weight=positive_weights,
-                    reduction="none",
+                    gamma=config.onset_focal_gamma,
                 )
                 onset_losses = onset_losses * onset_class_loss_multipliers
                 onset_loss = (onset_losses * valid_tensor).sum() / (
@@ -885,6 +888,29 @@ def _mixup_training_batch(
     mixed_velocities = coefficient * velocities + inverse * velocities[permutation]
     mixed_valid = np.maximum(valid, valid[permutation])
     return mixed_features, mixed_onsets, mixed_velocities, mixed_valid
+
+
+def _binary_focal_loss_with_logits(logits, targets, *, pos_weight, gamma: float):
+    """Return unreduced BCE focal loss while retaining positive-class balancing.
+
+    ``gamma=0`` is exactly the historical weighted BCE objective. Positive gamma
+    progressively discounts already-correct frames so rare, difficult onsets and
+    confusing false alarms contribute more of each optimizer update.
+    """
+    import torch
+    import torch.nn.functional as functional
+
+    losses = functional.binary_cross_entropy_with_logits(
+        logits,
+        targets,
+        pos_weight=pos_weight,
+        reduction="none",
+    )
+    if gamma == 0:
+        return losses
+    probabilities = torch.sigmoid(logits)
+    target_probabilities = probabilities * targets + (1 - probabilities) * (1 - targets)
+    return losses * (1 - target_probabilities).pow(gamma)
 
 
 def _dilate_batched_targets(targets: np.ndarray, tolerance: int) -> np.ndarray:

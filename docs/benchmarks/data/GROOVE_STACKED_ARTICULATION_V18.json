@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "modelVersion": "groove-stacked-articulation-v18",
+  "completedAt": "2026-09-04",
+  "config": {
+    "path": "ml/configs/groove-stacked-articulation-v18.json",
+    "sha256": "72348715dfee13de8caabb3a6943c5b6ffb561f5b35627faf9e3352edc341e23"
+  },
+  "decoder": {
+    "family": "HIHAT",
+    "sameFrameOnly": true,
+    "normalizedLogitMargin": 1.25
+  },
+  "validation": {
+    "split": "validation",
+    "recordCount": 120,
+    "preparedDatasetSha256": "9ef041078b1ffd41965b9fabf1933606b5bc86185f28c5f3c57f1348afaf1426",
+    "v17SupportedMacroF1": 0.8971346853574887,
+    "v18SupportedMacroF1": 0.8975411469785745,
+    "v17MicroF1": 0.9002905944695008,
+    "v18MicroF1": 0.9008198123511376
+  },
+  "grooveGenreTest": {
+    "status": "opened_test_split_comparative_detector_benchmark",
+    "recordCount": 100,
+    "scoredAudioSeconds": 1123.1687981859411,
+    "v17DetailedMicroF1At50ms": 0.9189254306710035,
+    "v18DetailedMicroF1At50ms": 0.9195055773289117,
+    "v17FamilyMicroF1At50ms": 0.9251897361763642,
+    "v18FamilyMicroF1At50ms": 0.9257763038890564,
+    "affectedClassesAt50ms": {
+      "CLOSED_HIHAT": {"v17": 0.9430548163916977, "v18": 0.943222143364088},
+      "OPEN_HIHAT": {"v17": 0.7603305785123967, "v18": 0.7634854771784232},
+      "PEDAL_HIHAT": {"v17": 0.6973995271867612, "v18": 0.7027677496991577}
+    },
+    "v18ResultSha256": "823143231ae22027a4fe60a0df618fbfa585d087f2c17e41fbd7851fe81838d0"
+  },
+  "multiKitTest": {
+    "split": "test",
+    "status": "opened_test_used_for_decoder_margin_pruning",
+    "recordCount": 122,
+    "preparedDatasetSha256": "2c30f2e251a819e40e868c458d3c2bb190df31cf26ea951167acde439972fea7",
+    "v17SupportedMacroF1": 0.8938499711055691,
+    "v18SupportedMacroF1": 0.894412196712494,
+    "v17MicroF1": 0.8992822824604069,
+    "v18MicroF1": 0.9000163299238432,
+    "affectedClasses": {
+      "CLOSED_HIHAT": {"v17": 0.9250766261777728, "v18": 0.9254968767745599},
+      "OPEN_HIHAT": {"v17": 0.8015075376884422, "v18": 0.8027725267800883},
+      "PEDAL_HIHAT": {"v17": 0.7030654815889715, "v18": 0.7081269491836361}
+    },
+    "v18ResultSha256": "c260698e2e27f377b064a6d396c25740a8d16afaa51673df828fc768fb9994e8"
+  },
+  "rejectedFocalFineTune": {
+    "gamma": 1.5,
+    "resumedValidationMacroF1": 0.8720839886378823,
+    "epoch16ValidationMacroF1": 0.8674005760647526,
+    "epoch17ValidationMacroF1": 0.8640221529170963,
+    "deployed": false
+  },
+  "claimBoundary": "Post-selection isolated-drum detector evidence only; not a fresh holdout, full-song, source-separation, or notation-layout accuracy claim."
+}

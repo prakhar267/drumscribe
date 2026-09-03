@@ -243,7 +243,11 @@ def predict_drumscribe(
             for name, model in models.items()
         }
     probabilities = blend_stacked_probabilities(probabilities_by_model, config.rules)
-    decoded = decode_stacked_probabilities(probabilities, config.rules)
+    decoded = decode_stacked_probabilities(
+        probabilities,
+        config.rules,
+        family_conflict_margins=config.family_conflict_margins,
+    )
     frame_seconds = hop_length / sample_rate
     return sorted(
         (frame * frame_seconds, instrument.value)

@@ -12,6 +12,7 @@ from typing import Any, Literal
 import numpy as np
 
 from .training import (
+    EXCLUSIVE_INSTRUMENT_FAMILIES,
     TRAINING_CLASSES,
     TrainingConfig,
     TrainingError,
@@ -24,6 +25,10 @@ from .training import (
 
 BlendStrategy = Literal["convex", "maximum", "noisy_or"]
 StackedBlendStrategy = Literal["convex", "linear", "logit", "maximum", "noisy_or"]
+EXCLUSIVE_FAMILIES_BY_NAME = {
+    "HIHAT": EXCLUSIVE_INSTRUMENT_FAMILIES[0],
+    "RIDE": EXCLUSIVE_INSTRUMENT_FAMILIES[1],
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -158,6 +163,7 @@ class StackedEnsembleConfig:
     models: dict[str, CheckpointReference]
     rules: dict[str, StackedEnsembleRule]
     onset_tolerance_frames: int = 2
+    family_conflict_margins: dict[str, float] | None = None
 
     def __post_init__(self) -> None:
         if not self.model_version.strip():
@@ -191,6 +197,21 @@ class StackedEnsembleConfig:
             )
         if self.onset_tolerance_frames < 0:
             raise TrainingError("stacked ensemble onset tolerance cannot be negative")
+        if self.family_conflict_margins is not None:
+            unknown_families = sorted(
+                set(self.family_conflict_margins) - set(EXCLUSIVE_FAMILIES_BY_NAME)
+            )
+            if unknown_families:
+                raise TrainingError(
+                    f"unknown exclusive family conflict rules: {unknown_families}"
+                )
+            if any(
+                not math.isfinite(margin) or margin < 0
+                for margin in self.family_conflict_margins.values()
+            ):
+                raise TrainingError(
+                    "exclusive family conflict margins must be finite and non-negative"
+                )
 
     @classmethod
     def load(cls, path: Path) -> StackedEnsembleConfig:
@@ -203,6 +224,11 @@ class StackedEnsembleConfig:
                 name: _checkpoint_reference(value) for name, value in payload["models"].items()
             },
             onset_tolerance_frames=int(payload.get("onsetToleranceFrames", 2)),
+            family_conflict_margins={
+                str(name): float(margin)
+                for name, margin in payload.get("familyConflictMargins", {}).items()
+            }
+            or None,
             rules={
                 instrument: StackedEnsembleRule(
                     strategy=rule["strategy"],
@@ -338,10 +364,12 @@ def blend_stacked_probabilities(
 def decode_stacked_probabilities(
     probabilities: np.ndarray,
     rules: dict[str, StackedEnsembleRule],
+    *,
+    family_conflict_margins: dict[str, float] | None = None,
 ) -> dict[str, list[int]]:
     if probabilities.ndim != 2 or probabilities.shape[1] != len(TRAINING_CLASSES):
         raise TrainingError("probabilities must be a frame-by-canonical-class matrix")
-    return {
+    decoded = {
         instrument.value: _peak_frames(
             probabilities[:, index],
             threshold=rules[instrument.value].threshold,
@@ -349,6 +377,54 @@ def decode_stacked_probabilities(
         )
         for index, instrument in enumerate(TRAINING_CLASSES)
     }
+    if not family_conflict_margins:
+        return decoded
+
+    class_index = {instrument: index for index, instrument in enumerate(TRAINING_CLASSES)}
+    unknown_families = sorted(set(family_conflict_margins) - set(EXCLUSIVE_FAMILIES_BY_NAME))
+    if unknown_families:
+        raise TrainingError(f"unknown exclusive family conflict rules: {unknown_families}")
+    for family_name, minimum_margin in family_conflict_margins.items():
+        if not math.isfinite(minimum_margin) or minimum_margin < 0:
+            raise TrainingError(
+                "exclusive family conflict margins must be finite and non-negative"
+            )
+        family = EXCLUSIVE_FAMILIES_BY_NAME[family_name]
+        candidates_by_frame: dict[int, list[Any]] = {}
+        for instrument in family:
+            for frame in decoded[instrument.value]:
+                candidates_by_frame.setdefault(frame, []).append(instrument)
+        for frame, candidates in candidates_by_frame.items():
+            if len(candidates) < 2:
+                continue
+            ranked = sorted(
+                candidates,
+                key=lambda instrument: (
+                    float(
+                        _probability_logit(probabilities[frame, class_index[instrument]])
+                        - _probability_logit(
+                            np.asarray(rules[instrument.value].threshold)
+                        )
+                    ),
+                    instrument.value,
+                ),
+                reverse=True,
+            )
+            winner = ranked[0]
+            winner_margin = float(
+                _probability_logit(probabilities[frame, class_index[winner]])
+                - _probability_logit(np.asarray(rules[winner.value].threshold))
+            )
+            runner_up = ranked[1]
+            runner_up_margin = float(
+                _probability_logit(probabilities[frame, class_index[runner_up]])
+                - _probability_logit(np.asarray(rules[runner_up.value].threshold))
+            )
+            if winner_margin - runner_up_margin < minimum_margin:
+                continue
+            for instrument in ranked[1:]:
+                decoded[instrument.value].remove(frame)
+    return decoded
 
 
 def _probability_logit(probabilities: np.ndarray) -> np.ndarray:
@@ -550,7 +626,11 @@ def evaluate_stacked_ensemble(
                 for name, model in models.items()
             }
             probabilities = blend_stacked_probabilities(probabilities_by_model, config.rules)
-            predictions = decode_stacked_probabilities(probabilities, config.rules)
+            predictions = decode_stacked_probabilities(
+                probabilities,
+                config.rules,
+                family_conflict_margins=config.family_conflict_margins,
+            )
             for index, instrument in enumerate(TRAINING_CLASSES):
                 references = np.flatnonzero(targets[:, index] > 0).tolist()
                 tp, fp, fn = _match_frames(

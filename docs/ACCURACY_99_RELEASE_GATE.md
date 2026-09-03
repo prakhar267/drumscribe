@@ -130,6 +130,17 @@ post-selection regression results, not a fresh generalization estimate. Pedal
 hi-hat, open hi-hat, ride bell and full-mixture separation remain blockers. See
 `docs/benchmarks/GROOVE_STACKED_ARTICULATION_V17.md`.
 
+The v18 decoder pass keeps the v17 model probabilities and resolves only
+exact-frame closed/open/pedal hi-hat conflicts where the winning articulation
+has a 1.25 normalized-logit lead. It raises the 100-record detailed micro F1
+from 91.89% to 91.95%, with global gains for all three affected hi-hat classes.
+On the opened 122-record multi-kit suite, micro F1 moves from 89.93% to 90.00%
+and supported macro F1 from 89.38% to 89.44%; all affected classes improve. A
+focal-loss fine-tune and broader family decoders were measured and rejected.
+These are still opened, post-selection isolated-drum results rather than a
+fresh full-song generalization estimate. See
+`docs/benchmarks/GROOVE_STACKED_ARTICULATION_V18.md`.
+
 ## Model path
 
 1. Import E-GMD through `drumscribe-ml import-egmd` on dedicated training compute. Its official train, validation and test assignments are preserved, and every kit rendering of one performance stays in the same leakage group.

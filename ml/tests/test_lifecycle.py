@@ -18,6 +18,7 @@ from drumscribe_ml.ensemble import (
     blend_probabilities,
     blend_stacked_probabilities,
     decode_probabilities,
+    decode_stacked_probabilities,
 )
 from drumscribe_ml.lifecycle import (
     PreparationConfig,
@@ -31,6 +32,7 @@ from drumscribe_ml.training import (
     TrainingConfig,
     TrainingError,
     _apply_family_competition,
+    _binary_focal_loss_with_logits,
     _calibration_peak_f1,
     _calibration_peak_tracks,
     _dilate_targets,
@@ -224,6 +226,35 @@ def test_calibration_and_training_metadata_are_versioned(tmp_path):
             "invalid-focused-weight",
             onset_class_loss_multipliers={"PEDAL_HIHAT": 0},
         )
+    focal = TrainingConfig(
+        "prepared.json", str(tmp_path), "focal", onset_focal_gamma=1.5
+    )
+    assert focal.onset_focal_gamma == pytest.approx(1.5)
+    with pytest.raises(TrainingError, match="focal gamma"):
+        TrainingConfig(
+            "prepared.json", str(tmp_path), "invalid-focal", onset_focal_gamma=6
+        )
+
+
+def test_binary_focal_loss_preserves_bce_at_zero_and_downweights_easy_frames():
+    import torch
+    import torch.nn.functional as functional
+
+    logits = torch.tensor([[5.0, -5.0], [0.2, -0.2]])
+    targets = torch.tensor([[1.0, 0.0], [1.0, 0.0]])
+    positive_weights = torch.tensor([2.0, 3.0])
+    baseline = functional.binary_cross_entropy_with_logits(
+        logits, targets, pos_weight=positive_weights, reduction="none"
+    )
+    focal_zero = _binary_focal_loss_with_logits(
+        logits, targets, pos_weight=positive_weights, gamma=0
+    )
+    focal = _binary_focal_loss_with_logits(
+        logits, targets, pos_weight=positive_weights, gamma=2
+    )
+    assert torch.equal(focal_zero, baseline)
+    assert torch.all(focal < baseline)
+    assert focal[0].sum() < focal[1].sum()
 
 
 def test_training_targets_and_validation_are_onset_tolerant_and_multilabel():
@@ -531,6 +562,40 @@ def test_stacked_ensemble_fuses_named_models_and_temporal_scores():
     assert output[0, 3] == pytest.approx(expected_post_blend)
 
 
+def test_stacked_decoder_resolves_exact_frame_exclusive_family_conflicts():
+    shape = (5, len(TRAINING_CLASSES))
+    probabilities = np.full(shape, 0.1, dtype=np.float32)
+    rules = {
+        instrument.value: StackedEnsembleRule(
+            strategy="convex",
+            model_weights={"base": 1},
+            threshold=0.5,
+            peak_distance_frames=1,
+        )
+        for instrument in TRAINING_CLASSES
+    }
+    closed_index = TRAINING_CLASSES.index(Instrument.CLOSED_HIHAT)
+    open_index = TRAINING_CLASSES.index(Instrument.OPEN_HIHAT)
+    probabilities[2, closed_index] = 0.8
+    probabilities[2, open_index] = 0.9
+
+    independent = decode_stacked_probabilities(probabilities, rules)
+    assert independent[Instrument.CLOSED_HIHAT.value] == [2]
+    assert independent[Instrument.OPEN_HIHAT.value] == [2]
+
+    resolved = decode_stacked_probabilities(
+        probabilities, rules, family_conflict_margins={"HIHAT": 0.5}
+    )
+    assert resolved[Instrument.CLOSED_HIHAT.value] == []
+    assert resolved[Instrument.OPEN_HIHAT.value] == [2]
+
+    ambiguous = decode_stacked_probabilities(
+        probabilities, rules, family_conflict_margins={"HIHAT": 1.0}
+    )
+    assert ambiguous[Instrument.CLOSED_HIHAT.value] == [2]
+    assert ambiguous[Instrument.OPEN_HIHAT.value] == [2]
+
+
 def test_stacked_ensemble_config_rejects_unknown_models_and_invalid_kernels():
     reference = CheckpointReference(model_version="fixture", sha256="0" * 64)
     rules = {
@@ -594,6 +659,7 @@ def test_stacked_ensemble_config_loads_post_blend(tmp_path: Path):
                         "sha256": "1" * 64,
                     },
                 },
+                "familyConflictMargins": {"HIHAT": 1.25},
                 "rules": rules,
             }
         ),
@@ -604,6 +670,15 @@ def test_stacked_ensemble_config_loads_post_blend(tmp_path: Path):
     assert rule.post_blend_model == "specialist"
     assert rule.post_blend_strategy == "logit"
     assert rule.post_blend_weight == 0.25
+    assert loaded.family_conflict_margins == {"HIHAT": 1.25}
+
+    with pytest.raises(TrainingError, match="unknown exclusive family"):
+        StackedEnsembleConfig(
+            model_version="fixture-stack",
+            models=loaded.models,
+            rules=loaded.rules,
+            family_conflict_margins={"CYMBAL": 1.0},
+        )
 
     probabilities = np.full((2, len(TRAINING_CLASSES)), 0.5)
     with pytest.raises(TrainingError, match="missing stacked ensemble probabilities"):

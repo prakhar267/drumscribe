@@ -347,7 +347,11 @@ def predict_fixture(args: argparse.Namespace) -> None:
     probabilities = _stack_probabilities(
         config, checkpoint_paths, features, args.device
     )
-    decoded = decode_stacked_probabilities(probabilities, config.rules)
+    decoded = decode_stacked_probabilities(
+        probabilities,
+        config.rules,
+        family_conflict_margins=config.family_conflict_margins,
+    )
 
     raw_hits: list[RawDrumHit] = []
     for class_index, instrument in enumerate(TRAINING_CLASSES):
