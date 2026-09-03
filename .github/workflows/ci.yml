@@ -131,7 +131,13 @@ jobs:
         with:
           python-version: "3.12"
       - run: pnpm install --frozen-lockfile
-      - run: pnpm audit --audit-level high
+      - name: Audit web dependencies
+        run: pnpm audit --audit-level high
+        env:
+          # The advisory endpoint can take longer than pnpm's 60-second default.
+          # Keep the high-severity gate strict while avoiding false failures on a
+          # slow registry response.
+          pnpm_config_fetch_timeout: "300000"
       - name: Audit API dependencies
         run: |
           uv export --quiet --project apps/api --all-extras --no-dev --no-emit-local --output-file /tmp/api-requirements.txt
