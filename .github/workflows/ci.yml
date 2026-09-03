@@ -120,24 +120,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - name: Audit web dependencies with OSV
+        uses: google/osv-scanner-action/osv-scanner-action@8deb546fdb875b9996d27d4950be7312dac076a1 # v2.5.0
         with:
-          version: 11.19.0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
+          scan-args: |-
+            --lockfile=pnpm-lock.yaml
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.12"
-      - run: pnpm install --frozen-lockfile
-      - name: Audit web dependencies
-        run: pnpm audit --audit-level high
-        env:
-          # The advisory endpoint can take longer than pnpm's 60-second default.
-          # Keep the high-severity gate strict while avoiding false failures on a
-          # slow registry response.
-          pnpm_config_fetch_timeout: "300000"
       - name: Audit API dependencies
         run: |
           uv export --quiet --project apps/api --all-extras --no-dev --no-emit-local --output-file /tmp/api-requirements.txt
