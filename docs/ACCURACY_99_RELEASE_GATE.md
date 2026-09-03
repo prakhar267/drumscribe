@@ -99,6 +99,16 @@ F1 is 84.77%; crash, cross-stick, individual toms and open hi-hat remain below
 regression gate rather than a broad commercial-song estimate. See
 `docs/benchmarks/CROSS_GENRE_HOLDOUT_B_V2.md`.
 
+The 2026-09-03 real-performance research pass evaluated eleven manually
+annotated MDB Drums MIREX test performances without test-label calibration.
+The best end-to-end full-mixture path (`htdemucs_ft` then ADTOF) reached 82.98%
+six-family micro F1 at 50 ms; ideal drum stems reached 85.01%. The same round
+reproduced 96.43% on the opened synthetic metal development suite and 97.33%
+on the opened quiet-song probe, but neither can support a general-song claim.
+ADTOF is non-commercial and Demucs artifact/data rights remain unresolved, so
+the research path is not a paid-production provider. See
+`docs/benchmarks/REAL_PERFORMANCE_RESEARCH_V1.md`.
+
 ## Model path
 
 1. Import E-GMD through `drumscribe-ml import-egmd` on dedicated training compute. Its official train, validation and test assignments are preserved, and every kit rendering of one performance stays in the same leakage group.

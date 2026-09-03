@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "completedAt": "2026-09-03",
+  "primaryMetric": "six-family event micro F1 with one-to-one 50 ms onset matching",
+  "developmentProbes": {
+    "supportedKitHardMetal": {
+      "status": "opened_post_tuning_development_probe",
+      "trackCount": 10,
+      "referenceEvents": 2391,
+      "toleranceMs": 20,
+      "familyMicro": {
+        "precision": 0.9864391951006124,
+        "recall": 0.9431200334588038,
+        "f1": 0.9642933504383152
+      },
+      "familyMacroF1": 0.9483847062278004,
+      "detailedMicroF1": 0.9480436177036562,
+      "detailedMacroF1": 0.6843195851333839,
+      "minimumTrackFamilyF1": 0.9252525252525252,
+      "researchOnly": true,
+      "resultSha256": "565a3e094f8585becc290fa4399976b92ec43aaae1c12a456f4575850e13c0ee"
+    },
+    "quietSoftSong": {
+      "status": "opened_post_tuning_development_probe",
+      "trackCount": 1,
+      "referenceEvents": 94,
+      "predictedEvents": 93,
+      "toleranceMs": 20,
+      "familyMicro": {
+        "precision": 0.978494623655914,
+        "recall": 0.9680851063829787,
+        "f1": 0.9732620320855615
+      },
+      "familyMacroF1": 0.9698412698412698,
+      "researchOnly": true,
+      "usesNonCommercialAdtof": true,
+      "audioSha256": "d762d2f88094b3994eada87496aa20b85e00193823ebabdf3df614613699c940",
+      "referenceSha256": "ede95f022c2c6dd9e24b651a6b2f590698ec5242a95e6da128dca118679d5a02",
+      "predictionSha256": "10fb7208331087c127c748d46e03b10cad9f9c8c26741b0ef63f1f49bbb522d5"
+    }
+  },
+  "realPerformanceBenchmark": {
+    "name": "MDB Drums MIREX test split",
+    "status": "independent_research_test",
+    "trackCount": 11,
+    "referenceEvents": 4138,
+    "datasetLicense": "CC BY-NC-SA 4.0",
+    "researchOnly": true,
+    "results": {
+      "idealDrumStemAdtof": {
+        "f1At20ms": 0.787281242297264,
+        "f1At50ms": 0.8501355681538082,
+        "resultSha256": "b7574117d6986f1a9c77dcf858a62de0209425110abf547344454f792221ec04"
+      },
+      "fullMixDemucsHtdemucsFtThenAdtof": {
+        "f1At20ms": 0.7456821026282854,
+        "f1At50ms": 0.8297872340425532,
+        "supportedMacroF1At50ms": 0.6213370135344501,
+        "resultSha256": "43625c8049d38e50b0213d5e9c89ca3f6d3c8bc194cf56971565f6e59033d07d"
+      },
+      "directFullMixAdtof": {
+        "f1At20ms": 0.7230691056910569,
+        "f1At50ms": 0.7807418699186992
+      },
+      "firstPartyStackedV16OnIdealDrumStem": {
+        "f1At50ms": 0.7438428764418581,
+        "resultSha256": "d11e51f374d7e7f589257d1b32011ad6197f44bedacdefcd335748091546370d"
+      },
+      "yourMt3PlusOnIdealDrumStem": {
+        "f1At50ms": 0.7117998221770608,
+        "resultSha256": "6bdeed4d3be36627baf33d40f477a2db562d23a120b32e2cb786e79b65f5a1d7"
+      }
+    },
+    "fullMixPerTrackF1At50ms": {
+      "MusicDelta_Beatles": 0.6438356164383562,
+      "MusicDelta_Country1": 0.6355140186915887,
+      "MusicDelta_FreeJazz": 0.8050117462803446,
+      "MusicDelta_Gospel": 0.9401197604790419,
+      "MusicDelta_Grunge": 0.9196261682242991,
+      "MusicDelta_Hendrix": 1.0,
+      "MusicDelta_LatinJazz": 0.8321917808219178,
+      "MusicDelta_ModalJazz": 0.7919375812743823,
+      "MusicDelta_Punk": 0.87,
+      "MusicDelta_SpeedMetal": 0.9324090121317158,
+      "MusicDelta_SwingJazz": 0.6976744186046512
+    }
+  },
+  "competitorComparison": {
+    "sameRealFiles": {
+      "status": "blocked_by_local_chrome_extension_upload_permission",
+      "predeclaredTracks": [
+        "MusicDelta_SpeedMetal",
+        "MusicDelta_Grunge",
+        "MusicDelta_FreeJazz",
+        "MusicDelta_Country1"
+      ],
+      "windowSeconds": 20
+    },
+    "existingRightsClearedSyntheticComparison": {
+      "trackCount": 12,
+      "drumscribeFamilyF1At20ms": 0.9735,
+      "drum2notesFamilyF1At20ms": 0.6554,
+      "source": "CROSS_GENRE_HOLDOUT_B_V2"
+    }
+  },
+  "releaseDecision": {
+    "broadNinetyPercentClaimAllowed": false,
+    "paidLaunchWithResearchStackAllowed": false,
+    "reasons": [
+      "The independent full-mixture result is 82.98%, below 90%.",
+      "ADTOF is non-commercial under the currently recorded grant.",
+      "Demucs checkpoint and training-data rights are unresolved for production.",
+      "The 90%+ probes are opened synthetic development tests, not broad real-song evidence."
+    ]
+  }
+}

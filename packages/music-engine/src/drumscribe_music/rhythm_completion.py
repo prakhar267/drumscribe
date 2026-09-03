@@ -46,12 +46,14 @@ class RhythmCompletionSettings:
 
     detector_latency_seconds: float = 0.008368806451612976
     minimum_kick_anchors: int = 4
+    minimum_anchor_confidence: float = 0.75
     anchor_assignment_tolerance_seconds: float = 0.060
     maximum_affine_residual_seconds: float = 0.025
     snap_tolerance_seconds: float = 0.055
     pattern_coverage: float = 0.82
     offbeat_signature_coverage: float = 0.75
     texture_dominance_ratio: float = 1.5
+    texture_slot_measure_ratio: float = 0.45
     recurring_snare_measure_ratio: float = 0.55
 
     def __post_init__(self) -> None:
@@ -65,12 +67,16 @@ class RhythmCompletionSettings:
                 raise ValueError(f"{name} must be non-negative")
         if self.minimum_kick_anchors < 2:
             raise ValueError("minimum_kick_anchors must be at least two")
+        if not 0 <= self.minimum_anchor_confidence <= 1:
+            raise ValueError("minimum_anchor_confidence must be between zero and one")
         if not 0 < self.pattern_coverage <= 1:
             raise ValueError("pattern_coverage must be between zero and one")
         if not 0 < self.offbeat_signature_coverage <= 1:
             raise ValueError("offbeat_signature_coverage must be between zero and one")
         if self.texture_dominance_ratio < 1:
             raise ValueError("texture_dominance_ratio must be at least one")
+        if not 0 < self.texture_slot_measure_ratio <= 1:
+            raise ValueError("texture_slot_measure_ratio must be between zero and one")
         if not 0 < self.recurring_snare_measure_ratio <= 1:
             raise ValueError("recurring_snare_measure_ratio must be between zero and one")
 
@@ -95,7 +101,12 @@ def _refine_tempo(
     hits: list[RawDrumHit], tempo_map: TempoMap, settings: RhythmCompletionSettings
 ) -> tuple[TempoMap, dict[str, Any]] | None:
     kick_hits = sorted(
-        (hit for hit in hits if canonical_instrument(hit.instrument_class) is Instrument.KICK),
+        (
+            hit
+            for hit in hits
+            if canonical_instrument(hit.instrument_class) is Instrument.KICK
+            and hit.confidence >= settings.minimum_anchor_confidence
+        ),
         key=lambda hit: hit.onset_seconds,
     )
     anchors_by_index: dict[int, RawDrumHit] = {}
@@ -266,15 +277,21 @@ def complete_rhythm(
     refined_tempo, evidence = refinement
 
     cells: dict[tuple[str, int], RawDrumHit] = {}
+    preserved_hits: list[RawDrumHit] = []
     maximum_index = 0
     for hit in original:
         instrument = canonical_instrument(hit.instrument_class)
         family = _FAMILY_BY_INSTRUMENT.get(instrument)
         if family is None:
+            preserved_hits.append(hit)
             continue
         index = _grid_index(hit.onset_seconds, refined_tempo)
         snapped = _grid_seconds(index, refined_tempo)
         if abs(snapped - hit.onset_seconds) > configuration.snap_tolerance_seconds:
+            # Expressive off-grid events are detector evidence, not completion
+            # candidates. Preserve them at their original onset instead of
+            # silently deleting ghost notes, flams, and loose jazz timing.
+            preserved_hits.append(hit)
             continue
         maximum_index = max(maximum_index, index)
         candidate = RawDrumHit(
@@ -319,7 +336,16 @@ def complete_rhythm(
     templates: dict[str, tuple[str, frozenset[int]]] = {}
     for label, family in (("H", "HIHAT"), ("C", "CYMBAL")):
         measures = [index for index, value in enumerate(labels) if value == label]
-        observed = [slot for measure in measures for slot in occupancy[family][measure]]
+        slot_counts = Counter(slot for measure in measures for slot in occupancy[family][measure])
+        minimum_slot_measures = max(
+            2,
+            round(len(measures) * configuration.texture_slot_measure_ratio),
+        )
+        # Infer a repeated texture only from slots that recur across measures.
+        # Without this gate, isolated cymbal false positives can force the
+        # template to a dense sixteenth-note ride pattern and create many more
+        # false positives than the detector supplied.
+        observed = [slot for slot, count in slot_counts.items() if count >= minimum_slot_measures]
         if observed:
             templates[label] = _pattern(observed, configuration)
 
@@ -351,22 +377,29 @@ def complete_rhythm(
 
     retained_crashes: list[tuple[int, RawDrumHit]] = []
     for (family, index), hit in cells.items():
-        if family == "CYMBAL" and canonical_instrument(hit.instrument_class) is Instrument.CRASH:
+        if (
+            family == "CYMBAL"
+            and canonical_instrument(hit.instrument_class) is Instrument.CRASH
+            and hit.confidence >= 0.75
+        ):
             retained_crashes.append((index, hit))
     hat_instruments = {slot: _hat_instrument(cells, slot) for slot in range(16)}
 
     for measure, label in enumerate(labels):
         selected_family = "HIHAT" if label == "H" else "CYMBAL"
         other_family = "CYMBAL" if label == "H" else "HIHAT"
+        template = templates.get(label)
+        if template is None:
+            # No repeated texture was proved for this label. Failing open here
+            # is essential: removing detector hits without a replacement
+            # pattern destroys quiet and expressive performances.
+            continue
         for key in list(cells):
             family, index = key
             if index // 16 != measure:
                 continue
             if family == selected_family or (family == other_family and index % 16 != 0):
                 del cells[key]
-        template = templates.get(label)
-        if template is None:
-            continue
         _, slots = template
         for slot in slots:
             index = measure * 16 + slot
@@ -436,7 +469,7 @@ def complete_rhythm(
                     ),
                 )
 
-    completed = list(cells.values())
+    completed = [*cells.values(), *preserved_hits]
     occupied_instruments = {
         (canonical_instrument(hit.instrument_class), _grid_index(hit.onset_seconds, refined_tempo))
         for hit in completed

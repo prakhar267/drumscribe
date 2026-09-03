@@ -2,6 +2,20 @@
 
 Date completed: 2026-09-02
 
+## 2026-09-03 post-opened regression repair
+
+The rhythm-completion fail-open bug is fixed: when no repeated texture is
+proved, detected texture hits are retained, and expressive off-grid hits are no
+longer silently discarded. The unchanged first-party hybrid therefore rises
+from 51.85% to **56.30% family F1 at 20 ms** on this already opened song.
+
+A research-only diagnostic using ADTOF after the existing separated stem plus
+the repaired completion stage reaches **97.33% family micro F1 at 20 ms**
+(97.85% precision, 96.81% recall, 96.98% macro F1). This is not a new holdout,
+and ADTOF's current non-commercial terms prohibit using that stack for a paid
+launch. See `docs/benchmarks/REAL_PERFORMANCE_RESEARCH_V1.md` for the independent
+real-performance result and release decision.
+
 Decision: **the unchanged hybrid does not generalize to this quiet soft-pop mix
 at the hard-metal benchmark level.** On the sealed original song “Quiet
 Horizon,” it reached **51.85% six-family micro F1 at 20 ms** and **56.30% at

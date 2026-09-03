@@ -2,6 +2,20 @@
 
 Date completed: 2026-09-02
 
+## 2026-09-03 post-opened research result
+
+After this holdout was opened, a research fusion routed first-party discrete
+drums with ADTOF continuous textures and applied the confidence-gated completion
+stage. Reproducing that path against current code scores **96.43% six-family
+micro F1 at 20 ms**, with 98.64% precision, 94.31% recall and 94.84% family
+macro F1. Every track is above 92.52%.
+
+This figure replaces neither the original sealed 78.13% result nor the broad
+real-song estimate: the detector policy was selected after references were
+opened, the recordings are deterministic single-kit synthesis, and ADTOF is
+non-commercial. The independent full-mixture MDB result is 82.98% at 50 ms.
+See `docs/benchmarks/REAL_PERFORMANCE_RESEARCH_V1.md`.
+
 Decision: **the frozen DrumScribe hybrid exceeded the existing Drum2Notes
 comparison target on a new ten-track holdout.** Its strict six-family micro F1
 was **78.13% at 20 ms**, versus the earlier Drum2Notes result of **74.64%**, a

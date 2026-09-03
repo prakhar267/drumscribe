@@ -27,6 +27,20 @@ def test_completion_is_a_noop_without_enough_kick_anchors() -> None:
     assert result.tempo_map == tracked
 
 
+def test_completion_is_a_noop_with_only_low_confidence_kick_anchors() -> None:
+    hits = [
+        RawDrumHit(Instrument.KICK, 0.25 + index * 0.125, confidence=0.5)
+        for index in range(0, 64, 4)
+    ]
+    tracked = TempoMap.constant(120, offset_seconds=0.30)
+
+    result = complete_rhythm(hits, tracked)
+
+    assert result.applied is False
+    assert result.metadata == {"reason": "unstable_or_sparse_grid"}
+    assert result.hits == tuple(hits)
+
+
 def test_completion_refines_grid_and_fills_repeated_rock_texture() -> None:
     hits = [
         *[_detected(Instrument.KICK, index) for index in (0, 8, 16, 24, 32, 40)],
@@ -133,3 +147,95 @@ def test_completion_uses_sparse_backbeat_evidence_without_overfilling_hats() -> 
     assert len(hats) == 16
     assert len(snares) == 8
     assert {hit.instrument_class for hit in snares} == {Instrument.CROSS_STICK}
+
+
+def test_completion_ignores_nonrecurring_cymbal_noise_when_selecting_texture() -> None:
+    hits = [
+        *[_detected(Instrument.KICK, index) for index in range(0, 64, 4)],
+        *[
+            _detected(Instrument.RIDE, measure * 16 + slot)
+            for measure in range(4)
+            for slot in range(0, 16, 2)
+            if not (measure == 2 and slot == 10)
+        ],
+        # Two isolated detector errors should not turn an eighth-note ride into
+        # a sixteenth-note template.
+        _detected(Instrument.RIDE, 1),
+        _detected(Instrument.RIDE, 19),
+    ]
+
+    result = complete_rhythm(
+        hits,
+        TempoMap.constant(120, offset_seconds=0.30),
+        settings=RhythmCompletionSettings(detector_latency_seconds=0.01),
+    )
+
+    assert result.metadata["texturePatterns"] == {"C": "eighth"}
+    rides = [hit for hit in result.hits if hit.instrument_class == Instrument.RIDE]
+    assert len(rides) == 32
+
+
+def test_completion_does_not_duplicate_low_confidence_generic_cymbals() -> None:
+    hits = [
+        *[_detected(Instrument.KICK, index) for index in range(0, 64, 4)],
+        *[
+            RawDrumHit(
+                Instrument.CRASH,
+                0.25 + index * 0.125 - 0.01,
+                confidence=0.5,
+            )
+            for index in range(0, 64, 2)
+        ],
+    ]
+
+    result = complete_rhythm(
+        hits,
+        TempoMap.constant(120, offset_seconds=0.30),
+        settings=RhythmCompletionSettings(detector_latency_seconds=0.01),
+    )
+
+    cymbals = [
+        hit
+        for hit in result.hits
+        if hit.instrument_class in {Instrument.CRASH, Instrument.RIDE, Instrument.RIDE_BELL}
+    ]
+    assert len(cymbals) == 32
+    assert {hit.instrument_class for hit in cymbals} == {Instrument.RIDE}
+
+
+def test_completion_preserves_texture_when_no_repeated_template_is_proved() -> None:
+    hats = [_detected(Instrument.CLOSED_HIHAT, index) for index in (1, 18, 35, 52)]
+    hits = [
+        *[_detected(Instrument.KICK, index) for index in range(0, 64, 4)],
+        *hats,
+    ]
+
+    result = complete_rhythm(
+        hits,
+        TempoMap.constant(120, offset_seconds=0.30),
+        settings=RhythmCompletionSettings(detector_latency_seconds=0.01),
+    )
+
+    assert result.applied is True
+    assert result.metadata["texturePatterns"] == {}
+    completed_hats = [hit for hit in result.hits if hit.instrument_class == Instrument.CLOSED_HIHAT]
+    assert len(completed_hats) == len(hats)
+
+
+def test_completion_preserves_expressive_off_grid_hits() -> None:
+    expressive_onset = 0.25 + 5 * 0.125 + 0.06
+    hits = [
+        *[_detected(Instrument.KICK, index) for index in range(0, 64, 4)],
+        RawDrumHit(Instrument.SNARE, expressive_onset, confidence=0.92),
+    ]
+
+    result = complete_rhythm(
+        hits,
+        TempoMap.constant(120, offset_seconds=0.30),
+        settings=RhythmCompletionSettings(detector_latency_seconds=0.01),
+    )
+
+    assert result.applied is True
+    expressive = [hit for hit in result.hits if hit.instrument_class == Instrument.SNARE]
+    assert len(expressive) == 1
+    assert expressive[0].onset_seconds == expressive_onset

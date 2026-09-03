@@ -11,8 +11,10 @@ from pathlib import Path
 from typing import Any
 
 import run_hard_metal_market_benchmark as market
+from drumscribe_music import RawDrumHit, complete_rhythm
+from drumscribe_music.providers.research import ResearchBeatThisTrackingProvider
 from model_runners.drumscribe_hybrid_runner import transcribe
-from run_competitive_drum_benchmark import score_taxonomies
+from run_competitive_drum_benchmark import FAMILY_SIX_MAP, score_taxonomies
 
 HOLDOUT_TRACKS = (
     market.TrackSpec("01-blackened-engine", "Blackened Engine", "thrash", 206.0, 7101),
@@ -30,6 +32,7 @@ HOLDOUT_TRACKS = (
     market.TrackSpec("09-ember-gallop", "Ember Gallop", "power-metal", 176.0, 7909),
     market.TrackSpec("10-cinder-dbeat", "Cinder D-Beat", "hardcore", 200.0, 8010),
 )
+CONTINUOUS_FAMILIES = frozenset({"CYMBAL", "HIHAT"})
 
 
 def _generate(args: argparse.Namespace) -> None:
@@ -85,8 +88,8 @@ def _predict(args: argparse.Namespace) -> None:
 
 def _score(args: argparse.Namespace) -> None:
     output = args.output.resolve(strict=True)
-    prediction_root = output / "hybrid-v1"
-    destination = output / "benchmark-result.json"
+    prediction_root = output / args.prediction_name
+    destination = output / args.result_name
     if destination.exists():
         raise FileExistsError(destination)
     per_track = []
@@ -149,11 +152,17 @@ def _score(args: argparse.Namespace) -> None:
         "createdAt": datetime.now(UTC).isoformat(),
         "benchmark": {
             "name": "Ten untouched rights-cleared supported-kit hard-metal holdouts",
-            "status": "sealed_post_freeze_holdout",
+            "status": (
+                "opened_development_probe"
+                if args.opened_development
+                else "sealed_post_freeze_holdout"
+            ),
             "trackCount": len(HOLDOUT_TRACKS),
             "referenceFrozenBeforePrediction": True,
-            "predictionManifestReferenceFilesRead": False,
-            "postTestTuning": False,
+            "predictionManifestReferenceFilesRead": (
+                None if args.opened_development else False
+            ),
+            "postTestTuning": args.opened_development,
             "rightsCleared": True,
             "limitations": [
                 "This measures deterministic synthetic arrangements rendered with one CC BY 4.0 acoustic kit, not commercial masters.",
@@ -185,6 +194,99 @@ def _score(args: argparse.Namespace) -> None:
     )
 
 
+def _research_fusion(args: argparse.Namespace) -> None:
+    """Reproduce the post-unsealing ADTOF/first-party research diagnostic.
+
+    The command does not read annotations, but the suite was already opened
+    before this policy was developed. Its outputs must therefore be scored with
+    ``--opened-development`` and never described as a fresh holdout.
+    """
+
+    output = args.output.resolve(strict=True)
+    hybrid_root = output / args.hybrid_prediction_name
+    adtof_root = output / args.adtof_prediction_name
+    destination = output / args.prediction_name
+    if destination.exists():
+        raise FileExistsError(destination)
+    destination.mkdir()
+    beat_tracker = ResearchBeatThisTrackingProvider(
+        device=None if args.device == "auto" else args.device
+    )
+    rows = []
+    for spec in HOLDOUT_TRACKS:
+        hybrid_path = hybrid_root / f"{spec.slug}.json"
+        adtof_path = adtof_root / f"{spec.slug}.json"
+        hybrid = json.loads(hybrid_path.read_text(encoding="utf-8"))
+        adtof = json.loads(adtof_path.read_text(encoding="utf-8"))
+        selected = [
+            hit
+            for hit in hybrid["hits"]
+            if FAMILY_SIX_MAP.get(str(hit["instrument"])) not in CONTINUOUS_FAMILIES
+        ]
+        selected.extend(
+            hit
+            for hit in adtof["hits"]
+            if FAMILY_SIX_MAP.get(str(hit["instrument"])) in CONTINUOUS_FAMILIES
+        )
+        completion = complete_rhythm(
+            (
+                RawDrumHit(
+                    hit["instrument"],
+                    float(hit["onsetSeconds"]),
+                    int(hit.get("velocity", 100)),
+                    float(hit.get("confidence", 0.5)),
+                    metadata={"sourceModel": hit.get("sourceModel")},
+                )
+                for hit in selected
+            ),
+            beat_tracker.track(output / "tracks" / spec.slug / "full-mix.wav"),
+        )
+        payload = {
+            "schemaVersion": 1,
+            "provider": "drumscribe-best-research-v3",
+            "modelVersion": "drumscribe-hybrid-v1+adtof-continuous+rhythm-completion-v3",
+            "researchOnly": True,
+            "openedDevelopmentProbe": True,
+            "rhythmCompletion": {
+                "applied": completion.applied,
+                **dict(completion.metadata),
+            },
+            "hits": [
+                {
+                    "instrument": str(hit.instrument_class),
+                    "onsetSeconds": round(hit.onset_seconds, 6),
+                    "velocity": hit.velocity,
+                    "confidence": round(hit.confidence, 6),
+                }
+                for hit in completion.hits
+            ],
+        }
+        prediction_path = destination / f"{spec.slug}.json"
+        market._write_json_new(prediction_path, payload)
+        rows.append(
+            {
+                "track": spec.slug,
+                "events": len(payload["hits"]),
+                "sources": {
+                    "hybrid": market._sha256(hybrid_path),
+                    "adtof": market._sha256(adtof_path),
+                },
+                "predictionSha256": market._sha256(prediction_path),
+            }
+        )
+        print(json.dumps(rows[-1]), flush=True)
+    market._write_json_new(
+        destination / "prediction-manifest.json",
+        {
+            "schemaVersion": 1,
+            "createdAt": datetime.now(UTC).isoformat(),
+            "referenceFilesRead": False,
+            "openedDevelopmentProbe": True,
+            "tracks": rows,
+        },
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     subcommands = parser.add_subparsers(dest="command", required=True)
@@ -213,6 +315,14 @@ def main() -> int:
     predict.add_argument(
         "--device", choices=("auto", "cpu", "mps", "cuda"), default="auto"
     )
+    fusion = subcommands.add_parser("research-fusion")
+    fusion.add_argument("--output", type=Path, required=True)
+    fusion.add_argument("--hybrid-prediction-name", default="hybrid-v1")
+    fusion.add_argument("--adtof-prediction-name", default="adtof-v1-raw")
+    fusion.add_argument("--prediction-name", default="best-research-v3")
+    fusion.add_argument(
+        "--device", choices=("auto", "cpu", "mps", "cuda"), default="auto"
+    )
     score = subcommands.add_parser("score")
     score.add_argument("--output", type=Path, required=True)
     score.add_argument(
@@ -222,11 +332,20 @@ def main() -> int:
             "output/hard-metal-market-benchmark-2026-09-02/benchmark-result.json"
         ),
     )
+    score.add_argument("--prediction-name", default="hybrid-v1")
+    score.add_argument("--result-name", default="benchmark-result.json")
+    score.add_argument(
+        "--opened-development",
+        action="store_true",
+        help="mark a post-unsealing diagnostic so it cannot be reported as a holdout",
+    )
     args = parser.parse_args()
     if args.command == "generate":
         _generate(args)
     elif args.command == "predict":
         _predict(args)
+    elif args.command == "research-fusion":
+        _research_fusion(args)
     else:
         _score(args)
     return 0
