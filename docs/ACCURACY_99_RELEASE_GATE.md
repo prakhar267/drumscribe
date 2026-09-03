@@ -109,6 +109,15 @@ ADTOF is non-commercial and Demucs artifact/data rights remain unresolved, so
 the research path is not a paid-production provider. See
 `docs/benchmarks/REAL_PERFORMANCE_RESEARCH_V1.md`.
 
+A balanced follow-up processed 100 real human GMD drum performances (25 each
+for rock/punk, pop/soul, funk/hip-hop and jazz/world). DrumScribe v16 reached
+91.70% detailed event micro F1 at 50 ms, versus 54.45% for the open-source
+DrumScript 0.2.1 alpha on the same files. Jazz/world remained below target at
+89.52%. These are isolated electronic-drum recordings from the already-opened
+GMD test split, so the result is a comparative detector benchmark rather than
+a full-song or fresh sealed release estimate. See
+`docs/benchmarks/REAL_100_GENRE_COMPETITOR_BENCHMARK.md`.
+
 ## Model path
 
 1. Import E-GMD through `drumscribe-ml import-egmd` on dedicated training compute. Its official train, validation and test assignments are preserved, and every kit rendering of one performance stays in the same leakage group.

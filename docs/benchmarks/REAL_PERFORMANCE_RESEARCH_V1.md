@@ -83,13 +83,19 @@ gigabytes and still require a complete artifact/training-data rights audit.
 ## Competitor comparison status
 
 The fair Drum2Notes real-song comparison was predeclared on the same first
-20 seconds of Speed Metal, Grunge, Free Jazz and Country. Its public demo upload
-is currently blocked because Chrome's ChatGPT extension does not have “Allow
-access to file URLs” enabled. No result is invented in its place.
+20 seconds of Speed Metal, Grunge, Free Jazz and Country. The public demo now
+accepts the benchmark files through the in-app browser, but final submission
+requires a rights/title/composer attestation. That external legal attestation
+is awaiting explicit action-time confirmation. No result is invented in its
+place.
 
 The existing completed comparison remains the 12-track rights-cleared synthetic
 suite: DrumScribe 97.35% versus Drum2Notes 65.54% at 20 ms. That result does not
 answer real-song generalization.
+
+A later 100-recording comparison on isolated GMD human performances measured
+DrumScribe against DrumScript and is reported separately in
+`docs/benchmarks/REAL_100_GENRE_COMPETITOR_BENCHMARK.md`.
 
 ## Commercial boundary and next work
 

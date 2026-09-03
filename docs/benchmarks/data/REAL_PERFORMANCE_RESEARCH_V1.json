@@ -87,7 +87,7 @@
   },
   "competitorComparison": {
     "sameRealFiles": {
-      "status": "blocked_by_local_chrome_extension_upload_permission",
+      "status": "awaiting_explicit_rights_attestation_confirmation",
       "predeclaredTracks": [
         "MusicDelta_SpeedMetal",
         "MusicDelta_Grunge",

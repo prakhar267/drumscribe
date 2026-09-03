@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "completedAt": "2026-09-03",
+  "status": "partial_competitor_coverage",
+  "primaryMetric": "detailed class-aware event micro F1 with one-to-one 50 ms onset matching",
+  "corpus": {
+    "name": "Google Magenta Groove MIDI Dataset",
+    "license": "CC BY 4.0",
+    "inputType": "isolated electronic-drum audio played by human drummers",
+    "recordCount": 100,
+    "uniqueAudioHashes": 100,
+    "recordsPerCategory": 25,
+    "totalScoredAudioSeconds": 1123.1687981859411,
+    "referenceEvents": 8588,
+    "testStatus": "opened_test_split_comparative_detector_benchmark",
+    "fullMixture": false,
+    "endToEndNotationScored": false
+  },
+  "systems": {
+    "drumscribe": {
+      "version": "groove-stacked-articulation-v16",
+      "completedRecords": 100,
+      "failedRecords": 0,
+      "predictionEvents": 7984,
+      "resultSha256": "b763073b9255214703948b5018ed0b7d3e9be7ce09806039ff984d032f663cc5",
+      "detailedAt50ms": {
+        "precision": 0.9516533066132264,
+        "recall": 0.8847228691197019,
+        "f1": 0.9169683804006759,
+        "tp": 7598,
+        "fp": 386,
+        "fn": 990
+      },
+      "familyF1At50ms": 0.923123340574463,
+      "detailedF1At20ms": 0.9082790248612117,
+      "familyF1At20ms": 0.9141926140477915,
+      "categoryDetailedF1At50ms": {
+        "heavy_rock_punk": 0.9510146955913226,
+        "pop_soul": 0.9200666111573689,
+        "funk_hiphop": 0.9089082384460817,
+        "jazz_world": 0.8951667801225324
+      },
+      "categoryFamilyF1At50ms": {
+        "heavy_rock_punk": 0.9552134359692093,
+        "pop_soul": 0.9263114071606994,
+        "funk_hiphop": 0.9169457468184863,
+        "jazz_world": 0.8992511912865895
+      }
+    },
+    "drumscript": {
+      "version": "0.2.1",
+      "commit": "59a912be8d5f9866798ead45930b9bf1fd8c9dab",
+      "completedRecords": 100,
+      "failedRecords": 0,
+      "predictionEvents": 7193,
+      "resultSha256": "f2ec1a70f7aa7407b6beb4586c93b969d0e95e0ce58693e3006823fce39a4294",
+      "detailedAt50ms": {
+        "precision": 0.5972473237870152,
+        "recall": 0.5002328830926874,
+        "f1": 0.5444521893416133,
+        "tp": 4296,
+        "fp": 2897,
+        "fn": 4292
+      },
+      "familyF1At50ms": 0.6052848361954248,
+      "detailedF1At20ms": 0.5286103542234333,
+      "familyF1At20ms": 0.5852607566060453,
+      "categoryDetailedF1At50ms": {
+        "heavy_rock_punk": 0.43398230088495576,
+        "pop_soul": 0.7333333333333333,
+        "funk_hiphop": 0.5811841627315656,
+        "jazz_world": 0.2844290657439446
+      },
+      "categoryFamilyF1At50ms": {
+        "heavy_rock_punk": 0.5047787610619469,
+        "pop_soul": 0.7609649122807017,
+        "funk_hiphop": 0.6476571013439884,
+        "jazz_world": 0.3771626297577855
+      }
+    }
+  },
+  "competitorCoverage": {
+    "drum2notes": {
+      "completedRecordsOnThisSelection": 0,
+      "status": "awaiting_explicit_rights_attestation_confirmation",
+      "freeDemoWindowSeconds": 20,
+      "priorSeparateProbeRecords": 10,
+      "priorSeparateProbeDetailedF1At50ms": 0.7687
+    },
+    "drumscrib": {
+      "completedRecordsOnThisSelection": 0,
+      "status": "paid_and_personal_use_terms_not_authorized",
+      "estimatedMinimumPriceEurFor100WithoutExtras": 150
+    },
+    "playDrumsOnline": {
+      "completedRecordsOnThisSelection": 0,
+      "status": "one_free_transcription_and_paid_upload_limit"
+    },
+    "drumAi": {
+      "completedRecordsOnThisSelection": 0,
+      "status": "sign_in_required_in_active_browser_session"
+    },
+    "drumscript": {
+      "completedRecordsOnThisSelection": 100,
+      "status": "complete"
+    }
+  },
+  "claimBoundary": {
+    "ninetyPercentOnThisDetectorBenchmark": true,
+    "ninetyPercentInEveryCategory": false,
+    "ninetyPercentOnArbitraryFullSongs": false,
+    "completeFiveCompetitorLeaderboard": false
+  }
+}
