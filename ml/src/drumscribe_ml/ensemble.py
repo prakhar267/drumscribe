@@ -202,9 +202,7 @@ class StackedEnsembleConfig:
                 set(self.family_conflict_margins) - set(EXCLUSIVE_FAMILIES_BY_NAME)
             )
             if unknown_families:
-                raise TrainingError(
-                    f"unknown exclusive family conflict rules: {unknown_families}"
-                )
+                raise TrainingError(f"unknown exclusive family conflict rules: {unknown_families}")
             if any(
                 not math.isfinite(margin) or margin < 0
                 for margin in self.family_conflict_margins.values()
@@ -386,9 +384,7 @@ def decode_stacked_probabilities(
         raise TrainingError(f"unknown exclusive family conflict rules: {unknown_families}")
     for family_name, minimum_margin in family_conflict_margins.items():
         if not math.isfinite(minimum_margin) or minimum_margin < 0:
-            raise TrainingError(
-                "exclusive family conflict margins must be finite and non-negative"
-            )
+            raise TrainingError("exclusive family conflict margins must be finite and non-negative")
         family = EXCLUSIVE_FAMILIES_BY_NAME[family_name]
         candidates_by_frame: dict[int, list[Any]] = {}
         for instrument in family:
@@ -402,9 +398,7 @@ def decode_stacked_probabilities(
                 key=lambda instrument: (
                     float(
                         _probability_logit(probabilities[frame, class_index[instrument]])
-                        - _probability_logit(
-                            np.asarray(rules[instrument.value].threshold)
-                        )
+                        - _probability_logit(np.asarray(rules[instrument.value].threshold))
                     ),
                     instrument.value,
                 ),

@@ -226,14 +226,10 @@ def test_calibration_and_training_metadata_are_versioned(tmp_path):
             "invalid-focused-weight",
             onset_class_loss_multipliers={"PEDAL_HIHAT": 0},
         )
-    focal = TrainingConfig(
-        "prepared.json", str(tmp_path), "focal", onset_focal_gamma=1.5
-    )
+    focal = TrainingConfig("prepared.json", str(tmp_path), "focal", onset_focal_gamma=1.5)
     assert focal.onset_focal_gamma == pytest.approx(1.5)
     with pytest.raises(TrainingError, match="focal gamma"):
-        TrainingConfig(
-            "prepared.json", str(tmp_path), "invalid-focal", onset_focal_gamma=6
-        )
+        TrainingConfig("prepared.json", str(tmp_path), "invalid-focal", onset_focal_gamma=6)
 
 
 def test_binary_focal_loss_preserves_bce_at_zero_and_downweights_easy_frames():
@@ -249,9 +245,7 @@ def test_binary_focal_loss_preserves_bce_at_zero_and_downweights_easy_frames():
     focal_zero = _binary_focal_loss_with_logits(
         logits, targets, pos_weight=positive_weights, gamma=0
     )
-    focal = _binary_focal_loss_with_logits(
-        logits, targets, pos_weight=positive_weights, gamma=2
-    )
+    focal = _binary_focal_loss_with_logits(logits, targets, pos_weight=positive_weights, gamma=2)
     assert torch.equal(focal_zero, baseline)
     assert torch.all(focal < baseline)
     assert focal[0].sum() < focal[1].sum()
