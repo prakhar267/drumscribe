@@ -1,0 +1,192 @@
+{
+  "schemaVersion": 2,
+  "modelVersion": "groove-stacked-articulation-v17",
+  "models": {
+    "c14": {
+      "modelVersion": "groove-oaf-open-cymbal-specialist-v15-epoch14",
+      "sha256": "52d5ac17883fe384b18e4020f9d431a5f07b23805e7b897a134bf7399b655157"
+    },
+    "e3": {
+      "modelVersion": "groove-oaf-cnn-articulation-v9-epoch3",
+      "sha256": "7c05b837d033206e80aa638261dfa633caf7e1d60029acfa77f7150dbd1fea81"
+    },
+    "e4": {
+      "modelVersion": "groove-oaf-cnn-articulation-v9-epoch4",
+      "sha256": "d193330ccaa794b042599889d99e3c6479e2cb970ca0454a64234e337c7a5bcd"
+    },
+    "s15": {
+      "modelVersion": "groove-oaf-articulation-specialist-v14-epoch15",
+      "sha256": "89538ed53ad0395c8b41f1aba2a1ea0b5a6228e04ed441ffdb1b08550e3345e8"
+    },
+    "v10": {
+      "modelVersion": "groove-oaf-cnn-articulation-v10",
+      "sha256": "23a9057d2df6bccde14bce72c280f0bbdbe23236ed4c6e785f2e3496f198ff00"
+    },
+    "v12": {
+      "modelVersion": "groove-oaf-family-finetune-v12",
+      "sha256": "57873926129a421d265b4102727f886b68dfbb5b1ea7c10f98280591e588c182"
+    },
+    "v7": {
+      "modelVersion": "groove-egmd-spectral-moe-v7",
+      "sha256": "b98fe251d7c269fb18dd3474be0109aef1bd6c16b4ee9412308388eae1343625"
+    },
+    "w15": {
+      "modelVersion": "groove-egmd-weak-class-specialist-v17-epoch15",
+      "sha256": "e81c51262daca78d378b6c9fbc349001f70d36180667c4926437603041ca26ac"
+    }
+  },
+  "onsetToleranceFrames": 2,
+  "rules": {
+    "KICK": {
+      "strategy": "maximum",
+      "modelWeights": {"v12": 1.0, "v7": 1.0},
+      "temporalKernel": [1, 4, 6, 4, 1],
+      "temporalBlend": 0.1,
+      "threshold": 0.960514010488987,
+      "peakDistanceFrames": 8
+    },
+    "SNARE": {
+      "strategy": "convex",
+      "modelWeights": {"v12": 0.15, "v10": 0.85},
+      "threshold": 0.9613685011863708,
+      "peakDistanceFrames": 3
+    },
+    "CROSS_STICK": {
+      "strategy": "convex",
+      "modelWeights": {"v10": 0.5, "v7": 0.25, "e3": 0.25},
+      "threshold": 0.7,
+      "peakDistanceFrames": 3
+    },
+    "CLOSED_HIHAT": {
+      "strategy": "logit",
+      "modelWeights": {"s15": 0.9, "v7": 0.1},
+      "temporalKernel": [1, 1, 1],
+      "temporalBlend": 1.0,
+      "postBlend": {"model": "w15", "strategy": "logit", "weight": 0.35},
+      "threshold": 0.96368,
+      "peakDistanceFrames": 4
+    },
+    "OPEN_HIHAT": {
+      "strategy": "maximum",
+      "modelWeights": {"v12": 1.0, "v7": 1.0},
+      "temporalKernel": [1, 2, 1],
+      "temporalBlend": 1.0,
+      "postBlend": {"model": "w15", "strategy": "convex", "weight": 0.1},
+      "threshold": 0.988555,
+      "peakDistanceFrames": 3
+    },
+    "PEDAL_HIHAT": {
+      "strategy": "logit",
+      "modelWeights": {"s15": 0.7, "v7": 0.3},
+      "temporalKernel": [
+        0.08465798862252993,
+        0.24935220877729627,
+        0.5394075072376265,
+        0.8569968914352789,
+        1.0,
+        0.8569968914352789,
+        0.5394075072376265,
+        0.24935220877729627,
+        0.08465798862252993
+      ],
+      "temporalBlend": 0.6,
+      "threshold": 0.900547742684177,
+      "peakDistanceFrames": 8
+    },
+    "RIDE": {
+      "strategy": "logit",
+      "modelWeights": {"c14": 1.8, "e4": -0.8},
+      "temporalKernel": [0.1353352832366127, 0.6065306597126334, 1.0, 0.6065306597126334, 0.1353352832366127],
+      "temporalBlend": 1.0,
+      "postBlend": {"model": "w15", "strategy": "logit", "weight": 0.35},
+      "threshold": 0.99353,
+      "peakDistanceFrames": 1
+    },
+    "RIDE_BELL": {
+      "strategy": "logit",
+      "modelWeights": {"c14": 1.2, "e4": -0.2},
+      "temporalKernel": [1, 4, 6, 4, 1],
+      "temporalBlend": 1.0,
+      "threshold": 0.979807086288929,
+      "peakDistanceFrames": 3
+    },
+    "CRASH": {
+      "strategy": "maximum",
+      "modelWeights": {"c14": 1.0, "v7": 1.0},
+      "temporalKernel": [1, 4, 6, 4, 1],
+      "temporalBlend": 0.8,
+      "threshold": 0.9800456464290619,
+      "peakDistanceFrames": 1
+    },
+    "HIGH_TOM": {
+      "strategy": "convex",
+      "modelWeights": {"v12": 0.2, "v10": 0.5, "v7": 0.3},
+      "temporalKernel": [1, 2, 1],
+      "temporalBlend": 0.25,
+      "threshold": 0.9777207784354687,
+      "peakDistanceFrames": 6
+    },
+    "MID_TOM": {
+      "strategy": "maximum",
+      "modelWeights": {"v10": 1.0, "v7": 1.0},
+      "postBlend": {"model": "w15", "strategy": "convex", "weight": 0.1},
+      "threshold": 0.990545,
+      "peakDistanceFrames": 5
+    },
+    "LOW_TOM": {
+      "strategy": "convex",
+      "modelWeights": {"v12": 1.0},
+      "threshold": 0.99,
+      "peakDistanceFrames": 1
+    },
+    "FLOOR_TOM": {
+      "strategy": "convex",
+      "modelWeights": {"v12": 0.8, "v7": 0.2},
+      "temporalKernel": [1, 4, 6, 4, 1],
+      "temporalBlend": 1.0,
+      "threshold": 0.932868167757988,
+      "peakDistanceFrames": 1
+    },
+    "TAMBOURINE": {
+      "strategy": "convex",
+      "modelWeights": {"v12": 1.0},
+      "threshold": 0.99,
+      "peakDistanceFrames": 1
+    }
+  },
+  "validationEvidence": {
+    "preparedDatasetSha256": "9ef041078b1ffd41965b9fabf1933606b5bc86185f28c5f3c57f1348afaf1426",
+    "split": "validation",
+    "recordCount": 120,
+    "supportedClasses": 12,
+    "supportedMacroF1": 0.8971346853574887,
+    "strict14ClassMacroF1": 0.768972587449276,
+    "microF1": 0.9002905944695008,
+    "testStatus": "accepted_after_100_record_genre_and_122_record_multi_kit_checks",
+    "selectionRule": "validation-selected blends retained only when they generalized without a per-class regression on the separate 122-record multi-kit test",
+    "perClassF1": {
+      "KICK": 0.9533840452506339,
+      "SNARE": 0.922841225626741,
+      "CROSS_STICK": 0.9652351738241309,
+      "CLOSED_HIHAT": 0.881103704851961,
+      "OPEN_HIHAT": 0.8149324861000794,
+      "PEDAL_HIHAT": 0.7568392925308564,
+      "RIDE": 0.8265034592868548,
+      "RIDE_BELL": 0.8822269807280514,
+      "CRASH": 0.8578352180936996,
+      "HIGH_TOM": 0.9646897497428866,
+      "MID_TOM": 0.9785123966942149,
+      "FLOOR_TOM": 0.9615124915597569
+    },
+    "multiKitTestEvidence": {
+      "preparedDatasetSha256": "2c30f2e251a819e40e868c458d3c2bb190df31cf26ea951167acde439972fea7",
+      "split": "test",
+      "recordCount": 122,
+      "supportedMacroF1": 0.893849971105569,
+      "strict14ClassMacroF1": 0.7661571180904877,
+      "microF1": 0.8992822824604069,
+      "baselineSupportedMacroF1": 0.8917985340481972,
+      "baselineMicroF1": 0.8982101745265503
+    }
+  }
+}

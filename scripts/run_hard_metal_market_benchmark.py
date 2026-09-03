@@ -467,7 +467,7 @@ def predict_suite(args: argparse.Namespace) -> None:
     config_path = _resolve(repository, args.config)
     config = StackedEnsembleConfig.load(config_path)
     checkpoint_paths = {
-        name: _resolve(repository, path) for name, path in CHECKPOINTS.items()
+        name: _resolve(repository, CHECKPOINTS[name]) for name in config.models
     }
     first_stem = (
         args.demucs_root.resolve(strict=True)

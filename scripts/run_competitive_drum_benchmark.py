@@ -14,10 +14,10 @@ import json
 import math
 import re
 import statistics
-from collections import defaultdict
+from collections.abc import Iterable
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 import numpy as np
 from drumscribe_ml.ensemble import (
@@ -27,7 +27,6 @@ from drumscribe_ml.ensemble import (
 )
 from drumscribe_ml.training import TRAINING_CLASSES, TrainingConfig, build_model
 from drumscribe_music.mapping import GM_TO_INSTRUMENT
-
 
 DEFAULT_CONFIG = Path("ml/configs/groove-stacked-articulation-v16.json")
 DEFAULT_PREPARED = Path("data/licensed-corpus/groove-prepared/prepared-dataset.json")
@@ -72,16 +71,15 @@ CHECKPOINTS = {
         "groove-oaf-articulation-specialist-v14/checkpoint-0015.pt"
     ),
     "v10": Path(
-        "data/licensed-corpus/experiments/"
-        "groove-oaf-cnn-articulation-v10/best.pt"
+        "data/licensed-corpus/experiments/groove-oaf-cnn-articulation-v10/best.pt"
     ),
     "v12": Path(
-        "data/licensed-corpus/experiments/"
-        "groove-oaf-family-finetune-v12/best.pt"
+        "data/licensed-corpus/experiments/groove-oaf-family-finetune-v12/best.pt"
     ),
-    "v7": Path(
+    "v7": Path("data/licensed-corpus/experiments/groove-egmd-spectral-moe-v7/best.pt"),
+    "w15": Path(
         "data/licensed-corpus/experiments/"
-        "groove-egmd-spectral-moe-v7/best.pt"
+        "groove-egmd-weak-class-specialist-v17/checkpoint-0015.pt"
     ),
 }
 
@@ -97,7 +95,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--competitor", type=Path, default=DEFAULT_COMPETITOR)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--window-seconds", type=float, default=WINDOW_SECONDS)
-    parser.add_argument("--device", choices=("auto", "cpu", "mps", "cuda"), default="auto")
+    parser.add_argument(
+        "--device", choices=("auto", "cpu", "mps", "cuda"), default="auto"
+    )
     return parser.parse_args()
 
 
@@ -110,7 +110,11 @@ def sha256(path: Path) -> str:
 
 
 def resolve(repository: Path, path: Path) -> Path:
-    return (repository / path).resolve(strict=True) if not path.is_absolute() else path.resolve(strict=True)
+    return (
+        (repository / path).resolve(strict=True)
+        if not path.is_absolute()
+        else path.resolve(strict=True)
+    )
 
 
 def select_records(prepared_path: Path) -> list[dict[str, Any]]:
@@ -123,7 +127,9 @@ def select_records(prepared_path: Path) -> list[dict[str, Any]]:
             selected[int(match.group(1))] = record
     expected = set(range(1, 11))
     if set(selected) != expected:
-        raise RuntimeError(f"expected Groove eval recordings 1..10; found {sorted(selected)}")
+        raise RuntimeError(
+            f"expected Groove eval recordings 1..10; found {sorted(selected)}"
+        )
     # Keep the same filename order used by the ten live submissions.
     return [selected[index] for index in (1, 10, 2, 3, 4, 5, 6, 7, 8, 9)]
 
@@ -192,11 +198,17 @@ def load_models(
     import torch
 
     models: dict[str, Any] = {}
-    for name, checkpoint_path in checkpoint_paths.items():
+    missing = sorted(set(config.models) - set(checkpoint_paths))
+    if missing:
+        raise RuntimeError(f"missing checkpoint paths for configured models: {missing}")
+    for name in config.models:
+        checkpoint_path = checkpoint_paths[name]
         expected = config.models[name].sha256
         actual = sha256(checkpoint_path)
         if actual != expected:
-            raise RuntimeError(f"checkpoint hash mismatch for {name}: {actual} != {expected}")
+            raise RuntimeError(
+                f"checkpoint hash mismatch for {name}: {actual} != {expected}"
+            )
         state = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
         model_config = TrainingConfig(**state["configuration"])
         model = build_model(
@@ -241,7 +253,9 @@ def predict_drumscribe(
     )
 
 
-def match_times(references: Iterable[float], predictions: Iterable[float], tolerance: float) -> dict[str, Any]:
+def match_times(
+    references: Iterable[float], predictions: Iterable[float], tolerance: float
+) -> dict[str, Any]:
     refs = sorted(references)
     preds = sorted(predictions)
     ref_index = pred_index = true_positive = false_positive = false_negative = 0
@@ -274,11 +288,22 @@ def metrics_from_counts(tp: int, fp: int, fn: int) -> dict[str, float | int]:
     precision = tp / (tp + fp) if tp + fp else 0.0
     recall = tp / (tp + fn) if tp + fn else 0.0
     f1 = 2 * tp / (2 * tp + fp + fn) if 2 * tp + fp + fn else 0.0
-    return {"tp": tp, "fp": fp, "fn": fn, "precision": precision, "recall": recall, "f1": f1}
+    return {
+        "tp": tp,
+        "fp": fp,
+        "fn": fn,
+        "precision": precision,
+        "recall": recall,
+        "f1": f1,
+    }
 
 
-def score(reference: list[Event], prediction: list[Event], tolerance: float) -> dict[str, Any]:
-    classes = sorted({label for _, label in reference} | {label for _, label in prediction})
+def score(
+    reference: list[Event], prediction: list[Event], tolerance: float
+) -> dict[str, Any]:
+    classes = sorted(
+        {label for _, label in reference} | {label for _, label in prediction}
+    )
     by_class: dict[str, dict[str, Any]] = {}
     aggregate = {"tp": 0, "fp": 0, "fn": 0}
     all_errors: list[float] = []
@@ -290,7 +315,9 @@ def score(reference: list[Event], prediction: list[Event], tolerance: float) -> 
         metrics = metrics_from_counts(matched["tp"], matched["fp"], matched["fn"])
         metrics["support"] = len(references)
         if matched["errors"]:
-            metrics["meanAbsoluteTimingErrorMs"] = statistics.mean(matched["errors"]) * 1000
+            metrics["meanAbsoluteTimingErrorMs"] = (
+                statistics.mean(matched["errors"]) * 1000
+            )
         by_class[instrument] = metrics
         for key in aggregate:
             aggregate[key] += int(matched[key])
@@ -327,10 +354,16 @@ def combine_event_lists(items: list[list[Event]], stride: float = 100.0) -> list
 
 
 def mapped_events(events: list[Event], mapping: dict[str, str]) -> list[Event]:
-    return [(time, mapping[instrument]) for time, instrument in events if instrument in mapping]
+    return [
+        (time, mapping[instrument])
+        for time, instrument in events
+        if instrument in mapping
+    ]
 
 
-def score_taxonomies(reference: list[Event], prediction: list[Event], tolerance: float) -> dict[str, Any]:
+def score_taxonomies(
+    reference: list[Event], prediction: list[Event], tolerance: float
+) -> dict[str, Any]:
     return {
         "detailed14": score(reference, prediction, tolerance),
         "family6": score(
@@ -359,18 +392,26 @@ def main() -> None:
     config_path = resolve(repository, args.config)
     prepared_path = resolve(repository, args.prepared)
     competitor_root = resolve(repository, args.competitor)
-    output_path = (repository / args.output).resolve() if not args.output.is_absolute() else args.output.resolve()
+    output_path = (
+        (repository / args.output).resolve()
+        if not args.output.is_absolute()
+        else args.output.resolve()
+    )
     config = StackedEnsembleConfig.load(config_path)
     records = select_records(prepared_path)
     competitor_paths = sorted(competitor_root.glob("*.json"))
     if len(competitor_paths) != len(records):
-        raise RuntimeError(f"expected {len(records)} competitor files; found {len(competitor_paths)}")
+        raise RuntimeError(
+            f"expected {len(records)} competitor files; found {len(competitor_paths)}"
+        )
 
     import torch
 
     first_features = np.load(records[0]["featurePath"])["features"]
     device = choose_device(torch, args.device)
-    checkpoint_paths = {name: resolve(repository, path) for name, path in CHECKPOINTS.items()}
+    checkpoint_paths = {
+        name: resolve(repository, CHECKPOINTS[name]) for name in config.models
+    }
     models = load_models(config, checkpoint_paths, int(first_features.shape[1]), device)
 
     all_reference: list[list[Event]] = []
@@ -381,12 +422,16 @@ def main() -> None:
     drumscribe_raw_root = output_path.parent / "drumscribe-raw"
     drumscribe_raw_root.mkdir(parents=True, exist_ok=True)
 
-    for sequence, (record, competitor_path) in enumerate(zip(records, competitor_paths, strict=True), 1):
+    for sequence, (record, competitor_path) in enumerate(
+        zip(records, competitor_paths, strict=True), 1
+    ):
         audio_path = Path(record["audioPath"]).resolve(strict=True)
         annotation_path = Path(record["annotationPath"]).resolve(strict=True)
         feature_path = Path(record["featurePath"]).resolve(strict=True)
         reference = reference_events(annotation_path, args.window_seconds)
-        competitor, estimated_bpm = competitor_events(competitor_path, args.window_seconds)
+        competitor, estimated_bpm = competitor_events(
+            competitor_path, args.window_seconds
+        )
         drumscribe = predict_drumscribe(
             feature_path, models, config, device, args.window_seconds
         )
@@ -427,8 +472,12 @@ def main() -> None:
                 "competitorEventCount": len(competitor),
                 "scores": {
                     str(int(tolerance * 1000)): {
-                        "drumscribe": score_taxonomies(reference, drumscribe, tolerance),
-                        "drum2notes": score_taxonomies(reference, competitor, tolerance),
+                        "drumscribe": score_taxonomies(
+                            reference, drumscribe, tolerance
+                        ),
+                        "drum2notes": score_taxonomies(
+                            reference, competitor, tolerance
+                        ),
                     }
                     for tolerance in TOLERANCES
                 },
@@ -463,7 +512,8 @@ def main() -> None:
                 "modelVersion": config.model_version,
                 "configSha256": sha256(config_path),
                 "checkpointSha256": {
-                    name: sha256(path) for name, path in sorted(checkpoint_paths.items())
+                    name: sha256(path)
+                    for name, path in sorted(checkpoint_paths.items())
                 },
                 "device": device,
             },
@@ -489,8 +539,14 @@ def main() -> None:
         "tracks": tracks,
     }
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print(json.dumps({"output": str(output_path), "device": device, "records": len(records)}))
+    output_path.write_text(
+        json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    print(
+        json.dumps(
+            {"output": str(output_path), "device": device, "records": len(records)}
+        )
+    )
 
 
 if __name__ == "__main__":

@@ -97,7 +97,7 @@ def main() -> int:
 
     configuration = StackedEnsembleConfig.load(_resolve(repository, args.config))
     checkpoint_paths = {
-        name: _resolve(repository, path) for name, path in CHECKPOINTS.items()
+        name: _resolve(repository, CHECKPOINTS[name]) for name in configuration.models
     }
     preparation = PreparationConfig(
         seed="mdb-frozen-ensemble-inference", augmentation_variants=0

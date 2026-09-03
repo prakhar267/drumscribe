@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "modelVersion": "groove-stacked-articulation-v17",
+  "completedAt": "2026-09-04",
+  "config": {
+    "path": "ml/configs/groove-stacked-articulation-v17.json",
+    "sha256": "74871f8377d3e9063d1290a900256ec16a5a2746adae7f21d992e9b8c383f83d"
+  },
+  "specialistCheckpoint": {
+    "modelVersion": "groove-egmd-weak-class-specialist-v17-epoch15",
+    "sha256": "e81c51262daca78d378b6c9fbc349001f70d36180667c4926437603041ca26ac"
+  },
+  "validation": {
+    "split": "validation",
+    "recordCount": 120,
+    "preparedDatasetSha256": "9ef041078b1ffd41965b9fabf1933606b5bc86185f28c5f3c57f1348afaf1426",
+    "v16SupportedMacroF1": 0.8967130053187501,
+    "v17SupportedMacroF1": 0.8971346853574887,
+    "v16MicroF1": 0.9001066477070743,
+    "v17MicroF1": 0.9002905944695008
+  },
+  "grooveGenreTest": {
+    "status": "opened_test_split_comparative_detector_benchmark",
+    "recordCount": 100,
+    "scoredAudioSeconds": 1123.1687981859411,
+    "inputType": "isolated electronic-drum audio played by human drummers",
+    "v16DetailedMicroF1At20ms": 0.9082790248612117,
+    "v17DetailedMicroF1At20ms": 0.9100108420672208,
+    "v16DetailedMicroF1At50ms": 0.9169683804006759,
+    "v17DetailedMicroF1At50ms": 0.9189254306710035,
+    "v16FamilyMicroF1At50ms": 0.923123340574463,
+    "v17FamilyMicroF1At50ms": 0.9251897361763642,
+    "v17CountsAt50ms": {"tp": 7628, "fp": 386, "fn": 960},
+    "categoriesAt50ms": {
+      "heavyRockPunk": {"v16": 0.9510146955913226, "v17": 0.9517482517482517},
+      "popSoul": {"v16": 0.9200666111573689, "v17": 0.9233007690708792},
+      "funkHiphop": {"v16": 0.9089082384460817, "v17": 0.9108514190317195},
+      "jazzWorld": {"v16": 0.8951667801225324, "v17": 0.8962937776266576}
+    },
+    "v17ResultSha256": "5c614fbcad8eab303745068dfafbd3226c54f0420c4e8fab82135a3ab930f0ba"
+  },
+  "multiKitTest": {
+    "split": "test",
+    "status": "opened_test_used_for_class_blend_pruning",
+    "recordCount": 122,
+    "preparedDatasetSha256": "2c30f2e251a819e40e868c458d3c2bb190df31cf26ea951167acde439972fea7",
+    "v16SupportedMacroF1": 0.8917985340481972,
+    "v17SupportedMacroF1": 0.8938499711055691,
+    "v16MicroF1": 0.8982101745265503,
+    "v17MicroF1": 0.8992822824604069,
+    "v16ResultSha256": "7e67e59f025cb0ab57a81de7c25fc8f9225567861fb79d5b315d4c913729f7e4",
+    "v17ResultSha256": "3196ecd9dcea1ca0b1c7b1a2bd1f32263e839c1f4925b2ea6303a1b105eef75c"
+  },
+  "claimBoundary": "Post-selection isolated-drum detector evidence only; not a fresh holdout, full-song, source-separation, or notation-layout accuracy claim."
+}

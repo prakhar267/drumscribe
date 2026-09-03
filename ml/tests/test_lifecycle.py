@@ -513,11 +513,22 @@ def test_stacked_ensemble_fuses_named_models_and_temporal_scores():
         threshold=0.1,
         peak_distance_frames=1,
     )
+    rules[TRAINING_CLASSES[3].value] = StackedEnsembleRule(
+        strategy="convex",
+        model_weights={"first": 1},
+        threshold=0.1,
+        peak_distance_frames=1,
+        post_blend_model="second",
+        post_blend_strategy="logit",
+        post_blend_weight=0.25,
+    )
     output = blend_stacked_probabilities({"first": first, "second": second}, rules)
     assert output[2, 0] == pytest.approx(0.425)
     expected_logit = 1 / (1 + np.exp(-(1.5 * np.log(0.1 / 0.9) - 0.5 * np.log(0.2 / 0.8))))
     assert output[0, 1] == pytest.approx(expected_logit)
     assert output[0, 2] == pytest.approx(0.2)
+    expected_post_blend = 1 / (1 + np.exp(-(0.75 * np.log(0.1 / 0.9) + 0.25 * np.log(0.2 / 0.8))))
+    assert output[0, 3] == pytest.approx(expected_post_blend)
 
 
 def test_stacked_ensemble_config_rejects_unknown_models_and_invalid_kernels():
@@ -545,3 +556,55 @@ def test_stacked_ensemble_config_rejects_unknown_models_and_invalid_kernels():
             peak_distance_frames=1,
             temporal_kernel=(1, 1),
         )
+    with pytest.raises(TrainingError, match="must be set together"):
+        StackedEnsembleRule(
+            strategy="convex",
+            model_weights={"available": 1},
+            threshold=0.5,
+            peak_distance_frames=1,
+            post_blend_model="available",
+        )
+
+
+def test_stacked_ensemble_config_loads_post_blend(tmp_path: Path):
+    rules = {
+        instrument.value: {
+            "strategy": "convex",
+            "modelWeights": {"base": 1},
+            "threshold": 0.5,
+            "peakDistanceFrames": 1,
+        }
+        for instrument in TRAINING_CLASSES
+    }
+    rules[TRAINING_CLASSES[0].value]["postBlend"] = {
+        "model": "specialist",
+        "strategy": "logit",
+        "weight": 0.25,
+    }
+    path = tmp_path / "stack.json"
+    path.write_text(
+        json.dumps(
+            {
+                "schemaVersion": 2,
+                "modelVersion": "fixture-stack",
+                "models": {
+                    "base": {"modelVersion": "base", "sha256": "0" * 64},
+                    "specialist": {
+                        "modelVersion": "specialist",
+                        "sha256": "1" * 64,
+                    },
+                },
+                "rules": rules,
+            }
+        ),
+        encoding="utf-8",
+    )
+    loaded = StackedEnsembleConfig.load(path)
+    rule = loaded.rules[TRAINING_CLASSES[0].value]
+    assert rule.post_blend_model == "specialist"
+    assert rule.post_blend_strategy == "logit"
+    assert rule.post_blend_weight == 0.25
+
+    probabilities = np.full((2, len(TRAINING_CLASSES)), 0.5)
+    with pytest.raises(TrainingError, match="missing stacked ensemble probabilities"):
+        blend_stacked_probabilities({"base": probabilities}, loaded.rules)

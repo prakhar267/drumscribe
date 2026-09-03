@@ -60,7 +60,7 @@ def transcribe(
         )
     configuration = StackedEnsembleConfig.load(ensemble_config)
     checkpoint_paths = {
-        name: _resolve(repository, path) for name, path in CHECKPOINTS.items()
+        name: _resolve(repository, CHECKPOINTS[name]) for name in configuration.models
     }
     duration = sf.info(source).duration
     with tempfile.TemporaryDirectory(prefix="drumscribe-hybrid-") as directory:

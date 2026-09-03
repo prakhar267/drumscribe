@@ -118,6 +118,18 @@ GMD test split, so the result is a comparative detector benchmark rather than
 a full-song or fresh sealed release estimate. See
 `docs/benchmarks/REAL_100_GENRE_COMPETITOR_BENCHMARK.md`.
 
+The v17 selective specialist pass adds an optional post-stack blend trained on
+the licensed Groove + E-GMD train partition. It raises the existing 100-record
+genre comparison from 91.70% to 91.89% detailed micro F1 at 50 ms; all four
+category aggregates improve. On the opened 122-record multi-kit evaluation it
+raises micro F1 from 89.82% to 89.93% and supported macro F1 from 89.18% to
+89.38%. The final blend retains only closed/open hi-hat, ride and mid-tom
+changes that did not regress a supported class on those comparisons. Because
+both test-style sets were already open and informed this pruning, these are
+post-selection regression results, not a fresh generalization estimate. Pedal
+hi-hat, open hi-hat, ride bell and full-mixture separation remain blockers. See
+`docs/benchmarks/GROOVE_STACKED_ARTICULATION_V17.md`.
+
 ## Model path
 
 1. Import E-GMD through `drumscribe-ml import-egmd` on dedicated training compute. Its official train, validation and test assignments are preserved, and every kit rendering of one performance stays in the same leakage group.

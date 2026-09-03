@@ -119,7 +119,9 @@ def prior_audio_hashes(path: Path) -> set[str]:
 
 
 def select_records(
-    prepared_path: Path, excluded_hashes: set[str], records_per_category: int
+    prepared_path: Path,
+    excluded_hashes: set[str],
+    records_per_category: int,
 ) -> list[dict[str, Any]]:
     payload = json.loads(prepared_path.read_text(encoding="utf-8"))
     candidates: dict[str, list[dict[str, Any]]] = defaultdict(list)
@@ -186,7 +188,7 @@ def main() -> int:
 
     configuration = StackedEnsembleConfig.load(config_path)
     checkpoint_paths = {
-        name: resolve(repository, path) for name, path in CHECKPOINTS.items()
+        name: resolve(repository, CHECKPOINTS[name]) for name in configuration.models
     }
     device = choose_device(args.device)
     with np.load(Path(records[0]["featurePath"]), allow_pickle=False) as arrays:

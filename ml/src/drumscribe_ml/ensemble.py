@@ -98,6 +98,9 @@ class StackedEnsembleRule:
     peak_distance_frames: int
     temporal_kernel: tuple[float, ...] = (1.0,)
     temporal_blend: float = 0.0
+    post_blend_model: str | None = None
+    post_blend_strategy: Literal["convex", "logit"] | None = None
+    post_blend_weight: float = 0.0
 
     def __post_init__(self) -> None:
         if self.strategy not in {"convex", "linear", "logit", "maximum", "noisy_or"}:
@@ -131,6 +134,22 @@ class StackedEnsembleRule:
             raise TrainingError("stacked ensemble temporal kernel must be positive and odd-length")
         if not math.isfinite(self.temporal_blend) or not 0 <= self.temporal_blend <= 1:
             raise TrainingError("stacked ensemble temporal blend must be between zero and one")
+        post_blend_fields = (
+            self.post_blend_model is not None,
+            self.post_blend_strategy is not None,
+            self.post_blend_weight != 0,
+        )
+        if any(post_blend_fields) and not all(post_blend_fields):
+            raise TrainingError(
+                "stacked ensemble post-blend model, strategy, and weight must be set together"
+            )
+        if self.post_blend_model is not None:
+            if not self.post_blend_model.strip():
+                raise TrainingError("stacked ensemble post-blend model cannot be empty")
+            if self.post_blend_strategy not in {"convex", "logit"}:
+                raise TrainingError("stacked ensemble post-blend strategy is invalid")
+            if not math.isfinite(self.post_blend_weight) or not 0 < self.post_blend_weight <= 1:
+                raise TrainingError("stacked ensemble post-blend weight must be in (0, 1]")
 
 
 @dataclass(frozen=True, slots=True)
@@ -159,6 +178,11 @@ class StackedEnsembleConfig:
                 for rule in self.rules.values()
                 for model in rule.model_weights
                 if model not in self.models
+            }
+            | {
+                rule.post_blend_model
+                for rule in self.rules.values()
+                if rule.post_blend_model is not None and rule.post_blend_model not in self.models
             }
         )
         if unknown_models:
@@ -191,6 +215,21 @@ class StackedEnsembleConfig:
                         float(value) for value in rule.get("temporalKernel", [1])
                     ),
                     temporal_blend=float(rule.get("temporalBlend", 0)),
+                    post_blend_model=(
+                        str(rule["postBlend"]["model"])
+                        if rule.get("postBlend") is not None
+                        else None
+                    ),
+                    post_blend_strategy=(
+                        str(rule["postBlend"]["strategy"])
+                        if rule.get("postBlend") is not None
+                        else None
+                    ),
+                    post_blend_weight=(
+                        float(rule["postBlend"]["weight"])
+                        if rule.get("postBlend") is not None
+                        else 0.0
+                    ),
                 )
                 for instrument, rule in payload["rules"].items()
             },
@@ -252,7 +291,10 @@ def blend_stacked_probabilities(
     output = np.empty(shape, dtype=np.float64)
     for index, instrument in enumerate(TRAINING_CLASSES):
         rule = rules[instrument.value]
-        unknown = sorted(set(rule.model_weights) - set(model_probabilities))
+        referenced_models = set(rule.model_weights)
+        if rule.post_blend_model is not None:
+            referenced_models.add(rule.post_blend_model)
+        unknown = sorted(referenced_models - set(model_probabilities))
         if unknown:
             raise TrainingError(f"missing stacked ensemble probabilities for models: {unknown}")
         inputs = {name: model_probabilities[name][:, index] for name in rule.model_weights}
@@ -278,6 +320,17 @@ def blend_stacked_probabilities(
             kernel /= kernel.sum()
             smoothed = _same_length_convolution(combined, kernel)
             combined = (1 - rule.temporal_blend) * combined + rule.temporal_blend * smoothed
+        if rule.post_blend_model is not None:
+            specialist = model_probabilities[rule.post_blend_model][:, index]
+            if rule.post_blend_strategy == "convex":
+                combined = (
+                    1 - rule.post_blend_weight
+                ) * combined + rule.post_blend_weight * specialist
+            else:
+                combined_logits = (1 - rule.post_blend_weight) * _probability_logit(
+                    combined
+                ) + rule.post_blend_weight * _probability_logit(specialist)
+                combined = 1 / (1 + np.exp(-np.clip(combined_logits, -30, 30)))
         output[:, index] = combined
     return output
 
