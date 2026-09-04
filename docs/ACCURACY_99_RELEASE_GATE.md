@@ -109,6 +109,15 @@ ADTOF is non-commercial and Demucs artifact/data rights remain unresolved, so
 the research path is not a paid-production provider. See
 `docs/benchmarks/REAL_PERFORMANCE_RESEARCH_V1.md`.
 
+The 2026-09-05 live full-mixture comparison then sent the same byte-identical
+20-second country, free-jazz, grunge and speed-metal excerpts through the
+current DrumScribe research-beta app path and Klangio Drum2Notes. Across 459
+manually annotated MDB events, current DrumScribe scored 76.42% six-family
+micro F1 at 50 ms versus Drum2Notes at 79.71%. The best DrumScribe research
+path reached 89.59%, but uses non-commercial ADTOF and unresolved Demucs model
+rights. It therefore neither clears the 90% gate nor qualifies for paid launch.
+See `docs/benchmarks/MDB_REAL_LIVE_COMPARISON.md`.
+
 A balanced follow-up processed 100 real human GMD drum performances (25 each
 for rock/punk, pop/soul, funk/hip-hop and jazz/world). DrumScribe v16 reached
 91.70% detailed event micro F1 at 50 ms, versus 54.45% for the open-source

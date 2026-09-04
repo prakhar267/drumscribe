@@ -82,12 +82,14 @@ gigabytes and still require a complete artifact/training-data rights audit.
 
 ## Competitor comparison status
 
-The fair Drum2Notes real-song comparison was predeclared on the same first
-20 seconds of Speed Metal, Grunge, Free Jazz and Country. The public demo now
-accepts the benchmark files through the in-app browser, but final submission
-requires a rights/title/composer attestation. That external legal attestation
-is awaiting explicit action-time confirmation. No result is invented in its
-place.
+The predeclared live Drum2Notes comparison is now complete on the same first
+20 seconds of Speed Metal, Grunge, Free Jazz and Country. On 459 annotated
+events, the current DrumScribe app research path scores **76.42%** six-family
+micro F1 at 50 ms and Drum2Notes scores **79.71%**. The best non-commercial
+DrumScribe research path scores **89.59%**. All four competitor jobs completed;
+no service failure or track was excluded. Both systems started from byte-identical
+full-mixture excerpts. See `MDB_REAL_LIVE_COMPARISON.md` for the per-genre
+results and commercial boundary.
 
 The existing completed comparison remains the 12-track rights-cleared synthetic
 suite: DrumScribe 97.35% versus Drum2Notes 65.54% at 20 ms. That result does not

@@ -87,14 +87,39 @@
   },
   "competitorComparison": {
     "sameRealFiles": {
-      "status": "awaiting_explicit_rights_attestation_confirmation",
+      "status": "complete_live_comparison",
       "predeclaredTracks": [
         "MusicDelta_SpeedMetal",
         "MusicDelta_Grunge",
         "MusicDelta_FreeJazz",
         "MusicDelta_Country1"
       ],
-      "windowSeconds": 20
+      "windowSeconds": 20,
+      "referenceEvents": 459,
+      "allCompetitorJobsCompleted": true,
+      "primaryMetric": "six-family event micro F1 with one-to-one 50 ms onset matching",
+      "currentApp": {
+        "pipeline": "htdemucs_ft -> drumscribe-hybrid-v1",
+        "precision": 0.7393075356415478,
+        "recall": 0.7908496732026143,
+        "f1": 0.7642105263157895
+      },
+      "drum2notes": {
+        "surface": "live public demo",
+        "precision": 0.7665995975855131,
+        "recall": 0.8300653594771242,
+        "f1": 0.797071129707113
+      },
+      "bestResearch": {
+        "pipeline": "htdemucs_ft -> ADTOF",
+        "precision": 0.8920086393088553,
+        "recall": 0.8997821350762527,
+        "f1": 0.89587852494577,
+        "commerciallyDeployable": false
+      },
+      "sameFullMixBytes": true,
+      "fullLocalResultSha256": "6a5f764a367f93470025ebd23a142b1c3574c6909f010ce06d1fbd4e2d7a0101",
+      "researchOnly": true
     },
     "existingRightsClearedSyntheticComparison": {
       "trackCount": 12,
