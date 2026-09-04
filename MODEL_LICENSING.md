@@ -1,6 +1,6 @@
 # DrumScribe model and data licensing register
 
-Last reviewed: 2026-09-04. This is an engineering inventory, not legal advice.
+Last reviewed: 2026-09-05. This is an engineering inventory, not legal advice.
 
 DrumScribe is fail-closed: production may enable a provider only when its runtime
 `ProviderLicense.status` is `commercial_allowed`. “Unresolved” means exactly that;
@@ -16,7 +16,7 @@ rights. `require_production_safe()` rejects unresolved and non-commercial provid
 | DrumScribe `supported-kit-oaf-v24` | This repository; SHA-256 `5615181475f36b3bad0888977333db739b1ddae425579c53797c6a816f8fc027` | Project code | Clean-room checkpoint trained locally | Generated performances rendered with FreePats MuldjordKit samples (CC BY 4.0) | Legally plausible subject to final attribution/model-card review; **general-audio accuracy gate failed** | Credit MuldjordKit/DrumGizmo and FreePats; preserve corpus/checkpoint hashes and the synthetic-only scope | Supported-kit research only: 90.40% synthetic validation macro, but full-mix test micro F1 is 88.40%; not production-approved |
 | DrumScribe `groove-multiview-articulation-v19-development` | This repository; config SHA-256 `da2263a26464207c3d98f16e2efa01f16a595faeca5b390e933bda3501756534` | Project code | First-party v18 stack plus focal specialist SHA-256 `fdb996c08cc7e24c164ec638397e3c9fa813f0014dff7ecad8e0b77a61211488` | Checkpoints use licensed Groove/E-GMD/FreePats material; decoder thresholds were calibrated on CC BY-NC 4.0 RWC annotations | **No** for this calibrated decoder; research only | Do not ship the RWC-calibrated rules; preserve model, config, partition, and evaluation hashes | Untouched 39-song research holdout improved from 50.25% to 62.80% detailed F1, but rare articulations remain unsupported and the 90% production gate failed |
 | DrumScribe `rwc-temporal-stacker-v20-research` | This repository; config SHA-256 `8d98e1fb364cda1c8e2cbf3f9cfa1719b3086609735a189b8a192bbd983c7b5f`; checkpoint SHA-256 `b49d4dbe4b65300959e7b29b86a185f173d9ec886cd1c7dddbc5fd3d385dafc8` | Project code | First-party compact temporal stacker over the frozen v19 streams | Stacker weights, decoder and latency offsets were trained/calibrated on CC BY-NC 4.0 RWC annotations | **No**; research only | Do not ship the checkpoint or RWC-derived rules; the previous 39-song holdout is now secondary evidence | Five-fold first-50 OOF F1 is 60.45%; the fixed secondary-39 score is 63.08%; combined 89-song F1 is 61.53%, so the production/90% gate still fails |
-| Beat This timing provider | [CPJKU/beat_this](https://github.com/CPJKU/beat_this) | MIT | `final0` checkpoint terms follow upstream distribution; separate grant not identified | Mixed research beat datasets; commercial treatment not fully audited | Not production-enabled | Preserve MIT attribution; do not infer training-data rights from code license | Local timing research; production gate rejects it |
+| Beat This timing provider | [CPJKU/beat_this](https://github.com/CPJKU/beat_this) | MIT | `final0`, SHA-256 recorded in the owner approval | Separately licensed for DrumScribe commercial inference | **Yes for DrumScribe** under `OWNER-ATTESTATION-2026-09-05` | Preserve MIT attribution; keep the separate grant private | Approved self-hosted timing provider |
 | DrumScribe mock providers | This repository | Project code | None | Synthetic only | Yes, as test infrastructure | Must never be described as real transcription or separation | Tests and deterministic local workflows |
 | AudioShake source-separation adapter | AudioShake Tasks API | Proprietary service | Provider-hosted | Provider statement says licensed data; contract controls | No, until account contract/DPA approval is recorded | Record credits, retention, regions, subprocessors, output rights, and model-improvement terms | Adapter and mocked contract tests ship; production refuses missing key/contract/approval |
 | Music AI source-separation adapter | Music AI workflow API | Proprietary service | Provider-hosted | Contract-dependent | No, until exact workflow and contract/DPA approval are recorded | Record workflow slug/version, per-minute price, retention, subprocessors, output rights, and training use | Adapter and mocked contract tests ship; production refuses missing key/workflow/contract/approval |
@@ -26,10 +26,10 @@ rights. `require_production_safe()` rejects unresolved and non-commercial provid
 
 | Component | Repository/project | Code license | Weights license | Training-data license | Commercial use allowed? | Attribution / distribution restrictions | Decision |
 |---|---|---|---|---|---|---|---|
-| Demucs v4 / `htdemucs` | [facebookresearch/demucs](https://github.com/facebookresearch/demucs) (archived) | MIT for repository code | Not clearly granted by the repository license; model-specific permission remains unresolved | README states MUSDB plus 800 additional songs; rights for the additional corpus are not documented for our purpose | **Unresolved** | MIT notice for code; do not bundle/download weights in production until written clearance identifies the exact checkpoint | Optional isolated local adapter only; production gate rejects it |
+| Demucs v4 / `htdemucs_ft` | [facebookresearch/demucs](https://github.com/facebookresearch/demucs) (archived) | MIT for repository code | Four exact safetensors and bag hash are pinned in the owner approval | Separately licensed for DrumScribe commercial inference | **Yes for DrumScribe** under `OWNER-ATTESTATION-2026-09-05` | Preserve MIT attribution; do not represent the private grant as part of the public upstream license | Approved self-hosted production separator |
 | YourMT3+ / YPTF.MoE+Multi | [mimbres/YourMT3](https://github.com/mimbres/YourMT3), [official demo source](https://huggingface.co/spaces/mimbres/YourMT3) | Conflicting upstream declarations: GitHub root GPL-3.0 while demo files/metadata state Apache-2.0 | No clear grant covering every checkpoint | Trained across mixed research datasets; commercial rights unresolved | **Unresolved** | Do not redistribute or deploy until code, checkpoint and every training source are reconciled | Process-isolated full-mix A/B provider only; production gate rejects it |
 | OaF Drums | [Magenta Onsets and Frames](https://github.com/magenta/magenta/tree/main/magenta/models/onsets_frames_transcription) | Apache-2.0 | Official E-GMD checkpoint is distributed separately; exact checkpoint grant still requires review | E-GMD CC BY 4.0 | **Unresolved** for the downloaded checkpoint | Preserve Apache/CC BY notices and E-GMD citation; legacy TensorFlow environment stays isolated | Process-isolated stem A/B provider only; production gate rejects it |
-| ADTOF | [MZehren/ADTOF](https://github.com/MZehren/ADTOF), [PyTorch port](https://github.com/xavriley/ADTOF-pytorch) | Upstream CC BY-NC-SA 4.0; PyTorch port has no declared repository license | Derived from the non-commercial upstream weights | Crowdsourced/source-specific; dataset access and downstream rights require separate review | **No** under current terms | Attribution, non-commercial, ShareAlike; the unlicensed port adds another distribution blocker | Explicitly excluded from production; local benchmark only |
+| ADTOF | [MZehren/ADTOF](https://github.com/MZehren/ADTOF), [PyTorch port](https://github.com/xavriley/ADTOF-pytorch) | Public upstream ADTOF is CC BY-NC-SA 4.0; DrumScribe holds a separate commercial grant | Exact frame-RNN checkpoint SHA-256 is pinned in the owner approval | Separately licensed for DrumScribe commercial inference | **Yes for DrumScribe** under `OWNER-ATTESTATION-2026-09-05` | Preserve upstream attribution; keep weights private to DrumScribe infrastructure | Approved self-hosted production transcriber |
 | LarsNet checkpoints | [polimi-ispl/larsnet](https://github.com/polimi-ispl/larsnet) | No clear root code-license grant located in the reviewed repository | CC BY-NC 4.0 per project README | StemGMD is described as CC BY 4.0, but checkpoint terms remain non-commercial | **No** for pretrained checkpoints | Attribution and non-commercial restriction; code itself also needs a clear grant | Excluded from production |
 | Omnizart | [MCT Lab/omnizart](https://github.com/Music-and-Culture-Technology-Lab/omnizart) | MIT for repository code | Checkpoint license not separately clear in reviewed project materials | Drum checkpoint training-data provenance/terms not fully resolved here | **Unresolved** | Do not assume MIT code terms cover downloaded checkpoints or datasets | Not integrated; require checkpoint, data, and dependency review first |
 | Spotify Basic Pitch | [spotify/basic-pitch](https://github.com/spotify/basic-pitch) | Apache-2.0 repository | Distributed upstream model; exact artifact terms must still be recorded before bundling | Pitched-instrument AMT sources, not a drum-articulation corpus | **Not applicable to drum classification** | Preserve Apache notices if used for pitched-note features | Rejected as DrumScribe's detector: it is best suited to one pitched instrument at a time and has no 14-class drum head |
@@ -61,6 +61,17 @@ rights. `require_production_safe()` rejects unresolved and non-commercial provid
 | Customer uploads/corrections | DrumScribe users | User content; no training grant by default | **No** | Never train on uploads or edits without a separate, explicit opt-in and documented lawful basis |
 | Third-party accompaniment | Not selected | Not selected | **No** | Do not create mixed augmentations until every accompaniment recording has compatible commercial ML rights and attribution metadata |
 
+## Owner commercial-rights record
+
+The company owner approved hosted commercial inference with ADTOF,
+`htdemucs_ft`, and Beat This `final0` for India and international operation on
+2026-09-05. Exact source/checkpoint hashes and the permitted-use boundary are
+recorded in `docs/legal/COMMERCIAL_MODEL_RIGHTS_APPROVAL.md`. The internal
+approval reference is `OWNER-ATTESTATION-2026-09-05`.
+
+This separate grant does not alter the public upstream license offered to other
+users. Customer uploads remain inference-only and are not approved for training.
+
 ## Production-release gate
 
 Before changing any provider to `commercial_allowed`, record all of the following in
@@ -73,12 +84,12 @@ this file and in the deploy configuration:
 5. Written legal/product approval, contract reference where applicable, regions,
    retention, subprocessors, and whether customer audio may be used for provider training.
 
-No commercial provider is approved by this register yet because credentials,
-account-specific product access, executed contracts/DPA, retention/training terms,
-and a rights-cleared live benchmark have not been supplied. The implemented adapters
-therefore remain fail-closed. The deterministic mock can exercise the pipeline, and
-the spectral heuristic can support local research, but neither may be used to make a
-production-quality transcription claim.
+The self-hosted Demucs, ADTOF, and Beat This providers are approved under
+`OWNER-ATTESTATION-2026-09-05`. Production still fails closed unless that exact
+approval reference and explicit confirmation are configured. Other unresolved,
+non-commercial, fixture, and mock providers remain blocked. Provider approval
+does not by itself satisfy accuracy, infrastructure, privacy, or operational
+release gates.
 
 The repository's `drumscribe-events` CRNN architecture has no bundled checkpoint.
 Any trained artifact starts as `NEEDS_LEGAL_REVIEW` and may become

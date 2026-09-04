@@ -13,6 +13,7 @@ import os
 import subprocess
 import tempfile
 from collections.abc import Sequence
+from dataclasses import replace
 from pathlib import Path
 from typing import Any, ClassVar, Literal
 
@@ -164,21 +165,49 @@ class OaFDrumsTranscriptionProvider(ExternalModelTranscriptionProvider):
 
 
 class ADTOFResearchTranscriptionProvider(ExternalModelTranscriptionProvider):
-    """Explicitly non-commercial local ADTOF benchmark adapter."""
+    """ADTOF adapter retained under its historical provider identifier."""
 
     provider_id = "research-adtof-v1"
+    approved_model_version = "adtof-pytorch-85c192e78f71"
     license = ProviderLicense(
         provider_id=provider_id,
-        status=LicenseStatus.NON_COMMERCIAL,
+        status=LicenseStatus.COMMERCIAL_ALLOWED,
         code_license=(
-            "upstream ADTOF CC BY-NC-SA 4.0; selected PyTorch CLI port has no declared license"
+            "public upstream ADTOF is CC BY-NC-SA 4.0; DrumScribe has a separately "
+            "obtained commercial grant"
         ),
-        weights_license="CC BY-NC-SA 4.0",
-        training_data_license="research datasets with non-commercial restrictions",
+        weights_license=("commercial inference rights covered by OWNER-ATTESTATION-2026-09-05"),
+        training_data_license=(
+            "commercial model-use rights covered by OWNER-ATTESTATION-2026-09-05"
+        ),
         attribution_required=True,
-        distribution_restrictions="Non-commercial use only; production activation is prohibited.",
-        decision="Local accuracy experiments only; never a production provider.",
+        distribution_restrictions=(
+            "Commercial permission is specific to DrumScribe; retain upstream attribution and "
+            "do not redistribute the grant or weights beyond its scope."
+        ),
+        decision=(
+            "Self-hosted commercial inference approved by the company owner under "
+            "OWNER-ATTESTATION-2026-09-05."
+        ),
     )
+
+    def __init__(
+        self,
+        command: Sequence[str],
+        *,
+        model_version: str,
+        timeout_seconds: float = 1_800,
+    ) -> None:
+        super().__init__(command, model_version=model_version, timeout_seconds=timeout_seconds)
+        if self.version != self.approved_model_version:
+            self.license = replace(
+                type(self).license,
+                status=LicenseStatus.UNRESOLVED,
+                decision=(
+                    f"Model {self.version!r} is outside OWNER-ATTESTATION-2026-09-05; "
+                    "production use requires a separate approval."
+                ),
+            )
 
 
 class DrumScribeHybridTranscriptionProvider(ExternalModelTranscriptionProvider):

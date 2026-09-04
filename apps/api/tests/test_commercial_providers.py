@@ -330,7 +330,7 @@ def test_production_configuration_fails_closed_for_fixture_and_missing_approval(
         production_settings(pipeline_provider="development")
     with pytest.raises(ValueError, match="explicit commercial approval"):
         production_settings(commercial_provider_license_confirmed=False)
-    with pytest.raises(ValueError, match="commercially approved Klangio drum adapter"):
+    with pytest.raises(ValueError, match="approved drum-transcription provider"):
         production_settings(music_transcription_provider="mock")
 
 

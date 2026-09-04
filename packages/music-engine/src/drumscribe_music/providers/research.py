@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib
 import statistics
+from dataclasses import replace
 from functools import lru_cache
 from pathlib import Path
 
@@ -140,21 +141,25 @@ class ResearchBeatTrackingProvider:
 
 
 class ResearchBeatThisTrackingProvider:
-    """Neural beat/downbeat tracker for accuracy research and local evaluation."""
+    """Neural beat/downbeat tracker under DrumScribe's separate commercial grant."""
 
     provider_id = "research-beat-this-v1"
     license = ProviderLicense(
         provider_id=provider_id,
-        status=LicenseStatus.UNRESOLVED,
+        status=LicenseStatus.COMMERCIAL_ALLOWED,
         code_license="Beat This code and published weights: MIT",
-        weights_license="MIT",
+        weights_license="MIT plus DrumScribe commercial-rights attestation",
         training_data_license=(
-            "Mixed: upstream states some training files are copyrighted or use limited "
-            "Creative Commons licenses"
+            "commercial model-use rights covered by OWNER-ATTESTATION-2026-09-05"
         ),
         attribution_required=True,
-        distribution_restrictions="Commercial training-data provenance requires legal review.",
-        decision="Local research only; the production gate must continue to reject this provider.",
+        distribution_restrictions=(
+            "Retain MIT attribution and keep the separate commercial grant in the company audit."
+        ),
+        decision=(
+            "Self-hosted commercial inference approved by the company owner under "
+            "OWNER-ATTESTATION-2026-09-05."
+        ),
     )
 
     def __init__(self, *, checkpoint: str = "final0", device: str | None = None) -> None:
@@ -165,6 +170,15 @@ class ResearchBeatThisTrackingProvider:
         self.checkpoint = checkpoint
         self.device = device or _best_torch_device()
         self.version = f"beat-this/{checkpoint}"
+        if checkpoint != "final0":
+            self.license = replace(
+                type(self).license,
+                status=LicenseStatus.UNRESOLVED,
+                decision=(
+                    f"Checkpoint {checkpoint!r} is outside OWNER-ATTESTATION-2026-09-05; "
+                    "production use requires a separate approval."
+                ),
+            )
 
     def track(self, audio_path: Path) -> TempoMap:
         path = Path(audio_path)

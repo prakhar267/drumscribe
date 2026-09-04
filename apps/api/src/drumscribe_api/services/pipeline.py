@@ -323,10 +323,19 @@ class MusicEngineAdapter:
             await result
         return ProviderRunMetadata(
             provider=str(getattr(provider, "provider_id", provider.__class__.__name__)),
-            category=ProviderCategory.DEVELOPMENT_RESEARCH,
+            category=(
+                ProviderCategory.PRODUCTION_COMMERCIAL
+                if self.settings.environment == Environment.PRODUCTION
+                else ProviderCategory.DEVELOPMENT_RESEARCH
+            ),
             model_version=str(getattr(provider, "version", "unknown")),
             request_id=None,
             processing_ms=round((time.monotonic() - started) * 1000),
+            contract_reference=(
+                self.settings.commercial_provider_approval_reference
+                if self.settings.environment == Environment.PRODUCTION
+                else None
+            ),
         )
 
     async def track_beats(self, audio_path: Path) -> dict[str, Any]:
@@ -355,6 +364,8 @@ class MusicEngineAdapter:
             category=(
                 ProviderCategory.TEST_FIXTURE
                 if self.settings.pipeline_provider == "development"
+                else ProviderCategory.PRODUCTION_COMMERCIAL
+                if self.settings.environment == Environment.PRODUCTION
                 else ProviderCategory.DEVELOPMENT_RESEARCH
             ),
             model_version=str(getattr(provider, "version", "unknown")),
@@ -362,6 +373,11 @@ class MusicEngineAdapter:
             processing_ms=round((time.monotonic() - started) * 1000),
             confidence=min(float(first_tempo.confidence), float(first_signature.confidence)),
             raw_metadata={"audioDerived": self.settings.pipeline_provider != "development"},
+            contract_reference=(
+                self.settings.commercial_provider_approval_reference
+                if self.settings.environment == Environment.PRODUCTION
+                else None
+            ),
         )
         return {
             "tempoBpm": float(display_bpm),
@@ -494,13 +510,22 @@ class MusicEngineAdapter:
             hits=tuple(hits),
             metadata=ProviderRunMetadata(
                 provider=str(getattr(provider, "provider_id", provider.__class__.__name__)),
-                category=ProviderCategory.DEVELOPMENT_RESEARCH,
+                category=(
+                    ProviderCategory.PRODUCTION_COMMERCIAL
+                    if self.settings.environment == Environment.PRODUCTION
+                    else ProviderCategory.DEVELOPMENT_RESEARCH
+                ),
                 model_version=version,
                 request_id=None,
                 processing_ms=round((time.monotonic() - started) * 1000),
                 raw_metadata={
                     "inputKind": str(getattr(provider, "input_kind", "drum_stem")),
                 },
+                contract_reference=(
+                    self.settings.commercial_provider_approval_reference
+                    if self.settings.environment == Environment.PRODUCTION
+                    else None
+                ),
             ),
         )
 

@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from dataclasses import replace
 from pathlib import Path
 
 from ..licensing import LicenseStatus, ProviderLicense
@@ -16,15 +17,23 @@ class DemucsAdapter:
     provider_id = "demucs-isolated-v5"
     license = ProviderLicense(
         provider_id=provider_id,
-        status=LicenseStatus.UNRESOLVED,
+        status=LicenseStatus.COMMERCIAL_ALLOWED,
         code_license="MIT (Demucs code)",
-        weights_license="model-specific; unresolved for bundled production distribution",
-        training_data_license="model-specific; not sufficiently documented for our commercial gate",
+        weights_license=(
+            "standard upstream model terms plus separately obtained DrumScribe commercial grant"
+        ),
+        training_data_license=(
+            "commercial inference rights covered by OWNER-ATTESTATION-2026-09-05"
+        ),
         attribution_required=True,
         distribution_restrictions=(
-            "Do not bundle weights until model-specific legal review is recorded."
+            "Commercial permission is specific to DrumScribe; retain upstream MIT notices and "
+            "do not represent the separate grant as part of the public upstream license."
         ),
-        decision="Optional local adapter only; production gate refuses it.",
+        decision=(
+            "Self-hosted commercial inference approved by the company owner under "
+            "OWNER-ATTESTATION-2026-09-05."
+        ),
     )
 
     def __init__(self, *, model: str = "htdemucs_ft", python_executable: str | None = None) -> None:
@@ -36,6 +45,15 @@ class DemucsAdapter:
         self.model = model
         self.version = model
         self.python_executable = python_executable or sys.executable
+        if model != "htdemucs_ft":
+            self.license = replace(
+                type(self).license,
+                status=LicenseStatus.UNRESOLVED,
+                decision=(
+                    f"Model {model!r} is outside OWNER-ATTESTATION-2026-09-05; "
+                    "production use requires a separate approval."
+                ),
+            )
 
     def separate_drums(self, source: Path, destination: Path) -> Path:
         source = Path(source).expanduser().resolve(strict=True)

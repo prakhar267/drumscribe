@@ -105,8 +105,10 @@ The best end-to-end full-mixture path (`htdemucs_ft` then ADTOF) reached 82.98%
 six-family micro F1 at 50 ms; ideal drum stems reached 85.01%. The same round
 reproduced 96.43% on the opened synthetic metal development suite and 97.33%
 on the opened quiet-song probe, but neither can support a general-song claim.
-ADTOF is non-commercial and Demucs artifact/data rights remain unresolved, so
-the research path is not a paid-production provider. See
+The company owner subsequently recorded separate DrumScribe commercial rights
+for ADTOF and the pinned Demucs artifacts under
+`OWNER-ATTESTATION-2026-09-05`. This resolves the provider-rights gate for the
+selected self-hosted path but does not change its measured accuracy. See
 `docs/benchmarks/REAL_PERFORMANCE_RESEARCH_V1.md`.
 
 The 2026-09-05 live full-mixture comparison then sent the same byte-identical
@@ -114,8 +116,8 @@ The 2026-09-05 live full-mixture comparison then sent the same byte-identical
 current DrumScribe research-beta app path and Klangio Drum2Notes. Across 459
 manually annotated MDB events, current DrumScribe scored 76.42% six-family
 micro F1 at 50 ms versus Drum2Notes at 79.71%. The best DrumScribe research
-path reached 89.59%, but uses non-commercial ADTOF and unresolved Demucs model
-rights. It therefore neither clears the 90% gate nor qualifies for paid launch.
+path reached 89.59%. It is now commercially authorized under the separate owner
+approval, but still misses the 90% gate by 0.41 percentage points.
 See `docs/benchmarks/MDB_REAL_LIVE_COMPARISON.md`.
 
 A balanced follow-up processed 100 real human GMD drum performances (25 each

@@ -64,24 +64,75 @@ def test_research_model_selection_requires_an_explicit_command() -> None:
         MusicEngineAdapter(settings)._transcription_provider(research_engine())
 
 
-def test_adtof_cannot_be_selected_in_production() -> None:
-    with pytest.raises(ValueError, match="commercially approved Klangio drum adapter"):
+def test_owner_approved_self_hosted_pipeline_can_be_selected_in_production() -> None:
+    settings = Settings(
+        environment=Environment.PRODUCTION,
+        database_url="postgresql+asyncpg://db.test/drumscribe",
+        storage_backend="s3",
+        queue_backend="celery",
+        pipeline_provider="music_engine",
+        source_separation_provider="demucs",
+        music_transcription_provider="adtof",
+        beat_tracking_provider="research",
+        commercial_provider_license_confirmed=True,
+        commercial_provider_approval_reference="OWNER-ATTESTATION-2026-09-05",
+        adtof_command="/approved/adtof",
+        adtof_model_version="adtof-pytorch-85c192e78f71",
+        cookie_secure=True,
+        dev_expose_magic_link=False,
+        magic_link_delivery="webhook",
+        magic_link_webhook_url="https://mail.test/link",
+        session_secret="a" * 40,
+        s3_access_key_id="access",
+        s3_secret_access_key="secret",
+        allowed_hosts=["api.drumscribe.test"],
+    )
+    assert settings.source_separation_provider == "demucs"
+    assert settings.music_transcription_provider == "adtof"
+    assert settings.beat_tracking_provider == "research"
+
+
+def test_production_rejects_an_unapproved_adtof_version() -> None:
+    with pytest.raises(ValueError, match="ADTOF model version is not approved"):
         Settings(
             environment=Environment.PRODUCTION,
             database_url="postgresql+asyncpg://db.test/drumscribe",
             storage_backend="s3",
             queue_backend="celery",
             pipeline_provider="music_engine",
-            source_separation_provider="audioshake",
+            source_separation_provider="demucs",
             music_transcription_provider="adtof",
-            beat_tracking_provider="klangio",
+            beat_tracking_provider="research",
             commercial_provider_license_confirmed=True,
-            commercial_provider_approval_reference="legal-review",
-            audioshake_api_key="key",
-            audioshake_contract_reference="contract",
-            klangio_api_key="key",
-            klangio_contract_reference="contract",
-            adtof_command="/research/adtof",
+            commercial_provider_approval_reference="OWNER-ATTESTATION-2026-09-05",
+            adtof_command="/approved/adtof",
+            adtof_model_version="different-version",
+            cookie_secure=True,
+            dev_expose_magic_link=False,
+            magic_link_delivery="webhook",
+            magic_link_webhook_url="https://mail.test/link",
+            session_secret="a" * 40,
+            s3_access_key_id="access",
+            s3_secret_access_key="secret",
+            allowed_hosts=["api.drumscribe.test"],
+        )
+
+
+def test_self_hosted_production_rejects_an_unrelated_approval_reference() -> None:
+    with pytest.raises(ValueError, match="pinned owner approval reference"):
+        Settings(
+            environment=Environment.PRODUCTION,
+            database_url="postgresql+asyncpg://db.test/drumscribe",
+            storage_backend="s3",
+            queue_backend="celery",
+            pipeline_provider="music_engine",
+            source_separation_provider="demucs",
+            music_transcription_provider="adtof",
+            beat_tracking_provider="research",
+            commercial_provider_license_confirmed=True,
+            commercial_provider_approval_reference="unrelated-review",
+            adtof_command="/approved/adtof",
+            adtof_model_version="adtof-pytorch-85c192e78f71",
             cookie_secure=True,
             dev_expose_magic_link=False,
             magic_link_delivery="webhook",

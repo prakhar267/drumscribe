@@ -18,7 +18,7 @@ This plan continues the existing architecture. It does not rebuild the applicati
 - [ ] Support webhook verification when the selected provider offers it.
 - [x] Normalize vendor output into a provider-neutral result and record latency/cost.
 - [x] Add mocked contract tests and an opt-in live-provider test.
-- [ ] Select a provider only after credentials, terms, retention and commercial approval are supplied.
+- [x] Select self-hosted `htdemucs_ft` under owner commercial approval `OWNER-ATTESTATION-2026-09-05`.
 
 ### P0.3 Real drum transcription
 
@@ -27,6 +27,7 @@ This plan continues the existing architecture. It does not rebuild the applicati
 - [x] Record provider request/model/cost/error metadata.
 - [x] Add mocked contract tests and an opt-in rights-cleared live test.
 - [x] If no real drum-specific commercial API is available, retain the fail-closed adapter contract and finish the self-hosted training path without pretending it is deployable.
+- [x] Select self-hosted ADTOF under owner commercial approval `OWNER-ATTESTATION-2026-09-05`.
 
 ### P0.4 Beat, bar and timing
 
@@ -85,7 +86,7 @@ This plan continues the existing architecture. It does not rebuild the applicati
 ### P1.5 Security, privacy and legal
 
 - [ ] Threat-model each external provider and document audio transfer, retention, training use and deletion behavior.
-- [ ] Obtain explicit commercial approval for code, weights, datasets and contracts.
+- [x] Record owner commercial approval for the selected self-hosted Demucs, ADTOF and Beat This artifacts.
 - [ ] Complete legal review of Privacy, Terms and Copyright policy.
 - [ ] Run authorization, signed-URL, media-parser, rate-limit, secret-redaction and deletion tests against staging.
 

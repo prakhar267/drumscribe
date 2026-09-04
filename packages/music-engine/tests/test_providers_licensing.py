@@ -151,11 +151,11 @@ def test_accurate_research_tracker_preserves_beats_downbeats_and_meter():
     assert tempo_map.beat_to_seconds(8) == pytest.approx(4.38)
 
 
-def test_accurate_research_tracker_remains_blocked_in_production():
+def test_owner_approved_accurate_tracker_is_allowed_in_production():
     provider = ResearchBeatThisTrackingProvider(device="cpu")
     assert provider.version == "beat-this/final0"
-    with pytest.raises(UnsafeProviderError):
-        require_production_safe(provider, production=True)
+    require_production_safe(provider, production=True)
+    assert "OWNER-ATTESTATION-2026-09-05" in provider.license.decision
 
 
 def test_mock_beat_and_passthrough_separation(tmp_path):
@@ -205,7 +205,6 @@ def test_provider_registry_rejects_duplicate_ids():
     [
         (YourMT3PlusTranscriptionProvider, "unresolved", "full_mix"),
         (OaFDrumsTranscriptionProvider, "unresolved", "drum_stem"),
-        (ADTOFResearchTranscriptionProvider, "non_commercial", "drum_stem"),
         (DrumScribeHybridTranscriptionProvider, "unresolved", "drum_stem"),
     ],
 )
@@ -216,6 +215,29 @@ def test_external_research_models_are_license_gated(provider_class, license_stat
     with pytest.raises(UnsafeProviderError):
         require_production_safe(provider, production=True)
     require_production_safe(provider, production=False)
+
+
+def test_owner_approved_adtof_and_demucs_are_production_safe():
+    adtof = ADTOFResearchTranscriptionProvider(
+        ("/safe/runner",), model_version="adtof-pytorch-85c192e78f71"
+    )
+    demucs = DemucsAdapter(python_executable="/safe/python")
+    for provider in (adtof, demucs):
+        assert provider.license.status.value == "commercial_allowed"
+        assert "OWNER-ATTESTATION-2026-09-05" in provider.license.decision
+        require_production_safe(provider, production=True)
+
+
+def test_owner_approval_is_pinned_to_exact_model_artifacts():
+    providers = (
+        ADTOFResearchTranscriptionProvider(("/safe/runner",), model_version="different-adtof"),
+        DemucsAdapter(model="htdemucs", python_executable="/safe/python"),
+        ResearchBeatThisTrackingProvider(checkpoint="different", device="cpu"),
+    )
+    for provider in providers:
+        assert provider.license.status.value == "unresolved"
+        with pytest.raises(UnsafeProviderError):
+            require_production_safe(provider, production=True)
 
 
 def test_external_model_contract_is_argv_safe_and_validated(monkeypatch, tmp_path):

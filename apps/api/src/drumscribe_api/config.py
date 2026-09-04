@@ -142,29 +142,49 @@ class Settings(BaseSettings):
                 raise ValueError("production providers require explicit commercial approval")
             if not self.commercial_provider_approval_reference:
                 raise ValueError("production providers require an approval reference")
-            if self.music_transcription_provider.casefold() != "klangio_drums":
+            transcription_provider = self.music_transcription_provider.casefold()
+            separation_provider = self.source_separation_provider.casefold()
+            beat_provider = self.beat_tracking_provider.casefold()
+            owner_approved_provider_selected = (
+                transcription_provider == "adtof"
+                or separation_provider == "demucs"
+                or beat_provider in {"research", "research_accurate"}
+            )
+            if (
+                owner_approved_provider_selected
+                and self.commercial_provider_approval_reference
+                != "OWNER-ATTESTATION-2026-09-05"
+            ):
                 raise ValueError(
-                    "production requires the commercially approved Klangio drum adapter"
+                    "self-hosted production providers require the pinned owner approval reference"
                 )
-            if self.source_separation_provider.casefold() not in {"audioshake", "music_ai"}:
-                raise ValueError(
-                    "production requires a commercially approved source-separation provider"
-                )
-            if self.beat_tracking_provider.casefold() != "klangio":
-                raise ValueError(
-                    "production requires the commercially approved Klangio beat adapter"
-                )
-            if not self.klangio_api_key or not self.klangio_contract_reference:
+            if transcription_provider not in {"klangio_drums", "adtof"}:
+                raise ValueError("production requires an approved drum-transcription provider")
+            if separation_provider not in {"audioshake", "music_ai", "demucs"}:
+                raise ValueError("production requires an approved source-separation provider")
+            if beat_provider not in {"klangio", "research", "research_accurate"}:
+                raise ValueError("production requires an approved beat-tracking provider")
+            if transcription_provider == "adtof" and not self.adtof_command:
+                raise ValueError("production ADTOF command is missing")
+            if (
+                transcription_provider == "adtof"
+                and self.adtof_model_version != "adtof-pytorch-85c192e78f71"
+            ):
+                raise ValueError("production ADTOF model version is not approved")
+            if (
+                "klangio" in {transcription_provider, beat_provider}
+                or transcription_provider == "klangio_drums"
+            ) and (not self.klangio_api_key or not self.klangio_contract_reference):
                 raise ValueError(
                     "production Klangio credentials and contract reference are missing"
                 )
-            if self.source_separation_provider.casefold() == "audioshake" and (
+            if separation_provider == "audioshake" and (
                 not self.audioshake_api_key or not self.audioshake_contract_reference
             ):
                 raise ValueError(
                     "production AudioShake credentials and contract reference are missing"
                 )
-            if self.source_separation_provider.casefold() == "music_ai" and (
+            if separation_provider == "music_ai" and (
                 not self.music_ai_api_key
                 or not self.music_ai_contract_reference
                 or not self.music_ai_separation_workflow

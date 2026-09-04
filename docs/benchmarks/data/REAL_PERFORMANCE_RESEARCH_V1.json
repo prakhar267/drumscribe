@@ -58,6 +58,16 @@
         "supportedMacroF1At50ms": 0.6213370135344501,
         "resultSha256": "43625c8049d38e50b0213d5e9c89ca3f6d3c8bc194cf56971565f6e59033d07d"
       },
+      "ownerApprovedFreshFullMixRerun": {
+        "commercialRightsReference": "OWNER-ATTESTATION-2026-09-05",
+        "predictionsGeneratedFreshFromFullMixtures": true,
+        "precisionAt50ms": 0.8620151002343139,
+        "recallAt50ms": 0.8001449975833737,
+        "f1At20ms": 0.7457074821406191,
+        "f1At50ms": 0.8299285624765008,
+        "f1At100ms": 0.8311818523624515,
+        "resultSha256": "e5379f8ef05e16e6303334d72959d1987413da082efd9cc0c0782a79c911248a"
+      },
       "directFullMixAdtof": {
         "f1At20ms": 0.7230691056910569,
         "f1At50ms": 0.7807418699186992
@@ -115,7 +125,8 @@
         "precision": 0.8920086393088553,
         "recall": 0.8997821350762527,
         "f1": 0.89587852494577,
-        "commerciallyDeployable": false
+        "commerciallyDeployable": true,
+        "commercialRightsReference": "OWNER-ATTESTATION-2026-09-05"
       },
       "sameFullMixBytes": true,
       "fullLocalResultSha256": "6a5f764a367f93470025ebd23a142b1c3574c6909f010ce06d1fbd4e2d7a0101",
@@ -133,8 +144,7 @@
     "paidLaunchWithResearchStackAllowed": false,
     "reasons": [
       "The independent full-mixture result is 82.98%, below 90%.",
-      "ADTOF is non-commercial under the currently recorded grant.",
-      "Demucs checkpoint and training-data rights are unresolved for production.",
+      "The selected ADTOF, Demucs and Beat This artifacts are commercially approved under OWNER-ATTESTATION-2026-09-05.",
       "The 90%+ probes are opened synthetic development tests, not broad real-song evidence."
     ]
   }

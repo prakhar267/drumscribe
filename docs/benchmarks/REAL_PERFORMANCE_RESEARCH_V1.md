@@ -99,12 +99,13 @@ A later 100-recording comparison on isolated GMD human performances measured
 DrumScribe against DrumScript and is reported separately in
 `docs/benchmarks/REAL_100_GENRE_COMPETITOR_BENCHMARK.md`.
 
-## Commercial boundary and next work
+## Commercial approval and next work
 
-ADTOF remains non-commercial under the currently recorded CC BY-NC-SA terms,
-and the exact Demucs checkpoint/training-data grant remains unresolved. Model
-access is not the same as a commercial license. Neither component may become a
-paid production default until written rights are recorded in `MODEL_LICENSING.md`.
+The company owner recorded a separate commercial-use grant for the pinned ADTOF
+and `htdemucs_ft` artifacts under `OWNER-ATTESTATION-2026-09-05`. The public
+upstream license remains unchanged; DrumScribe's production permission comes
+from that separate grant. Exact artifact hashes are recorded in
+`MODEL_LICENSING.md` and `docs/legal/COMMERCIAL_MODEL_RIGHTS_APPROVAL.md`.
 
 The next path toward a defensible 90% real-song result is rights-cleared
 multi-kit human data with explicit tom, side-stick, hi-hat articulation and

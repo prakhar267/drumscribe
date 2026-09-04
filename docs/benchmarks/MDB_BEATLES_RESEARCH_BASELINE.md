@@ -132,7 +132,7 @@ Baseline artifacts are under `data/benchmark-mdb-beatles/output/`; detector-pass
 
 ## Engineering decision
 
-Do not treat the improved local research path as production transcription quality. It remains behind the existing production safety gate because the Demucs weight/training-data rights are not cleared for the commercial deployment and the deterministic classifier still has material recall gaps. ADTOF was rejected on both quality and licensing grounds; YourMT3+ remains an unselected A/B backend because aggregate quality regressed and its code/checkpoint/training-data rights are unresolved.
+Do not treat the improved local research path as production transcription quality. It remains behind the existing production safety gate because the deterministic classifier has material recall gaps. This paragraph records the conclusion at the time of the original experiment. On 2026-09-05, the company owner separately attested commercial-use rights for the exact pinned Demucs, ADTOF and Beat This artifacts under `OWNER-ATTESTATION-2026-09-05`; the fresh wider rerun and current accuracy boundary are recorded in `MDB_OWNER_APPROVED_ADTOF_RERUN.md`. YourMT3+ remains an unselected A/B backend because aggregate quality regressed and its code/checkpoint/training-data rights are unresolved.
 
 The next model iteration should be accepted only after it:
 

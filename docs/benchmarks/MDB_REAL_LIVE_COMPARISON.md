@@ -19,9 +19,11 @@ matching at 50 ms.
 | DrumScribe best research path (`htdemucs_ft` -> ADTOF) | 89.20% | 89.98% | **89.59%** |
 
 The current app path trails Drum2Notes by 3.29 percentage points on this probe.
-The best research path exceeds Drum2Notes by 9.88 points, but it is 0.41 points
-below 90% and is not commercially deployable because ADTOF is non-commercial
-and the selected Demucs checkpoint rights remain unresolved.
+The best research path exceeds Drum2Notes by 9.88 points but is 0.41 points
+below 90%. The company owner has now approved the pinned ADTOF and Demucs
+artifacts for DrumScribe commercial use under `OWNER-ATTESTATION-2026-09-05`.
+That resolves deployability for this provider path; it does not turn 89.59%
+into a 90% accuracy result.
 
 ## Per-genre F1 at 50 ms
 
