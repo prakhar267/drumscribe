@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-09-05",
+  "benchmark": {
+    "name": "RWC Popular secondary39 frozen partition",
+    "recordCount": 39,
+    "scoredSecondsPerRecord": 20,
+    "primaryMetric": "detailed14 event micro F1",
+    "primaryToleranceMs": 50,
+    "selectionPartition": "development50",
+    "evaluationPartition": "secondary39",
+    "evaluationLabelsUsedForSelection": false
+  },
+  "decision": {
+    "target": 0.9,
+    "achieved": false,
+    "bestResearch": 0.6815539920464974,
+    "researchV20": 0.6307587415992987,
+    "rightsClearedTrainingV18": 0.5025109080431382,
+    "shortfallFromTarget": 0.21844600795350255
+  },
+  "systemsAt50Ms": {
+    "drumscribeV20": {
+      "detailed14": 0.6307587415992987,
+      "family6": 0.6623161585662803,
+      "core3": 0.722859954083306,
+      "classAgnosticOnset": 0.734781338268238,
+      "commercialApproved": false,
+      "reason": "calibrated against CC BY-NC RWC labels"
+    },
+    "drumscribeAdtofResearchFusion": {
+      "detailed14": 0.6815539920464974,
+      "family6": 0.7090853472009789,
+      "core3": 0.7765408011018019,
+      "classAgnosticOnset": 0.7508922198429693,
+      "commercialApproved": false
+    },
+    "adtof": {
+      "detailed14": 0.6705673388360673,
+      "family6": 0.7292863859575802,
+      "core3": 0.7943621250451752,
+      "classAgnosticOnset": 0.7608400376136245,
+      "commercialApproved": false
+    },
+    "inverseDrumMachine": {
+      "detailed14": 0.566145936325885,
+      "family6": 0.6157801067826775,
+      "core3": 0.7112217087332622,
+      "classAgnosticOnset": 0.7110935337156417,
+      "publishedLicenseAllowsCommercialUse": true
+    },
+    "drumscribeV18": {
+      "detailed14": 0.5025109080431382,
+      "family6": 0.5570099613073187,
+      "core3": 0.6064866891638545,
+      "classAgnosticOnset": 0.6485551988145221,
+      "rightsClearedTraining": true,
+      "broadProductionValidated": false
+    },
+    "oafDrums": {
+      "detailed14": 0.3807763401109057,
+      "family6": 0.47060998151571165,
+      "core3": 0.5314545656274271,
+      "classAgnosticOnset": 0.5883548983364141,
+      "publishedLicenseAllowsCommercialUse": true
+    },
+    "drumScriptFullMix": {
+      "detailed14": 0.16450044647286438,
+      "family6": 0.259152693719615,
+      "core3": 0.33515024458420684,
+      "classAgnosticOnset": 0.6260541720408771,
+      "publishedLicenseAllowsCommercialUse": true
+    },
+    "drumScriptProvidedDrumStemDiagnostic": {
+      "detailed14": 0.487127508615447,
+      "family6": 0.5556456517332252,
+      "core3": 0.6367671104882037,
+      "classAgnosticOnset": 0.6973444151631867,
+      "equalInputLeaderboard": false
+    }
+  },
+  "novelCandidates": {
+    "beatSynchronousRepetitionRepair": {
+      "developmentBefore": 0.6571449391532463,
+      "developmentAfter": 0.6607580342988904,
+      "secondaryBefore": 0.6815539920464974,
+      "secondaryAfter": 0.6767585023715814,
+      "decision": "rejected"
+    },
+    "inverseDrumMachineProposalFusion": {
+      "developmentBefore": 0.6571449391532463,
+      "developmentAfter": 0.6582628971145439,
+      "secondaryBefore": 0.6815539920464974,
+      "secondaryAfter": 0.6814105177333877,
+      "decision": "rejected"
+    }
+  },
+  "sourceReports": {
+    "v18SecondaryBaseline": {
+      "path": "output/rwc-popular-holdout-39-v19/benchmark-result.json",
+      "sha256": "0ff2f97ff728f824b2eecb17fd193b358881ea8ae2e85c59840f6e9c5b638033"
+    },
+    "v20": {
+      "path": "output/rwc-popular-holdout-39-v20/benchmark-result.json",
+      "sha256": "5f0a74a8fe80390058e9924badaab06b266abb08577042d7a1528bfc75edcbbe"
+    },
+    "bestResearchFusion": {
+      "path": "output/rwc-adtof-v21-probe/final-fusion-result.json",
+      "sha256": "6f2b10e4975ae6736cf577955fc5238ee85759479b7fed509cc32dd8d69ddceb"
+    },
+    "repetitionRepair": {
+      "path": "output/rwc-repetition-repair-v22-probe.json",
+      "sha256": "2d54f7c635f5daa277502196fd743ae6ba35ec62fe4838f688556353f7545f29"
+    },
+    "inverseDrumMachine": {
+      "path": "output/rwc-idm-v22-probe/benchmark-result.json",
+      "sha256": "08cc9e3ca53f287855669b0d4d9d8fffd8dde7dfe33196003f1401772ebc9f40"
+    },
+    "drumScriptFullMix": {
+      "path": "output/rwc-drumscript-v22-probe/fullmix/benchmark-result.json",
+      "sha256": "b2fb022d65882232e9fe63eb76c4de8be2291108bc8c87b53210914a161865ff"
+    },
+    "drumScriptDrumStem": {
+      "path": "output/rwc-drumscript-v22-probe/drumstem/benchmark-result.json",
+      "sha256": "ec77ba4ee7a97fdd37ee94ab93a685377332e70cfef7724ecd189428bbf39570"
+    }
+  },
+  "proprietaryProductComparison": [
+    {
+      "name": "Klangio Drum2Notes",
+      "publicComparableAccuracy": null,
+      "sameBenchmarkScore": null
+    },
+    {
+      "name": "Drumscrib",
+      "publicComparableAccuracy": null,
+      "sameBenchmarkScore": null,
+      "note": "Historical >95% note-detection statement is not a precision/F1 benchmark"
+    },
+    {
+      "name": "PlayDrumsOnline",
+      "publicComparableAccuracy": null,
+      "sameBenchmarkScore": null
+    },
+    {
+      "name": "Drum AI",
+      "publicComparableAccuracy": null,
+      "sameBenchmarkScore": null
+    },
+    {
+      "name": "DrumScript",
+      "publicComparableAccuracy": null,
+      "sameBenchmarkScore": 0.16450044647286438
+    }
+  ]
+}
