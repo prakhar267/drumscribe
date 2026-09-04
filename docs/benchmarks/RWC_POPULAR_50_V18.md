@@ -142,8 +142,8 @@ The primary columns below are class-aware, one-to-one event micro F1 at ±50 ms.
   at commit `0a1a6c31dbe73a7f5d44f7caef8cd0999402a4c2`. The repository identifies
   RWC-P's preprocessed MIDI as aligned and supplies manual music start/end
   metadata.
-- Selection: exclude the 10 RWC-P rows marked `Without drums`; rank the other
-  90 by SHA-256 of `drumscribe-rwc-popular-50-v1:RWCID`; take 50; report in
+- Selection: exclude the 11 RWC-P rows marked `Without drums`; rank the other
+  89 by SHA-256 of `drumscribe-rwc-popular-50-v1:RWCID`; take 50; report in
   RWC ID order.
 - Window: 20 seconds beginning one second before the first supported GM drum
   event, bounded by the manual music start/end annotations. This is a

@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "modelVersion": "groove-egmd-focal-specialist-v18",
+  "checkpoint": "ml/models/groove-egmd-focal-specialist-v18.pt",
+  "checkpointSha256": "fdb996c08cc7e24c164ec638397e3c9fa813f0014dff7ecad8e0b77a61211488",
+  "architecture": "clean-room OaF-style CNN plus bidirectional LSTM",
+  "training": {
+    "preparedDatasetSha256": "2c30f2e251a819e40e868c458d3c2bb190df31cf26ea951167acde439972fea7",
+    "datasetManifestHash": "e63b2fa84effeecdcb3cb920ada10426222d9002e515f5f26f80ff8c7e73f491",
+    "sources": [
+      "Google Groove MIDI Dataset",
+      "Expanded Groove MIDI Dataset",
+      "FreePats MuldjordKit CC BY 4.0 overlays",
+      "FreePats World Percussion CC0 1.0 overlays"
+    ],
+    "resumeCheckpointSha256": "e81c51262daca78d378b6c9fbc349001f70d36180667c4926437603041ca26ac",
+    "note": "The retained best snapshot is the validation-recalibrated resume state; later focal-loss epochs did not exceed its validation macro F1."
+  },
+  "validation": {
+    "split": "validation",
+    "recordCount": 120,
+    "supportedClassCount": 12,
+    "supportedMacroF1": 0.8720839886378823,
+    "unsupportedNaturalClasses": ["LOW_TOM", "TAMBOURINE"]
+  },
+  "licenseStatus": "needs_final_attribution_and_model_card_review",
+  "productionApproved": false,
+  "limitations": [
+    "The validation data contains isolated drum performances rather than arbitrary mastered songs.",
+    "Low tom and tambourine have overlays but no natural validation support.",
+    "This checkpoint is only one component of the non-commercial v19 research decoder."
+  ]
+}

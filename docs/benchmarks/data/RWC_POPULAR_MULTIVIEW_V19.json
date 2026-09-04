@@ -1,0 +1,85 @@
+{
+  "benchmarkId": "rwc-popular-multiview-v19",
+  "claimBoundary": [
+    "The 50-song partition was used for decoder calibration and is development evidence.",
+    "The disjoint 39-song partition was untouched until the v19 rules were frozen.",
+    "The corpus is CC BY-NC 4.0 and this candidate is not commercially deployable.",
+    "The score measures drum events after separation, not complete notation engraving.",
+    "The result is 62.80% on the untouched holdout, not 90%."
+  ],
+  "completedAt": "2026-09-04T10:02:30.537089+00:00",
+  "corpus": {
+    "annotationsUrl": "https://github.com/rwc-music/rwc-annotations",
+    "datasetUrl": "https://zenodo.org/records/18656623",
+    "license": "CC BY-NC 4.0",
+    "name": "RWC 2.0 Popular Music Database",
+    "recordCount": 89,
+    "referenceEventCount": 12454,
+    "secondsPerTrack": 20.0,
+    "totalScoredAudioSeconds": 1780.0
+  },
+  "development50": {
+    "baselineDetailedF1At50ms": 0.46475654772367725,
+    "classAgnosticF1At50ms": 0.7497206703910615,
+    "coreF1At50ms": 0.6732872992474203,
+    "detailedF1At50ms": 0.5885474860335196,
+    "detailedGainPercentagePoints": 12.379093830984234,
+    "familyF1At50ms": 0.616340782122905,
+    "recordCount": 50,
+    "referenceEventCount": 7319,
+    "status": "opened_development_calibration_replay"
+  },
+  "holdout39": {
+    "baselineDetailedF1At50ms": 0.5025109080431382,
+    "classAgnosticF1At50ms": 0.7282532707480276,
+    "coreF1At50ms": 0.7222655814472071,
+    "detailedF1At50ms": 0.62798362129232,
+    "detailedGainPercentagePoints": 12.547271324918174,
+    "familyF1At50ms": 0.6575451912513732,
+    "recordCount": 39,
+    "referenceEventCount": 5135,
+    "status": "previously_untouched_holdout_opened_by_this_run"
+  },
+  "combined89": {
+    "20ms": {
+      "baselineCoreF1": 0.363338916371285,
+      "baselineDetailedF1": 0.2823988498665024,
+      "baselineFamilyF1": 0.3305949202437188,
+      "classAgnosticF1": 0.48592446471869477,
+      "coreF1": 0.4457864397474609,
+      "detailedF1": 0.3868820120823573,
+      "familyF1": 0.40701927423663337
+    },
+    "50ms": {
+      "baselineCoreF1": 0.5968137732247887,
+      "baselineDetailedF1": 0.480454576572876,
+      "baselineFamilyF1": 0.5428219346888478,
+      "classAgnosticF1": 0.7408868614638556,
+      "coreF1": 0.6933845731539939,
+      "detailedF1": 0.6047754078822998,
+      "familyF1": 0.6332963465252949
+    }
+  },
+  "drumTypesAt50ms": {
+    "live": {"trackCount": 21, "baselineDetailedF1": 0.45241, "v19DetailedF1": 0.61071},
+    "loops": {"trackCount": 8, "baselineDetailedF1": 0.246, "v19DetailedF1": 0.40225},
+    "sequences": {"trackCount": 60, "baselineDetailedF1": 0.52187, "v19DetailedF1": 0.63059}
+  },
+  "integrity": {
+    "developmentPredictionManifestSha256": "632e63dcd10b005402e774e332a89a69cc13ad7513648e9b141836ce12167a3f",
+    "developmentResultSha256": "f93dcd56a2633cfac30ed5483414f9e6c02652816796b903d32808332d3790f4",
+    "developmentSelectionManifestSha256": "20e0f3c39d3d41cd0e822e678a941da11fe0135b268748f0c67fe61cd3f36451",
+    "developmentSeparationManifestSha256": "4d755a14cb40ce2466642fe1fb7cd69fa93c11a15b57a8ed66e80cfdaa571425",
+    "holdoutPredictionManifestSha256": "715ce8e96f6e00c49795ffe33ed6474fc0e10bfe36e3553b73d2049fa7bfd46c",
+    "holdoutResultSha256": "5328d1a1cac7abf29c7473bd361c10c754831026bbd386a80583e5f2251c2fa3",
+    "holdoutSelectionManifestSha256": "3e1608e17f92d89e533e9bcb17e3b8b9fe06cf57d619e8c3e3f2c42f1fec2f0a",
+    "holdoutSeparationManifestSha256": "e307ff8c7bba182fe09c5535f45980aa83a39a79fc4b2075efb5908140ccdab0"
+  },
+  "system": {
+    "focalSpecialistCheckpointSha256": "fdb996c08cc7e24c164ec638397e3c9fa813f0014dff7ecad8e0b77a61211488",
+    "modelVersion": "groove-multiview-articulation-v19-development",
+    "multiviewConfigSha256": "da2263a26464207c3d98f16e2efa01f16a595faeca5b390e933bda3501756534",
+    "pipeline": "htdemucs_ft stem plus original mixture into fixed v19 probability fusion",
+    "productionApproved": false
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "modelVersion": "groove-multiview-articulation-v19-development",
+  "productionApproved": false,
+  "components": {
+    "stackedEnsemble": {
+      "config": "ml/configs/groove-stacked-articulation-v18.json",
+      "sha256": "72348715dfee13de8caabb3a6943c5b6ffb561f5b35627faf9e3352edc341e23"
+    },
+    "focalSpecialist": {
+      "checkpoint": "ml/models/groove-egmd-focal-specialist-v18.pt",
+      "sha256": "fdb996c08cc7e24c164ec638397e3c9fa813f0014dff7ecad8e0b77a61211488",
+      "trainingData": "Groove MIDI Dataset plus E-GMD and rights-cleared FreePats overlays"
+    }
+  },
+  "calibration": {
+    "corpus": "RWC Popular 50 v1 opened development set",
+    "corpusLicense": "CC BY-NC 4.0",
+    "metric": "detailed 14-class micro F1 at 50 ms",
+    "status": "research-only decoder calibration; rules frozen before RWC holdout-39 inference"
+  },
+  "probabilitySources": [
+    "stemEnsemble",
+    "stemSpecialist",
+    "mixtureEnsemble",
+    "mixtureSpecialist"
+  ],
+  "rules": {
+    "KICK": {"modelWeights": {"stemEnsemble": 0.75, "stemSpecialist": 0.25}, "threshold": 0.998, "peakDistanceFrames": 8},
+    "SNARE": {"modelWeights": {"stemSpecialist": 0.5, "mixtureSpecialist": 0.5}, "threshold": 0.98, "peakDistanceFrames": 6},
+    "CROSS_STICK": {"modelWeights": {"stemEnsemble": 0.85, "stemSpecialist": 0.15}, "threshold": 0.8, "peakDistanceFrames": 8},
+    "CLOSED_HIHAT": {"modelWeights": {"stemEnsemble": 0.75, "mixtureSpecialist": 0.25}, "threshold": 0.65, "peakDistanceFrames": 8},
+    "OPEN_HIHAT": {"modelWeights": {"stemSpecialist": 0.85, "mixtureSpecialist": 0.15}, "threshold": 0.99, "peakDistanceFrames": 8},
+    "PEDAL_HIHAT": {"modelWeights": {"stemSpecialist": 0.15, "mixtureSpecialist": 0.85}, "threshold": 0.9999, "peakDistanceFrames": 8},
+    "RIDE": {"modelWeights": {"stemEnsemble": 0.15, "stemSpecialist": 0.85}, "threshold": 0.995, "peakDistanceFrames": 8},
+    "RIDE_BELL": {"modelWeights": {"stemSpecialist": 0.15, "mixtureSpecialist": 0.85}, "threshold": 0.9999, "peakDistanceFrames": 8},
+    "CRASH": {"modelWeights": {"stemEnsemble": 0.85, "mixtureSpecialist": 0.15}, "threshold": 0.9, "peakDistanceFrames": 8},
+    "HIGH_TOM": {"modelWeights": {"stemSpecialist": 0.75, "mixtureSpecialist": 0.25}, "threshold": 0.995, "peakDistanceFrames": 8},
+    "MID_TOM": {"modelWeights": {"stemSpecialist": 0.15, "mixtureSpecialist": 0.85}, "threshold": 0.9999, "peakDistanceFrames": 8},
+    "LOW_TOM": {"modelWeights": {"stemSpecialist": 0.15, "mixtureSpecialist": 0.85}, "threshold": 0.9999, "peakDistanceFrames": 8},
+    "FLOOR_TOM": {"modelWeights": {"stemEnsemble": 0.15, "stemSpecialist": 0.85}, "threshold": 0.9995, "peakDistanceFrames": 8},
+    "TAMBOURINE": {"modelWeights": {"stemSpecialist": 0.15, "mixtureSpecialist": 0.85}, "threshold": 0.9999, "peakDistanceFrames": 8}
+  },
+  "limitations": [
+    "The calibration corpus is non-commercial and opened; this decoder is not approved for a paid launch.",
+    "The exact frozen rules must be evaluated on the untouched RWC holdout before generalization is assessed.",
+    "Several rare classes are deliberately conservative because the development models do not yet generalize to them.",
+    "Demucs research separation remains outside the commercially approved production path."
+  ]
+}

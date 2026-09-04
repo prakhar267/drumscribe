@@ -28,6 +28,26 @@ def test_selection_is_deterministic_and_excludes_drumless_tracks():
     assert all(row["DrumInformation"] != "Without drums" for row in first)
 
 
+def test_selection_offset_returns_a_disjoint_deterministic_holdout():
+    select_popular_tracks = _module()["select_popular_tracks"]
+    rows = [
+        {
+            "RWCID": f"RWC_P{index:03d}",
+            "CollID": "P",
+            "DrumInformation": "Live drums",
+        }
+        for index in range(1, 13)
+    ]
+
+    development = select_popular_tracks(rows, count=7, seed="test-seed")
+    holdout = select_popular_tracks(rows, count=5, seed="test-seed", offset=7)
+
+    assert {row["RWCID"] for row in development}.isdisjoint(row["RWCID"] for row in holdout)
+    assert sorted(row["RWCID"] for row in development + holdout) == sorted(
+        row["RWCID"] for row in rows
+    )
+
+
 def test_active_window_is_bounded_and_reference_times_are_clip_relative():
     module = _module()
     active_window = module["active_window"]

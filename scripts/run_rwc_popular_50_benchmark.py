@@ -99,6 +99,7 @@ def select_popular_tracks(
     rows: list[dict[str, str]],
     count: int = DEFAULT_TRACK_COUNT,
     seed: str = SELECTION_SEED,
+    offset: int = 0,
 ) -> list[dict[str, str]]:
     eligible = [
         row
@@ -110,12 +111,15 @@ def select_popular_tracks(
         eligible,
         key=lambda row: (selection_score(row["RWCID"], seed), row["RWCID"]),
     )
-    if len(ranked) < count:
+    if offset < 0:
+        raise ValueError("selection offset must not be negative")
+    if len(ranked) < offset + count:
         raise RuntimeError(
-            f"only {len(ranked)} drum-containing RWC-P tracks; need {count}"
+            f"only {len(ranked)} drum-containing RWC-P tracks; "
+            f"need {offset + count} for offset {offset} and count {count}"
         )
     # The hash determines membership. Stable RWC ID order makes reports readable.
-    return sorted(ranked[:count], key=lambda row: row["RWCID"])
+    return sorted(ranked[offset : offset + count], key=lambda row: row["RWCID"])
 
 
 def drum_type(value: str) -> str:
@@ -166,12 +170,15 @@ def build_selection_manifest(
     *,
     count: int,
     window_seconds: float,
+    selection_offset: int = 0,
 ) -> dict[str, Any]:
     metadata_path = annotations_root / "metadata.csv"
     midi_root = (
         annotations_root / "01_annotations_preprocessed" / "MIDI_aligned" / "RWC-P"
     )
-    rows = select_popular_tracks(load_metadata(metadata_path), count)
+    rows = select_popular_tracks(
+        load_metadata(metadata_path), count, offset=selection_offset
+    )
     tracks: list[dict[str, Any]] = []
     for sequence, row in enumerate(rows, 1):
         rwc_id = row["RWCID"]
@@ -230,10 +237,15 @@ def build_selection_manifest(
     ]
     return {
         "schemaVersion": 1,
-        "benchmarkId": "rwc-popular-50-v1",
+        "benchmarkId": (
+            "rwc-popular-50-v1"
+            if selection_offset == 0 and count == DEFAULT_TRACK_COUNT
+            else f"rwc-popular-offset-{selection_offset}-count-{count}-v1"
+        ),
         "status": "selection_and_references_frozen_before_inference",
         "createdAt": datetime.now(UTC).isoformat(),
         "selectionSeed": SELECTION_SEED,
+        "selectionOffset": selection_offset,
         "selectionRule": (
             "Exclude metadata rows marked 'Without drums'; rank the remaining RWC-P "
             "tracks by SHA-256(seed:RWCID); take the first N; report in RWCID order."
@@ -454,6 +466,7 @@ def prepare(args: argparse.Namespace) -> int:
         annotations_root,
         count=args.track_count,
         window_seconds=args.window_seconds,
+        selection_offset=args.selection_offset,
     )
     # Persist the immutable selection and references before any model inference.
     write_json(manifest_path, manifest)
@@ -813,6 +826,12 @@ def parse_args() -> argparse.Namespace:
     prepare_parser.add_argument("--data-root", type=Path, default=DEFAULT_DATA_ROOT)
     prepare_parser.add_argument("--archive-url", default=ARCHIVE_URL)
     prepare_parser.add_argument("--track-count", type=int, default=DEFAULT_TRACK_COUNT)
+    prepare_parser.add_argument(
+        "--selection-offset",
+        type=int,
+        default=0,
+        help="skip this many tracks in the deterministic hash ranking",
+    )
     prepare_parser.add_argument("--workers", type=int, default=4)
     prepare_parser.add_argument(
         "--window-seconds", type=float, default=DEFAULT_WINDOW_SECONDS
@@ -837,6 +856,8 @@ def parse_args() -> argparse.Namespace:
     args = parser.parse_args()
     if getattr(args, "track_count", 1) <= 0:
         parser.error("--track-count must be positive")
+    if getattr(args, "selection_offset", 0) < 0:
+        parser.error("--selection-offset must not be negative")
     if getattr(args, "window_seconds", 1.0) <= 0:
         parser.error("--window-seconds must be positive")
     if getattr(args, "workers", 1) <= 0:

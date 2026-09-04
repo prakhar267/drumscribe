@@ -229,12 +229,36 @@ def predict_drumscribe(
     device: str,
     limit: float,
 ) -> list[Event]:
+    probabilities, frame_seconds = predict_stacked_probabilities(
+        feature_path, models, config, device, limit
+    )
+    decoded = decode_stacked_probabilities(
+        probabilities,
+        config.rules,
+        family_conflict_margins=config.family_conflict_margins,
+    )
+    return sorted(
+        (frame * frame_seconds, instrument.value)
+        for instrument in TRAINING_CLASSES
+        for frame in decoded[instrument.value]
+        if frame * frame_seconds < limit
+    )
+
+
+def predict_stacked_probabilities(
+    feature_path: Path,
+    models: dict[str, Any],
+    config: StackedEnsembleConfig,
+    device: str,
+    limit: float,
+) -> tuple[np.ndarray, float]:
+    """Return the fused frame probabilities before threshold decoding."""
     import torch
 
-    arrays = np.load(feature_path)
-    features = arrays["features"].astype(np.float32)
-    hop_length = int(arrays["hop_length"])
-    sample_rate = int(arrays["sample_rate"])
+    with np.load(feature_path, allow_pickle=False) as arrays:
+        features = arrays["features"].astype(np.float32)
+        hop_length = int(arrays["hop_length"])
+        sample_rate = int(arrays["sample_rate"])
     maximum_frames = min(features.shape[0], math.ceil(limit * sample_rate / hop_length))
     feature_tensor = torch.from_numpy(features[:maximum_frames])[None].to(device)
     with torch.no_grad():
@@ -243,18 +267,7 @@ def predict_drumscribe(
             for name, model in models.items()
         }
     probabilities = blend_stacked_probabilities(probabilities_by_model, config.rules)
-    decoded = decode_stacked_probabilities(
-        probabilities,
-        config.rules,
-        family_conflict_margins=config.family_conflict_margins,
-    )
-    frame_seconds = hop_length / sample_rate
-    return sorted(
-        (frame * frame_seconds, instrument.value)
-        for instrument in TRAINING_CLASSES
-        for frame in decoded[instrument.value]
-        if frame * frame_seconds < limit
-    )
+    return probabilities, hop_length / sample_rate
 
 
 def match_times(
