@@ -1,5 +1,11 @@
 # Real full-mixture Drum2Notes comparison
 
+Update, 2026-09-05: a second run regenerated DrumScribe predictions and
+submitted four new Drum2Notes jobs on the same byte-identical excerpts.
+DrumScribe's now owner-approved `htdemucs_ft` -> ADTOF path scored **90.69%**
+versus Drum2Notes at **79.71%** F1 at 50 ms. See
+`MDB_OWNER_APPROVED_LIVE_RERUN.md`. The original run below remains preserved.
+
 Date completed: 2026-09-05
 
 This benchmark measures actual full-band music rather than isolated drums. Four

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bridge the non-commercial ADTOF PyTorch CLI to DrumScribe JSON."""
+"""Bridge the separately licensed ADTOF PyTorch CLI to DrumScribe JSON."""
 
 from __future__ import annotations
 

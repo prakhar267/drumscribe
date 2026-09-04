@@ -120,6 +120,13 @@ path reached 89.59%. It is now commercially authorized under the separate owner
 approval, but still misses the 90% gate by 0.41 percentage points.
 See `docs/benchmarks/MDB_REAL_LIVE_COMPARISON.md`.
 
+A fresh same-audio rerun on 2026-09-05 regenerated all four Demucs/ADTOF
+predictions and submitted four new Drum2Notes jobs. DrumScribe reached 90.69%
+versus Drum2Notes at 79.71% F1 at 50 ms. This clears 90% only on the narrow
+four-excerpt probe; it does not supersede the wider 11-track 82.99% result or
+authorize a broad 90% marketing claim. See
+`docs/benchmarks/MDB_OWNER_APPROVED_LIVE_RERUN.md`.
+
 A balanced follow-up processed 100 real human GMD drum performances (25 each
 for rock/punk, pop/soul, funk/hip-hop and jazz/world). DrumScribe v16 reached
 91.70% detailed event micro F1 at 50 ms, versus 54.45% for the open-source
