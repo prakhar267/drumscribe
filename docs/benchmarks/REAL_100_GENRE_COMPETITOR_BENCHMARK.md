@@ -2,6 +2,12 @@
 
 Date completed: 2026-09-03
 
+Update, 2026-09-05: Klangio Drum2Notes has now been submitted on all 100
+frozen inputs. DrumScribe reached 91.70% detailed F1 versus Drum2Notes at
+67.83%; Drum2Notes returned usable output for 61/100 inputs. See
+`docs/benchmarks/DRUM2NOTES_LIVE_100_BENCHMARK.md` for the complete protocol,
+failure analysis and completed-only diagnostic.
+
 ## Result
 
 DrumScribe processed all 100 selected recordings and reached **91.70% detailed
@@ -63,7 +69,7 @@ market-share table exists for this niche.
 
 | Competitor | Same 100 completed | What was verified | Why no 100-track score |
 | --- | ---: | --- | --- |
-| Klangio Drum2Notes | 0 | Unlimited free demos cover the first 20 seconds and accept the benchmark WAVs. A prior, separate 10-recording live comparison scored 76.87% detailed F1 at ±50 ms. | The final submission requires a rights/title/composer legal attestation. It is awaiting explicit action-time confirmation; the prior 10-record score is not mixed into this leaderboard. |
+| Klangio Drum2Notes | **100 submitted; 61 usable** | The live public demo was run on the frozen 100 inputs on 2026-09-05. It scored 67.83% detailed F1 at ±50 ms under the strict failure-inclusive protocol. | 39 short inputs returned service errors. See `DRUM2NOTES_LIVE_100_BENCHMARK.md`. |
 | Drumscrib | 0 | Current beta accepts uploaded audio, says errors remain, and prices 10 transcriptions at €15. | 100 files require a €150 purchase before optional MIDI/MuseScore files. No payment was authorized. Its terms also restrict products to personal use. |
 | PlayDrumsOnline | 0 | The free plan permits one transcription; private MP3 upload and unlimited AI sheets require a paid plan. | One free item cannot support a 100-record comparison, and no subscription purchase was authorized. |
 | Drum AI | 0 | The transcription page loads, but the active browser session requires sign-in before a private upload. | No authenticated benchmark session or bulk evaluation interface was available. |

@@ -81,9 +81,14 @@
   },
   "competitorCoverage": {
     "drum2notes": {
-      "completedRecordsOnThisSelection": 0,
-      "status": "awaiting_explicit_rights_attestation_confirmation",
+      "submittedRecordsOnThisSelection": 100,
+      "completedRecordsOnThisSelection": 61,
+      "failedRecordsOnThisSelection": 39,
+      "status": "complete_live_comparison_2026_09_05",
       "freeDemoWindowSeconds": 20,
+      "detailedF1At50msFailureInclusive": 0.6783097854526426,
+      "completedOnlyDetailedF1At50ms": 0.7081882127979239,
+      "comparisonEvidence": "docs/benchmarks/data/DRUM2NOTES_LIVE_100_BENCHMARK.json",
       "priorSeparateProbeRecords": 10,
       "priorSeparateProbeDetailedF1At50ms": 0.7687
     },

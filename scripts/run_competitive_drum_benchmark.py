@@ -150,6 +150,13 @@ def competitor_events(path: Path, limit: float) -> tuple[list[Event], float]:
     displayed rounded BPM.  This preserves the service's own audio alignment.
     """
     payload = json.loads(path.read_text(encoding="utf-8"))
+    # The live endpoint has returned both a JSON object and a JSON-encoded
+    # string containing that object.  Preserve the raw response on disk while
+    # accepting either representation for reproducible scoring.
+    if isinstance(payload, str):
+        payload = json.loads(payload)
+    if not isinstance(payload, dict):
+        raise TypeError(f"unexpected MusicJSON payload in {path}")
     global_tempo = float(payload["MusicInfo"]["Tempo"])
     events: list[Event] = []
     for part in payload.get("Parts", []):
