@@ -169,6 +169,11 @@ def evaluate(args: argparse.Namespace) -> int:
         "language": defaultdict(list),
     }
     raw_root = output_path.parent / "drumscribe-raw"
+    probability_cache_root = (
+        _resolve(repository, args.probability_cache_root, strict=False)
+        if args.probability_cache_root is not None
+        else None
+    )
     tracks: list[dict[str, Any]] = []
     class_index = {
         instrument.value: index for index, instrument in enumerate(TRAINING_CLASSES)
@@ -201,6 +206,18 @@ def evaluate(args: argparse.Namespace) -> int:
             if view == "stem":
                 stem_stacked = stacked
         assert frame_seconds is not None and stem_stacked is not None
+        if probability_cache_root is not None:
+            for source_name, source_probabilities in sources.items():
+                destination = probability_cache_root / source_name / f"{rwc_id}.npz"
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                temporary = destination.with_suffix(destination.suffix + ".tmp")
+                with temporary.open("wb") as handle:
+                    np.savez_compressed(
+                        handle,
+                        probabilities=source_probabilities.astype(np.float32),
+                        frame_seconds=np.asarray(frame_seconds, dtype=np.float64),
+                    )
+                temporary.replace(destination)
         probabilities, decoded = decode_multiview_probabilities(sources, fusion.rules)
         baseline_decoded = decode_stacked_probabilities(
             stem_stacked,
@@ -388,6 +405,11 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--device", choices=("auto", "cpu", "mps", "cuda"), default="auto"
+    )
+    parser.add_argument(
+        "--probability-cache-root",
+        type=Path,
+        help="optional directory for the four aligned frame-probability streams",
     )
     return parser.parse_args()
 

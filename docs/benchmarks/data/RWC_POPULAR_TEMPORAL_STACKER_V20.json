@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "completedAt": "2026-09-04",
+  "benchmark": {
+    "corpus": "RWC 2.0 Popular Music Database",
+    "license": "CC BY-NC 4.0",
+    "songs": 89,
+    "referenceEvents": 12454,
+    "scoredAudioSeconds": 1780,
+    "matching": "one-to-one class-aware onset matching",
+    "developmentProtocol": "five-fold track-wise out-of-fold model prediction; timing and fusion hyperparameters selected from the first-50 out-of-fold outputs",
+    "secondaryProtocol": "fixed evaluation on the previously opened remaining 39 selections"
+  },
+  "artifacts": {
+    "configurationSha256": "8d98e1fb364cda1c8e2cbf3f9cfa1719b3086609735a189b8a192bbd983c7b5f",
+    "checkpointSha256": "b49d4dbe4b65300959e7b29b86a185f173d9ec886cd1c7dddbc5fd3d385dafc8",
+    "trainingEvidenceSha256": "d792dfea987c7d48b6a00f3807cba741a63a593786a74c722a7b2fc8abe20e74",
+    "secondaryResultSha256": "5f0a74a8fe80390058e9924badaab06b266abb08577042d7a1528bfc75edcbbe"
+  },
+  "scores": {
+    "development50": {
+      "v19DetailedF1At50ms": 0.5885474860335196,
+      "v20OutOfFoldDetailedF1At50ms": 0.6044517051255871
+    },
+    "secondary39": {
+      "v19DetailedF1At20ms": 0.3998801557974633,
+      "v20DetailedF1At20ms": 0.5053082692120385,
+      "v19DetailedF1At50ms": 0.62798362129232,
+      "v20DetailedF1At50ms": 0.6307587415992987,
+      "v20FamilyF1At50ms": 0.6623161585662803,
+      "v20CoreF1At50ms": 0.722859954083306,
+      "v20ClassAgnosticF1At50ms": 0.734781338268238
+    },
+    "combined89": {
+      "20ms": {
+        "v19DetailedF1": 0.38696420498910944,
+        "v20DetailedF1": 0.46454042791890376,
+        "v19FamilyF1": 0.4071014671433855,
+        "v20FamilyF1": 0.4908245853033096,
+        "v19CoreF1": 0.445877939427212,
+        "v20CoreF1": 0.5382342406876791,
+        "v19ClassAgnosticF1": 0.4860066576254469,
+        "v20ClassAgnosticF1": 0.5866655982049844
+      },
+      "50ms": {
+        "v19DetailedF1": 0.6047754078822998,
+        "v20DetailedF1": 0.6152736597483772,
+        "v19FamilyF1": 0.6332963465252949,
+        "v20FamilyF1": 0.6462056254507573,
+        "v19CoreF1": 0.6933845731539939,
+        "v20CoreF1": 0.7042442693409742,
+        "v19ClassAgnosticF1": 0.7408868614638556,
+        "v20ClassAgnosticF1": 0.7566311403157304
+      }
+    }
+  },
+  "claimBoundary": {
+    "productionApproved": false,
+    "commercialUseApproved": false,
+    "ninetyPercentReached": false,
+    "reason": "RWC-derived stacker/decoder is non-commercial and rare natural-mixture articulations remain unsupported."
+  }
+}

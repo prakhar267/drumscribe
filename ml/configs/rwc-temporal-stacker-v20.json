@@ -1,0 +1,2056 @@
+{
+  "baseOnsetShiftFrames": {
+    "CLOSED_HIHAT": -2,
+    "CRASH": 0,
+    "CROSS_STICK": -2,
+    "FLOOR_TOM": -3,
+    "HIGH_TOM": -4,
+    "KICK": -1,
+    "LOW_TOM": -4,
+    "MID_TOM": -4,
+    "OPEN_HIHAT": -2,
+    "PEDAL_HIHAT": -4,
+    "RIDE": -4,
+    "RIDE_BELL": -4,
+    "SNARE": -2,
+    "TAMBOURINE": -4
+  },
+  "checkpoint": {
+    "path": "ml/models/rwc-temporal-stacker-v20.pt",
+    "sha256": "b49d4dbe4b65300959e7b29b86a185f173d9ec886cd1c7dddbc5fd3d385dafc8"
+  },
+  "developmentEvidence": {
+    "alignedV19Base": {
+      "f1": 0.597582279365523,
+      "fn": 3043,
+      "fp": 2716,
+      "tp": 4276
+    },
+    "exactSecondDomain": {
+      "alignedV19Base": {
+        "20": {
+          "core3": {
+            "classAgnostic": {
+              "f1": 0.5599378881987578,
+              "fn": 2386,
+              "fp": 3282,
+              "precision": 0.5235191637630662,
+              "recall": 0.6018024032042724,
+              "tp": 3606
+            },
+            "meanAbsoluteTimingErrorMs": 8.821788360018708,
+            "medianAbsoluteTimingErrorMs": 8.110999999985324,
+            "micro": {
+              "f1": 0.5027950310559006,
+              "fn": 2754,
+              "fp": 3650,
+              "precision": 0.47009291521486646,
+              "recall": 0.5403871829105474,
+              "tp": 3238
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 0.4792264692551745,
+                "fn": 1308,
+                "fp": 2139,
+                "meanAbsoluteTimingErrorMs": 8.98340799026049,
+                "precision": 0.42577181208053694,
+                "recall": 0.548030407740152,
+                "support": 2894,
+                "tp": 1586
+              },
+              "KICK": {
+                "f1": 0.6253669994128009,
+                "fn": 578,
+                "fp": 698,
+                "meanAbsoluteTimingErrorMs": 8.686643579993687,
+                "precision": 0.6040839478162223,
+                "recall": 0.6482045039561777,
+                "support": 1643,
+                "tp": 1065
+              },
+              "SNARE": {
+                "f1": 0.41120840630472855,
+                "fn": 868,
+                "fp": 813,
+                "meanAbsoluteTimingErrorMs": 8.630307026395501,
+                "precision": 0.41928571428571426,
+                "recall": 0.4034364261168385,
+                "support": 1455,
+                "tp": 587
+              }
+            },
+            "predictedEvents": 6888,
+            "referenceEvents": 5992,
+            "supportedClassCount": 3,
+            "supportedMacroF1": 0.505267291657568
+          },
+          "detailed14": {
+            "classAgnostic": {
+              "f1": 0.5700510097128083,
+              "fn": 3240,
+              "fp": 2913,
+              "precision": 0.5833810068649885,
+              "recall": 0.5573165733023637,
+              "tp": 4079
+            },
+            "meanAbsoluteTimingErrorMs": 8.783203698110894,
+            "medianAbsoluteTimingErrorMs": 8.07864852606599,
+            "micro": {
+              "f1": 0.4346307036545315,
+              "fn": 4209,
+              "fp": 3882,
+              "precision": 0.4447940503432494,
+              "recall": 0.4249214373548299,
+              "tp": 3110
+            },
+            "perClass": {
+              "CLOSED_HIHAT": {
+                "f1": 0.4657102869139258,
+                "fn": 1065,
+                "fp": 1989,
+                "meanAbsoluteTimingErrorMs": 8.905955633238813,
+                "precision": 0.40090361445783135,
+                "recall": 0.5555091819699499,
+                "support": 2396,
+                "tp": 1331
+              },
+              "CRASH": {
+                "f1": 0.2972972972972973,
+                "fn": 118,
+                "fp": 38,
+                "meanAbsoluteTimingErrorMs": 9.479787878807187,
+                "precision": 0.4647887323943662,
+                "recall": 0.2185430463576159,
+                "support": 151,
+                "tp": 33
+              },
+              "CROSS_STICK": {
+                "f1": 0.43537414965986393,
+                "fn": 31,
+                "fp": 52,
+                "meanAbsoluteTimingErrorMs": 6.8376318027461025,
+                "precision": 0.38095238095238093,
+                "recall": 0.5079365079365079,
+                "support": 63,
+                "tp": 32
+              },
+              "FLOOR_TOM": {
+                "f1": 0.0,
+                "fn": 58,
+                "fp": 16,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 58,
+                "tp": 0
+              },
+              "HIGH_TOM": {
+                "f1": 0.23076923076923078,
+                "fn": 13,
+                "fp": 7,
+                "meanAbsoluteTimingErrorMs": 5.186099017313002,
+                "precision": 0.3,
+                "recall": 0.1875,
+                "support": 16,
+                "tp": 3
+              },
+              "KICK": {
+                "f1": 0.6253669994128009,
+                "fn": 578,
+                "fp": 698,
+                "meanAbsoluteTimingErrorMs": 8.686643579993687,
+                "precision": 0.6040839478162223,
+                "recall": 0.6482045039561777,
+                "support": 1643,
+                "tp": 1065
+              },
+              "LOW_TOM": {
+                "f1": 0.0,
+                "fn": 13,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 13,
+                "tp": 0
+              },
+              "MID_TOM": {
+                "f1": 0.0,
+                "fn": 42,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 42,
+                "tp": 0
+              },
+              "OPEN_HIHAT": {
+                "f1": 0.25096030729833546,
+                "fn": 278,
+                "fp": 307,
+                "meanAbsoluteTimingErrorMs": 9.22928652409696,
+                "precision": 0.2419753086419753,
+                "recall": 0.26063829787234044,
+                "support": 376,
+                "tp": 98
+              },
+              "PEDAL_HIHAT": {
+                "f1": 0.0,
+                "fn": 122,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 122,
+                "tp": 0
+              },
+              "RIDE": {
+                "f1": 0.058823529411764705,
+                "fn": 59,
+                "fp": 5,
+                "meanAbsoluteTimingErrorMs": 11.545297052180103,
+                "precision": 0.2857142857142857,
+                "recall": 0.03278688524590164,
+                "support": 61,
+                "tp": 2
+              },
+              "RIDE_BELL": {
+                "f1": 0.0,
+                "fn": 71,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 71,
+                "tp": 0
+              },
+              "SNARE": {
+                "f1": 0.4032496307237814,
+                "fn": 846,
+                "fp": 770,
+                "meanAbsoluteTimingErrorMs": 8.673818594110681,
+                "precision": 0.4148936170212766,
+                "recall": 0.3922413793103448,
+                "support": 1392,
+                "tp": 546
+              },
+              "TAMBOURINE": {
+                "f1": 0.0,
+                "fn": 915,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 915,
+                "tp": 0
+              }
+            },
+            "predictedEvents": 6992,
+            "referenceEvents": 7319,
+            "supportedClassCount": 14,
+            "supportedMacroF1": 0.19768224510621432
+          },
+          "family6": {
+            "classAgnostic": {
+              "f1": 0.5700510097128083,
+              "fn": 3240,
+              "fp": 2913,
+              "precision": 0.5833810068649885,
+              "recall": 0.5573165733023637,
+              "tp": 4079
+            },
+            "meanAbsoluteTimingErrorMs": 8.829303509581283,
+            "medianAbsoluteTimingErrorMs": 8.155648526098958,
+            "micro": {
+              "f1": 0.457969394172315,
+              "fn": 4042,
+              "fp": 3715,
+              "precision": 0.4686784897025172,
+              "recall": 0.44773876212597347,
+              "tp": 3277
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.1994459833795014,
+                "fn": 247,
+                "fp": 42,
+                "meanAbsoluteTimingErrorMs": 9.808849836259823,
+                "precision": 0.46153846153846156,
+                "recall": 0.127208480565371,
+                "support": 283,
+                "tp": 36
+              },
+              "HIHAT": {
+                "f1": 0.4792264692551745,
+                "fn": 1308,
+                "fp": 2139,
+                "meanAbsoluteTimingErrorMs": 8.98340799026049,
+                "precision": 0.42577181208053694,
+                "recall": 0.548030407740152,
+                "support": 2894,
+                "tp": 1586
+              },
+              "KICK": {
+                "f1": 0.6253669994128009,
+                "fn": 578,
+                "fp": 698,
+                "meanAbsoluteTimingErrorMs": 8.686643579993687,
+                "precision": 0.6040839478162223,
+                "recall": 0.6482045039561777,
+                "support": 1643,
+                "tp": 1065
+              },
+              "SNARE": {
+                "f1": 0.41120840630472855,
+                "fn": 868,
+                "fp": 813,
+                "meanAbsoluteTimingErrorMs": 8.630307026395501,
+                "precision": 0.41928571428571426,
+                "recall": 0.4034364261168385,
+                "support": 1455,
+                "tp": 587
+              },
+              "TAMBOURINE": {
+                "f1": 0.0,
+                "fn": 915,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 915,
+                "tp": 0
+              },
+              "TOM": {
+                "f1": 0.03870967741935484,
+                "fn": 126,
+                "fp": 23,
+                "meanAbsoluteTimingErrorMs": 5.186099017313002,
+                "precision": 0.11538461538461539,
+                "recall": 0.023255813953488372,
+                "support": 129,
+                "tp": 3
+              }
+            },
+            "predictedEvents": 6992,
+            "referenceEvents": 7319,
+            "supportedClassCount": 6,
+            "supportedMacroF1": 0.2923262559619267
+          }
+        },
+        "50": {
+          "core3": {
+            "classAgnostic": {
+              "f1": 0.7445652173913043,
+              "fn": 1197,
+              "fp": 2093,
+              "precision": 0.6961382113821138,
+              "recall": 0.8002336448598131,
+              "tp": 4795
+            },
+            "meanAbsoluteTimingErrorMs": 13.997626699190828,
+            "medianAbsoluteTimingErrorMs": 11.772675737120153,
+            "micro": {
+              "f1": 0.6815217391304348,
+              "fn": 1603,
+              "fp": 2499,
+              "precision": 0.6371951219512195,
+              "recall": 0.7324766355140186,
+              "tp": 4389
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 0.6369542226922495,
+                "fn": 786,
+                "fp": 1617,
+                "meanAbsoluteTimingErrorMs": 13.836698079224972,
+                "precision": 0.5659060402684564,
+                "recall": 0.728403593642018,
+                "support": 2894,
+                "tp": 2108
+              },
+              "KICK": {
+                "f1": 0.8326482677627716,
+                "fn": 225,
+                "fp": 345,
+                "meanAbsoluteTimingErrorMs": 13.297488348692529,
+                "precision": 0.8043108338060124,
+                "recall": 0.8630553864881315,
+                "support": 1643,
+                "tp": 1418
+              },
+              "SNARE": {
+                "f1": 0.604553415061296,
+                "fn": 592,
+                "fp": 537,
+                "meanAbsoluteTimingErrorMs": 15.541118833483544,
+                "precision": 0.6164285714285714,
+                "recall": 0.593127147766323,
+                "support": 1455,
+                "tp": 863
+              }
+            },
+            "predictedEvents": 6888,
+            "referenceEvents": 5992,
+            "supportedClassCount": 3,
+            "supportedMacroF1": 0.6913853018387723
+          },
+          "detailed14": {
+            "classAgnostic": {
+              "f1": 0.75857731814688,
+              "fn": 1891,
+              "fp": 1564,
+              "precision": 0.7763157894736842,
+              "recall": 0.7416313704057932,
+              "tp": 5428
+            },
+            "meanAbsoluteTimingErrorMs": 14.117567180057636,
+            "medianAbsoluteTimingErrorMs": 11.848486394683277,
+            "micro": {
+              "f1": 0.5959052477115505,
+              "fn": 3055,
+              "fp": 2728,
+              "precision": 0.6098398169336384,
+              "recall": 0.5825932504440497,
+              "tp": 4264
+            },
+            "perClass": {
+              "CLOSED_HIHAT": {
+                "f1": 0.6189643107067879,
+                "fn": 627,
+                "fp": 1551,
+                "meanAbsoluteTimingErrorMs": 13.598275083990812,
+                "precision": 0.5328313253012048,
+                "recall": 0.738313856427379,
+                "support": 2396,
+                "tp": 1769
+              },
+              "CRASH": {
+                "f1": 0.46846846846846846,
+                "fn": 99,
+                "fp": 19,
+                "meanAbsoluteTimingErrorMs": 17.87580769231038,
+                "precision": 0.7323943661971831,
+                "recall": 0.3443708609271523,
+                "support": 151,
+                "tp": 52
+              },
+              "CROSS_STICK": {
+                "f1": 0.6258503401360545,
+                "fn": 17,
+                "fp": 38,
+                "meanAbsoluteTimingErrorMs": 14.793332544657103,
+                "precision": 0.5476190476190477,
+                "recall": 0.7301587301587301,
+                "support": 63,
+                "tp": 46
+              },
+              "FLOOR_TOM": {
+                "f1": 0.2972972972972973,
+                "fn": 47,
+                "fp": 5,
+                "meanAbsoluteTimingErrorMs": 36.42642733458698,
+                "precision": 0.6875,
+                "recall": 0.1896551724137931,
+                "support": 58,
+                "tp": 11
+              },
+              "HIGH_TOM": {
+                "f1": 0.23076923076923078,
+                "fn": 13,
+                "fp": 7,
+                "meanAbsoluteTimingErrorMs": 5.186099017313002,
+                "precision": 0.3,
+                "recall": 0.1875,
+                "support": 16,
+                "tp": 3
+              },
+              "KICK": {
+                "f1": 0.8326482677627716,
+                "fn": 225,
+                "fp": 345,
+                "meanAbsoluteTimingErrorMs": 13.297488348692529,
+                "precision": 0.8043108338060124,
+                "recall": 0.8630553864881315,
+                "support": 1643,
+                "tp": 1418
+              },
+              "LOW_TOM": {
+                "f1": 0.0,
+                "fn": 13,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 13,
+                "tp": 0
+              },
+              "MID_TOM": {
+                "f1": 0.0,
+                "fn": 42,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 42,
+                "tp": 0
+              },
+              "OPEN_HIHAT": {
+                "f1": 0.3994878361075544,
+                "fn": 220,
+                "fp": 249,
+                "meanAbsoluteTimingErrorMs": 17.066582766378772,
+                "precision": 0.3851851851851852,
+                "recall": 0.4148936170212766,
+                "support": 376,
+                "tp": 156
+              },
+              "PEDAL_HIHAT": {
+                "f1": 0.0,
+                "fn": 122,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 122,
+                "tp": 0
+              },
+              "RIDE": {
+                "f1": 0.11764705882352941,
+                "fn": 57,
+                "fp": 3,
+                "meanAbsoluteTimingErrorMs": 16.624148526034332,
+                "precision": 0.5714285714285714,
+                "recall": 0.06557377049180328,
+                "support": 61,
+                "tp": 4
+              },
+              "RIDE_BELL": {
+                "f1": 0.0,
+                "fn": 71,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 71,
+                "tp": 0
+              },
+              "SNARE": {
+                "f1": 0.5945347119645494,
+                "fn": 587,
+                "fp": 511,
+                "meanAbsoluteTimingErrorMs": 15.566399445085747,
+                "precision": 0.6117021276595744,
+                "recall": 0.5783045977011494,
+                "support": 1392,
+                "tp": 805
+              },
+              "TAMBOURINE": {
+                "f1": 0.0,
+                "fn": 915,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 915,
+                "tp": 0
+              }
+            },
+            "predictedEvents": 6992,
+            "referenceEvents": 7319,
+            "supportedClassCount": 14,
+            "supportedMacroF1": 0.2989762515740174
+          },
+          "family6": {
+            "classAgnostic": {
+              "f1": 0.75857731814688,
+              "fn": 1891,
+              "fp": 1564,
+              "precision": 0.7763157894736842,
+              "recall": 0.7416313704057932,
+              "tp": 5428
+            },
+            "meanAbsoluteTimingErrorMs": 14.094042418517809,
+            "medianAbsoluteTimingErrorMs": 11.85435147392866,
+            "micro": {
+              "f1": 0.6234365173642652,
+              "fn": 2858,
+              "fp": 2531,
+              "precision": 0.6380148741418764,
+              "recall": 0.609509495832764,
+              "tp": 4461
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.32132963988919666,
+                "fn": 225,
+                "fp": 20,
+                "meanAbsoluteTimingErrorMs": 17.8272171397474,
+                "precision": 0.7435897435897436,
+                "recall": 0.2049469964664311,
+                "support": 283,
+                "tp": 58
+              },
+              "HIHAT": {
+                "f1": 0.6369542226922495,
+                "fn": 786,
+                "fp": 1617,
+                "meanAbsoluteTimingErrorMs": 13.836698079224972,
+                "precision": 0.5659060402684564,
+                "recall": 0.728403593642018,
+                "support": 2894,
+                "tp": 2108
+              },
+              "KICK": {
+                "f1": 0.8326482677627716,
+                "fn": 225,
+                "fp": 345,
+                "meanAbsoluteTimingErrorMs": 13.297488348692529,
+                "precision": 0.8043108338060124,
+                "recall": 0.8630553864881315,
+                "support": 1643,
+                "tp": 1418
+              },
+              "SNARE": {
+                "f1": 0.604553415061296,
+                "fn": 592,
+                "fp": 537,
+                "meanAbsoluteTimingErrorMs": 15.541118833483544,
+                "precision": 0.6164285714285714,
+                "recall": 0.593127147766323,
+                "support": 1455,
+                "tp": 863
+              },
+              "TAMBOURINE": {
+                "f1": 0.0,
+                "fn": 915,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 915,
+                "tp": 0
+              },
+              "TOM": {
+                "f1": 0.18064516129032257,
+                "fn": 115,
+                "fp": 12,
+                "meanAbsoluteTimingErrorMs": 28.854360868146095,
+                "precision": 0.5384615384615384,
+                "recall": 0.10852713178294573,
+                "support": 129,
+                "tp": 14
+              }
+            },
+            "predictedEvents": 6992,
+            "referenceEvents": 7319,
+            "supportedClassCount": 6,
+            "supportedMacroF1": 0.4293551177826394
+          }
+        }
+      },
+      "matching": "exact seconds using the release benchmark scorer",
+      "outOfFoldFusion": {
+        "20": {
+          "core3": {
+            "classAgnostic": {
+              "f1": 0.5616801880354841,
+              "fn": 2288,
+              "fp": 3493,
+              "precision": 0.5146588856467973,
+              "recall": 0.6181575433911882,
+              "tp": 3704
+            },
+            "meanAbsoluteTimingErrorMs": 8.812285227789157,
+            "medianAbsoluteTimingErrorMs": 8.141824263134367,
+            "micro": {
+              "f1": 0.5046629767230267,
+              "fn": 2664,
+              "fp": 3869,
+              "precision": 0.4624148950951785,
+              "recall": 0.5554072096128171,
+              "tp": 3328
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 0.4838337182448037,
+                "fn": 1218,
+                "fp": 2358,
+                "meanAbsoluteTimingErrorMs": 8.955858950414605,
+                "precision": 0.4154685176003966,
+                "recall": 0.5791292328956462,
+                "support": 2894,
+                "tp": 1676
+              },
+              "KICK": {
+                "f1": 0.6253669994128009,
+                "fn": 578,
+                "fp": 698,
+                "meanAbsoluteTimingErrorMs": 8.686643579993687,
+                "precision": 0.6040839478162223,
+                "recall": 0.6482045039561777,
+                "support": 1643,
+                "tp": 1065
+              },
+              "SNARE": {
+                "f1": 0.41120840630472855,
+                "fn": 868,
+                "fp": 813,
+                "meanAbsoluteTimingErrorMs": 8.630307026395501,
+                "precision": 0.41928571428571426,
+                "recall": 0.4034364261168385,
+                "support": 1455,
+                "tp": 587
+              }
+            },
+            "predictedEvents": 7197,
+            "referenceEvents": 5992,
+            "supportedClassCount": 3,
+            "supportedMacroF1": 0.5068030413207777
+          },
+          "detailed14": {
+            "classAgnostic": {
+              "f1": 0.5739568443264583,
+              "fn": 3103,
+              "fp": 3156,
+              "precision": 0.5718936516549105,
+              "recall": 0.5760349774559366,
+              "tp": 4216
+            },
+            "meanAbsoluteTimingErrorMs": 8.776335702848371,
+            "medianAbsoluteTimingErrorMs": 8.102000000008047,
+            "micro": {
+              "f1": 0.43604928187325576,
+              "fn": 4116,
+              "fp": 4169,
+              "precision": 0.43448182311448724,
+              "recall": 0.4376280912692991,
+              "tp": 3203
+            },
+            "perClass": {
+              "CLOSED_HIHAT": {
+                "f1": 0.46605809128630704,
+                "fn": 992,
+                "fp": 2225,
+                "meanAbsoluteTimingErrorMs": 8.885161658295004,
+                "precision": 0.3868834389639019,
+                "recall": 0.5859766277128547,
+                "support": 2396,
+                "tp": 1404
+              },
+              "CRASH": {
+                "f1": 0.36177474402730375,
+                "fn": 98,
+                "fp": 89,
+                "meanAbsoluteTimingErrorMs": 9.183636503655848,
+                "precision": 0.3732394366197183,
+                "recall": 0.3509933774834437,
+                "support": 151,
+                "tp": 53
+              },
+              "CROSS_STICK": {
+                "f1": 0.43537414965986393,
+                "fn": 31,
+                "fp": 52,
+                "meanAbsoluteTimingErrorMs": 6.8376318027461025,
+                "precision": 0.38095238095238093,
+                "recall": 0.5079365079365079,
+                "support": 63,
+                "tp": 32
+              },
+              "FLOOR_TOM": {
+                "f1": 0.0,
+                "fn": 58,
+                "fp": 16,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 58,
+                "tp": 0
+              },
+              "HIGH_TOM": {
+                "f1": 0.23076923076923078,
+                "fn": 13,
+                "fp": 7,
+                "meanAbsoluteTimingErrorMs": 5.186099017313002,
+                "precision": 0.3,
+                "recall": 0.1875,
+                "support": 16,
+                "tp": 3
+              },
+              "KICK": {
+                "f1": 0.6253669994128009,
+                "fn": 578,
+                "fp": 698,
+                "meanAbsoluteTimingErrorMs": 8.686643579993687,
+                "precision": 0.6040839478162223,
+                "recall": 0.6482045039561777,
+                "support": 1643,
+                "tp": 1065
+              },
+              "LOW_TOM": {
+                "f1": 0.0,
+                "fn": 13,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 13,
+                "tp": 0
+              },
+              "MID_TOM": {
+                "f1": 0.0,
+                "fn": 42,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 42,
+                "tp": 0
+              },
+              "OPEN_HIHAT": {
+                "f1": 0.25096030729833546,
+                "fn": 278,
+                "fp": 307,
+                "meanAbsoluteTimingErrorMs": 9.22928652409696,
+                "precision": 0.2419753086419753,
+                "recall": 0.26063829787234044,
+                "support": 376,
+                "tp": 98
+              },
+              "PEDAL_HIHAT": {
+                "f1": 0.0,
+                "fn": 122,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 122,
+                "tp": 0
+              },
+              "RIDE": {
+                "f1": 0.058823529411764705,
+                "fn": 59,
+                "fp": 5,
+                "meanAbsoluteTimingErrorMs": 11.545297052180103,
+                "precision": 0.2857142857142857,
+                "recall": 0.03278688524590164,
+                "support": 61,
+                "tp": 2
+              },
+              "RIDE_BELL": {
+                "f1": 0.0,
+                "fn": 71,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 71,
+                "tp": 0
+              },
+              "SNARE": {
+                "f1": 0.4032496307237814,
+                "fn": 846,
+                "fp": 770,
+                "meanAbsoluteTimingErrorMs": 8.673818594110681,
+                "precision": 0.4148936170212766,
+                "recall": 0.3922413793103448,
+                "support": 1392,
+                "tp": 546
+              },
+              "TAMBOURINE": {
+                "f1": 0.0,
+                "fn": 915,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 915,
+                "tp": 0
+              }
+            },
+            "predictedEvents": 7372,
+            "referenceEvents": 7319,
+            "supportedClassCount": 14,
+            "supportedMacroF1": 0.2023126201849563
+          },
+          "family6": {
+            "classAgnostic": {
+              "f1": 0.5739568443264583,
+              "fn": 3103,
+              "fp": 3156,
+              "precision": 0.5718936516549105,
+              "recall": 0.5760349774559366,
+              "tp": 4216
+            },
+            "meanAbsoluteTimingErrorMs": 8.819481767043891,
+            "medianAbsoluteTimingErrorMs": 8.182148525975208,
+            "micro": {
+              "f1": 0.46123476958682186,
+              "fn": 3931,
+              "fp": 3984,
+              "precision": 0.4595767769940315,
+              "recall": 0.4629047684109851,
+              "tp": 3388
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.2638888888888889,
+                "fn": 226,
+                "fp": 92,
+                "meanAbsoluteTimingErrorMs": 9.430889326499152,
+                "precision": 0.3825503355704698,
+                "recall": 0.20141342756183744,
+                "support": 283,
+                "tp": 57
+              },
+              "HIHAT": {
+                "f1": 0.4838337182448037,
+                "fn": 1218,
+                "fp": 2358,
+                "meanAbsoluteTimingErrorMs": 8.955858950414605,
+                "precision": 0.4154685176003966,
+                "recall": 0.5791292328956462,
+                "support": 2894,
+                "tp": 1676
+              },
+              "KICK": {
+                "f1": 0.6253669994128009,
+                "fn": 578,
+                "fp": 698,
+                "meanAbsoluteTimingErrorMs": 8.686643579993687,
+                "precision": 0.6040839478162223,
+                "recall": 0.6482045039561777,
+                "support": 1643,
+                "tp": 1065
+              },
+              "SNARE": {
+                "f1": 0.41120840630472855,
+                "fn": 868,
+                "fp": 813,
+                "meanAbsoluteTimingErrorMs": 8.630307026395501,
+                "precision": 0.41928571428571426,
+                "recall": 0.4034364261168385,
+                "support": 1455,
+                "tp": 587
+              },
+              "TAMBOURINE": {
+                "f1": 0.0,
+                "fn": 915,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 915,
+                "tp": 0
+              },
+              "TOM": {
+                "f1": 0.03870967741935484,
+                "fn": 126,
+                "fp": 23,
+                "meanAbsoluteTimingErrorMs": 5.186099017313002,
+                "precision": 0.11538461538461539,
+                "recall": 0.023255813953488372,
+                "support": 129,
+                "tp": 3
+              }
+            },
+            "predictedEvents": 7372,
+            "referenceEvents": 7319,
+            "supportedClassCount": 6,
+            "supportedMacroF1": 0.3038346150450962
+          }
+        },
+        "50": {
+          "core3": {
+            "classAgnostic": {
+              "f1": 0.7530517855788915,
+              "fn": 1026,
+              "fp": 2231,
+              "precision": 0.6900097262748367,
+              "recall": 0.8287716955941254,
+              "tp": 4966
+            },
+            "meanAbsoluteTimingErrorMs": 14.22500729064989,
+            "medianAbsoluteTimingErrorMs": 11.918648526034303,
+            "micro": {
+              "f1": 0.6913336871635454,
+              "fn": 1433,
+              "fp": 2638,
+              "precision": 0.6334583854383771,
+              "recall": 0.7608477970627503,
+              "tp": 4559
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 0.6576212471131639,
+                "fn": 616,
+                "fp": 1756,
+                "meanAbsoluteTimingErrorMs": 14.303768308310158,
+                "precision": 0.564700049578582,
+                "recall": 0.7871458189357291,
+                "support": 2894,
+                "tp": 2278
+              },
+              "KICK": {
+                "f1": 0.8326482677627716,
+                "fn": 225,
+                "fp": 345,
+                "meanAbsoluteTimingErrorMs": 13.297488348692529,
+                "precision": 0.8043108338060124,
+                "recall": 0.8630553864881315,
+                "support": 1643,
+                "tp": 1418
+              },
+              "SNARE": {
+                "f1": 0.604553415061296,
+                "fn": 592,
+                "fp": 537,
+                "meanAbsoluteTimingErrorMs": 15.541118833483544,
+                "precision": 0.6164285714285714,
+                "recall": 0.593127147766323,
+                "support": 1455,
+                "tp": 863
+              }
+            },
+            "predictedEvents": 7197,
+            "referenceEvents": 5992,
+            "supportedClassCount": 3,
+            "supportedMacroF1": 0.6982743099790771
+          },
+          "detailed14": {
+            "classAgnostic": {
+              "f1": 0.7719011639779457,
+              "fn": 1649,
+              "fp": 1702,
+              "precision": 0.7691264243081931,
+              "recall": 0.7746959967208635,
+              "tp": 5670
+            },
+            "meanAbsoluteTimingErrorMs": 14.343480745536713,
+            "medianAbsoluteTimingErrorMs": 11.973175736898156,
+            "micro": {
+              "f1": 0.6044517051255871,
+              "fn": 2879,
+              "fp": 2932,
+              "precision": 0.6022788931090614,
+              "recall": 0.6066402514004645,
+              "tp": 4440
+            },
+            "perClass": {
+              "CLOSED_HIHAT": {
+                "f1": 0.6350207468879668,
+                "fn": 483,
+                "fp": 1716,
+                "meanAbsoluteTimingErrorMs": 14.118929834414972,
+                "precision": 0.5271424634885643,
+                "recall": 0.7984140233722872,
+                "support": 2396,
+                "tp": 1913
+              },
+              "CRASH": {
+                "f1": 0.5733788395904437,
+                "fn": 67,
+                "fp": 58,
+                "meanAbsoluteTimingErrorMs": 17.418165532872433,
+                "precision": 0.5915492957746479,
+                "recall": 0.5562913907284768,
+                "support": 151,
+                "tp": 84
+              },
+              "CROSS_STICK": {
+                "f1": 0.6258503401360545,
+                "fn": 17,
+                "fp": 38,
+                "meanAbsoluteTimingErrorMs": 14.793332544657103,
+                "precision": 0.5476190476190477,
+                "recall": 0.7301587301587301,
+                "support": 63,
+                "tp": 46
+              },
+              "FLOOR_TOM": {
+                "f1": 0.2972972972972973,
+                "fn": 47,
+                "fp": 5,
+                "meanAbsoluteTimingErrorMs": 36.42642733458698,
+                "precision": 0.6875,
+                "recall": 0.1896551724137931,
+                "support": 58,
+                "tp": 11
+              },
+              "HIGH_TOM": {
+                "f1": 0.23076923076923078,
+                "fn": 13,
+                "fp": 7,
+                "meanAbsoluteTimingErrorMs": 5.186099017313002,
+                "precision": 0.3,
+                "recall": 0.1875,
+                "support": 16,
+                "tp": 3
+              },
+              "KICK": {
+                "f1": 0.8326482677627716,
+                "fn": 225,
+                "fp": 345,
+                "meanAbsoluteTimingErrorMs": 13.297488348692529,
+                "precision": 0.8043108338060124,
+                "recall": 0.8630553864881315,
+                "support": 1643,
+                "tp": 1418
+              },
+              "LOW_TOM": {
+                "f1": 0.0,
+                "fn": 13,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 13,
+                "tp": 0
+              },
+              "MID_TOM": {
+                "f1": 0.0,
+                "fn": 42,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 42,
+                "tp": 0
+              },
+              "OPEN_HIHAT": {
+                "f1": 0.3994878361075544,
+                "fn": 220,
+                "fp": 249,
+                "meanAbsoluteTimingErrorMs": 17.066582766378772,
+                "precision": 0.3851851851851852,
+                "recall": 0.4148936170212766,
+                "support": 376,
+                "tp": 156
+              },
+              "PEDAL_HIHAT": {
+                "f1": 0.0,
+                "fn": 122,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 122,
+                "tp": 0
+              },
+              "RIDE": {
+                "f1": 0.11764705882352941,
+                "fn": 57,
+                "fp": 3,
+                "meanAbsoluteTimingErrorMs": 16.624148526034332,
+                "precision": 0.5714285714285714,
+                "recall": 0.06557377049180328,
+                "support": 61,
+                "tp": 4
+              },
+              "RIDE_BELL": {
+                "f1": 0.0,
+                "fn": 71,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 71,
+                "tp": 0
+              },
+              "SNARE": {
+                "f1": 0.5945347119645494,
+                "fn": 587,
+                "fp": 511,
+                "meanAbsoluteTimingErrorMs": 15.566399445085747,
+                "precision": 0.6117021276595744,
+                "recall": 0.5783045977011494,
+                "support": 1392,
+                "tp": 805
+              },
+              "TAMBOURINE": {
+                "f1": 0.0,
+                "fn": 915,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 915,
+                "tp": 0
+              }
+            },
+            "predictedEvents": 7372,
+            "referenceEvents": 7319,
+            "supportedClassCount": 14,
+            "supportedMacroF1": 0.30761673780995696
+          },
+          "family6": {
+            "classAgnostic": {
+              "f1": 0.7719011639779457,
+              "fn": 1649,
+              "fp": 1702,
+              "precision": 0.7691264243081931,
+              "recall": 0.7746959967208635,
+              "tp": 5670
+            },
+            "meanAbsoluteTimingErrorMs": 14.329732879911099,
+            "medianAbsoluteTimingErrorMs": 11.987500000032014,
+            "micro": {
+              "f1": 0.6349465659247158,
+              "fn": 2655,
+              "fp": 2708,
+              "precision": 0.6326641345632121,
+              "recall": 0.6372455253449925,
+              "tp": 4664
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.4212962962962963,
+                "fn": 192,
+                "fp": 58,
+                "meanAbsoluteTimingErrorMs": 17.34181166679636,
+                "precision": 0.610738255033557,
+                "recall": 0.3215547703180212,
+                "support": 283,
+                "tp": 91
+              },
+              "HIHAT": {
+                "f1": 0.6576212471131639,
+                "fn": 616,
+                "fp": 1756,
+                "meanAbsoluteTimingErrorMs": 14.303768308310158,
+                "precision": 0.564700049578582,
+                "recall": 0.7871458189357291,
+                "support": 2894,
+                "tp": 2278
+              },
+              "KICK": {
+                "f1": 0.8326482677627716,
+                "fn": 225,
+                "fp": 345,
+                "meanAbsoluteTimingErrorMs": 13.297488348692529,
+                "precision": 0.8043108338060124,
+                "recall": 0.8630553864881315,
+                "support": 1643,
+                "tp": 1418
+              },
+              "SNARE": {
+                "f1": 0.604553415061296,
+                "fn": 592,
+                "fp": 537,
+                "meanAbsoluteTimingErrorMs": 15.541118833483544,
+                "precision": 0.6164285714285714,
+                "recall": 0.593127147766323,
+                "support": 1455,
+                "tp": 863
+              },
+              "TAMBOURINE": {
+                "f1": 0.0,
+                "fn": 915,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 915,
+                "tp": 0
+              },
+              "TOM": {
+                "f1": 0.18064516129032257,
+                "fn": 115,
+                "fp": 12,
+                "meanAbsoluteTimingErrorMs": 28.854360868146095,
+                "precision": 0.5384615384615384,
+                "recall": 0.10852713178294573,
+                "support": 129,
+                "tp": 14
+              }
+            },
+            "predictedEvents": 7372,
+            "referenceEvents": 7319,
+            "supportedClassCount": 6,
+            "supportedMacroF1": 0.44946073125397507
+          }
+        }
+      },
+      "v19Original": {
+        "20": {
+          "core3": {
+            "classAgnostic": {
+              "f1": 0.48615098145705643,
+              "fn": 2859,
+              "fp": 3764,
+              "precision": 0.4542554733942294,
+              "recall": 0.5228638184245661,
+              "tp": 3133
+            },
+            "meanAbsoluteTimingErrorMs": 9.50592615055047,
+            "medianAbsoluteTimingErrorMs": 9.348000000045431,
+            "micro": {
+              "f1": 0.4349445263402902,
+              "fn": 3189,
+              "fp": 4094,
+              "precision": 0.40640858344207625,
+              "recall": 0.46779038718291055,
+              "tp": 2803
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 0.3986720989889845,
+                "fn": 1573,
+                "fp": 2412,
+                "meanAbsoluteTimingErrorMs": 9.491162755492631,
+                "precision": 0.35387088132869005,
+                "recall": 0.4564616447823082,
+                "support": 2894,
+                "tp": 1321
+              },
+              "KICK": {
+                "f1": 0.5214327657075749,
+                "fn": 755,
+                "fp": 875,
+                "meanAbsoluteTimingErrorMs": 9.637759009001101,
+                "precision": 0.5036868973340897,
+                "recall": 0.5404747413268411,
+                "support": 1643,
+                "tp": 888
+              },
+              "SNARE": {
+                "f1": 0.41596638655462187,
+                "fn": 861,
+                "fp": 807,
+                "meanAbsoluteTimingErrorMs": 9.341675084165363,
+                "precision": 0.42398286937901497,
+                "recall": 0.40824742268041236,
+                "support": 1455,
+                "tp": 594
+              }
+            },
+            "predictedEvents": 6897,
+            "referenceEvents": 5992,
+            "supportedClassCount": 3,
+            "supportedMacroF1": 0.44535708375039373
+          },
+          "detailed14": {
+            "classAgnostic": {
+              "f1": 0.49762569832402237,
+              "fn": 3756,
+              "fp": 3438,
+              "precision": 0.5089272961005571,
+              "recall": 0.4868151386801476,
+              "tp": 3563
+            },
+            "meanAbsoluteTimingErrorMs": 9.467813747225605,
+            "medianAbsoluteTimingErrorMs": 9.284999999977117,
+            "micro": {
+              "f1": 0.37793296089385475,
+              "fn": 4613,
+              "fp": 4295,
+              "precision": 0.38651621196971864,
+              "recall": 0.36972263970487773,
+              "tp": 2706
+            },
+            "perClass": {
+              "CLOSED_HIHAT": {
+                "f1": 0.37755637126376507,
+                "fn": 1316,
+                "fp": 2245,
+                "meanAbsoluteTimingErrorMs": 9.460272222228172,
+                "precision": 0.324812030075188,
+                "recall": 0.4507512520868113,
+                "support": 2396,
+                "tp": 1080
+              },
+              "CRASH": {
+                "f1": 0.2972972972972973,
+                "fn": 118,
+                "fp": 38,
+                "meanAbsoluteTimingErrorMs": 9.479787878807187,
+                "precision": 0.4647887323943662,
+                "recall": 0.2185430463576159,
+                "support": 151,
+                "tp": 33
+              },
+              "CROSS_STICK": {
+                "f1": 0.29931972789115646,
+                "fn": 41,
+                "fp": 62,
+                "meanAbsoluteTimingErrorMs": 10.98468181819292,
+                "precision": 0.2619047619047619,
+                "recall": 0.3492063492063492,
+                "support": 63,
+                "tp": 22
+              },
+              "FLOOR_TOM": {
+                "f1": 0.2972972972972973,
+                "fn": 47,
+                "fp": 5,
+                "meanAbsoluteTimingErrorMs": 7.97827272726243,
+                "precision": 0.6875,
+                "recall": 0.1896551724137931,
+                "support": 58,
+                "tp": 11
+              },
+              "HIGH_TOM": {
+                "f1": 0.07692307692307693,
+                "fn": 15,
+                "fp": 9,
+                "meanAbsoluteTimingErrorMs": 11.730000000056862,
+                "precision": 0.1,
+                "recall": 0.0625,
+                "support": 16,
+                "tp": 1
+              },
+              "KICK": {
+                "f1": 0.5214327657075749,
+                "fn": 755,
+                "fp": 875,
+                "meanAbsoluteTimingErrorMs": 9.637759009001101,
+                "precision": 0.5036868973340897,
+                "recall": 0.5404747413268411,
+                "support": 1643,
+                "tp": 888
+              },
+              "LOW_TOM": {
+                "f1": 0.0,
+                "fn": 13,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 13,
+                "tp": 0
+              },
+              "MID_TOM": {
+                "f1": 0.0,
+                "fn": 42,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 42,
+                "tp": 0
+              },
+              "OPEN_HIHAT": {
+                "f1": 0.2627551020408163,
+                "fn": 273,
+                "fp": 305,
+                "meanAbsoluteTimingErrorMs": 8.982223300958562,
+                "precision": 0.25245098039215685,
+                "recall": 0.27393617021276595,
+                "support": 376,
+                "tp": 103
+              },
+              "PEDAL_HIHAT": {
+                "f1": 0.0,
+                "fn": 122,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 122,
+                "tp": 0
+              },
+              "RIDE": {
+                "f1": 0.029411764705882353,
+                "fn": 60,
+                "fp": 6,
+                "meanAbsoluteTimingErrorMs": 18.549999999777356,
+                "precision": 0.14285714285714285,
+                "recall": 0.01639344262295082,
+                "support": 61,
+                "tp": 1
+              },
+              "RIDE_BELL": {
+                "f1": 0.0,
+                "fn": 71,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 71,
+                "tp": 0
+              },
+              "SNARE": {
+                "f1": 0.4186046511627907,
+                "fn": 825,
+                "fp": 750,
+                "meanAbsoluteTimingErrorMs": 9.25356966489198,
+                "precision": 0.4305239179954442,
+                "recall": 0.4073275862068966,
+                "support": 1392,
+                "tp": 567
+              },
+              "TAMBOURINE": {
+                "f1": 0.0,
+                "fn": 915,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 915,
+                "tp": 0
+              }
+            },
+            "predictedEvents": 7001,
+            "referenceEvents": 7319,
+            "supportedClassCount": 14,
+            "supportedMacroF1": 0.18432843244926125
+          },
+          "family6": {
+            "classAgnostic": {
+              "f1": 0.49762569832402237,
+              "fn": 3756,
+              "fp": 3438,
+              "precision": 0.5089272961005571,
+              "recall": 0.4868151386801476,
+              "tp": 3563
+            },
+            "meanAbsoluteTimingErrorMs": 9.506378947366205,
+            "medianAbsoluteTimingErrorMs": 9.345499999881213,
+            "micro": {
+              "f1": 0.39804469273743015,
+              "fn": 4469,
+              "fp": 4151,
+              "precision": 0.4070847021854021,
+              "recall": 0.3893974586692171,
+              "tp": 2850
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.19390581717451524,
+                "fn": 248,
+                "fp": 43,
+                "meanAbsoluteTimingErrorMs": 9.959371428593451,
+                "precision": 0.44871794871794873,
+                "recall": 0.12367491166077739,
+                "support": 283,
+                "tp": 35
+              },
+              "HIHAT": {
+                "f1": 0.3986720989889845,
+                "fn": 1573,
+                "fp": 2412,
+                "meanAbsoluteTimingErrorMs": 9.491162755492631,
+                "precision": 0.35387088132869005,
+                "recall": 0.4564616447823082,
+                "support": 2894,
+                "tp": 1321
+              },
+              "KICK": {
+                "f1": 0.5214327657075749,
+                "fn": 755,
+                "fp": 875,
+                "meanAbsoluteTimingErrorMs": 9.637759009001101,
+                "precision": 0.5036868973340897,
+                "recall": 0.5404747413268411,
+                "support": 1643,
+                "tp": 888
+              },
+              "SNARE": {
+                "f1": 0.41596638655462187,
+                "fn": 861,
+                "fp": 807,
+                "meanAbsoluteTimingErrorMs": 9.341675084165363,
+                "precision": 0.42398286937901497,
+                "recall": 0.40824742268041236,
+                "support": 1455,
+                "tp": 594
+              },
+              "TAMBOURINE": {
+                "f1": 0.0,
+                "fn": 915,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 915,
+                "tp": 0
+              },
+              "TOM": {
+                "f1": 0.15483870967741936,
+                "fn": 117,
+                "fp": 14,
+                "meanAbsoluteTimingErrorMs": 8.290916666661966,
+                "precision": 0.46153846153846156,
+                "recall": 0.09302325581395349,
+                "support": 129,
+                "tp": 12
+              }
+            },
+            "predictedEvents": 7001,
+            "referenceEvents": 7319,
+            "supportedClassCount": 6,
+            "supportedMacroF1": 0.28080262968385267
+          }
+        },
+        "50": {
+          "core3": {
+            "classAgnostic": {
+              "f1": 0.7350453875397626,
+              "fn": 1255,
+              "fp": 2160,
+              "precision": 0.686820356676816,
+              "recall": 0.7905540720961282,
+              "tp": 4737
+            },
+            "meanAbsoluteTimingErrorMs": 16.751908043323443,
+            "medianAbsoluteTimingErrorMs": 14.952999999877647,
+            "micro": {
+              "f1": 0.6732872992474203,
+              "fn": 1653,
+              "fp": 2558,
+              "precision": 0.6291141075830071,
+              "recall": 0.7241321762349799,
+              "tp": 4339
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 0.6280368190734873,
+                "fn": 813,
+                "fp": 1652,
+                "meanAbsoluteTimingErrorMs": 16.916803940412905,
+                "precision": 0.5574604875435307,
+                "recall": 0.7190739460953697,
+                "support": 2894,
+                "tp": 2081
+              },
+              "KICK": {
+                "f1": 0.823840281855549,
+                "fn": 240,
+                "fp": 360,
+                "meanAbsoluteTimingErrorMs": 17.300585887375195,
+                "precision": 0.7958026091888826,
+                "recall": 0.8539257455873402,
+                "support": 1643,
+                "tp": 1403
+              },
+              "SNARE": {
+                "f1": 0.5987394957983193,
+                "fn": 600,
+                "fp": 546,
+                "meanAbsoluteTimingErrorMs": 15.450219883033633,
+                "precision": 0.6102783725910065,
+                "recall": 0.5876288659793815,
+                "support": 1455,
+                "tp": 855
+              }
+            },
+            "predictedEvents": 6897,
+            "referenceEvents": 5992,
+            "supportedClassCount": 3,
+            "supportedMacroF1": 0.6835388655757852
+          },
+          "detailed14": {
+            "classAgnostic": {
+              "f1": 0.7497206703910615,
+              "fn": 1951,
+              "fp": 1633,
+              "precision": 0.7667476074846451,
+              "recall": 0.7334335291706517,
+              "tp": 5368
+            },
+            "meanAbsoluteTimingErrorMs": 16.79036829615144,
+            "medianAbsoluteTimingErrorMs": 14.965999999958512,
+            "micro": {
+              "f1": 0.5885474860335196,
+              "fn": 3105,
+              "fp": 2787,
+              "precision": 0.6019140122839595,
+              "recall": 0.5757617160814319,
+              "tp": 4214
+            },
+            "perClass": {
+              "CLOSED_HIHAT": {
+                "f1": 0.6093340325117986,
+                "fn": 653,
+                "fp": 1582,
+                "meanAbsoluteTimingErrorMs": 17.201456110156855,
+                "precision": 0.5242105263157895,
+                "recall": 0.7274624373956594,
+                "support": 2396,
+                "tp": 1743
+              },
+              "CRASH": {
+                "f1": 0.46846846846846846,
+                "fn": 99,
+                "fp": 19,
+                "meanAbsoluteTimingErrorMs": 17.87580769231038,
+                "precision": 0.7323943661971831,
+                "recall": 0.3443708609271523,
+                "support": 151,
+                "tp": 52
+              },
+              "CROSS_STICK": {
+                "f1": 0.6394557823129252,
+                "fn": 16,
+                "fp": 37,
+                "meanAbsoluteTimingErrorMs": 18.919063829793853,
+                "precision": 0.5595238095238095,
+                "recall": 0.746031746031746,
+                "support": 63,
+                "tp": 47
+              },
+              "FLOOR_TOM": {
+                "f1": 0.2972972972972973,
+                "fn": 47,
+                "fp": 5,
+                "meanAbsoluteTimingErrorMs": 7.97827272726243,
+                "precision": 0.6875,
+                "recall": 0.1896551724137931,
+                "support": 58,
+                "tp": 11
+              },
+              "HIGH_TOM": {
+                "f1": 0.23076923076923078,
+                "fn": 13,
+                "fp": 7,
+                "meanAbsoluteTimingErrorMs": 36.00233333334776,
+                "precision": 0.3,
+                "recall": 0.1875,
+                "support": 16,
+                "tp": 3
+              },
+              "KICK": {
+                "f1": 0.823840281855549,
+                "fn": 240,
+                "fp": 360,
+                "meanAbsoluteTimingErrorMs": 17.300585887375195,
+                "precision": 0.7958026091888826,
+                "recall": 0.8539257455873402,
+                "support": 1643,
+                "tp": 1403
+              },
+              "LOW_TOM": {
+                "f1": 0.0,
+                "fn": 13,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 13,
+                "tp": 0
+              },
+              "MID_TOM": {
+                "f1": 0.0,
+                "fn": 42,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 42,
+                "tp": 0
+              },
+              "OPEN_HIHAT": {
+                "f1": 0.3979591836734694,
+                "fn": 220,
+                "fp": 252,
+                "meanAbsoluteTimingErrorMs": 15.436474358956058,
+                "precision": 0.38235294117647056,
+                "recall": 0.4148936170212766,
+                "support": 376,
+                "tp": 156
+              },
+              "PEDAL_HIHAT": {
+                "f1": 0.0,
+                "fn": 122,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 122,
+                "tp": 0
+              },
+              "RIDE": {
+                "f1": 0.08823529411764706,
+                "fn": 58,
+                "fp": 4,
+                "meanAbsoluteTimingErrorMs": 25.09266666675103,
+                "precision": 0.42857142857142855,
+                "recall": 0.04918032786885246,
+                "support": 61,
+                "tp": 3
+              },
+              "RIDE_BELL": {
+                "f1": 0.0,
+                "fn": 71,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 71,
+                "tp": 0
+              },
+              "SNARE": {
+                "f1": 0.587670727205611,
+                "fn": 596,
+                "fp": 521,
+                "meanAbsoluteTimingErrorMs": 15.077736180896478,
+                "precision": 0.6044039483675019,
+                "recall": 0.5718390804597702,
+                "support": 1392,
+                "tp": 796
+              },
+              "TAMBOURINE": {
+                "f1": 0.0,
+                "fn": 915,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 915,
+                "tp": 0
+              }
+            },
+            "predictedEvents": 7001,
+            "referenceEvents": 7319,
+            "supportedClassCount": 14,
+            "supportedMacroF1": 0.2959307355865712
+          },
+          "family6": {
+            "classAgnostic": {
+              "f1": 0.7497206703910615,
+              "fn": 1951,
+              "fp": 1633,
+              "precision": 0.7667476074846451,
+              "recall": 0.7334335291706517,
+              "tp": 5368
+            },
+            "meanAbsoluteTimingErrorMs": 16.77130818037196,
+            "medianAbsoluteTimingErrorMs": 14.949999999998909,
+            "micro": {
+              "f1": 0.616340782122905,
+              "fn": 2906,
+              "fp": 2588,
+              "precision": 0.6303385230681331,
+              "recall": 0.6029512228446509,
+              "tp": 4413
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.3157894736842105,
+                "fn": 226,
+                "fp": 21,
+                "meanAbsoluteTimingErrorMs": 18.294035087744998,
+                "precision": 0.7307692307692307,
+                "recall": 0.20141342756183744,
+                "support": 283,
+                "tp": 57
+              },
+              "HIHAT": {
+                "f1": 0.6280368190734873,
+                "fn": 813,
+                "fp": 1652,
+                "meanAbsoluteTimingErrorMs": 16.916803940412905,
+                "precision": 0.5574604875435307,
+                "recall": 0.7190739460953697,
+                "support": 2894,
+                "tp": 2081
+              },
+              "KICK": {
+                "f1": 0.823840281855549,
+                "fn": 240,
+                "fp": 360,
+                "meanAbsoluteTimingErrorMs": 17.300585887375195,
+                "precision": 0.7958026091888826,
+                "recall": 0.8539257455873402,
+                "support": 1643,
+                "tp": 1403
+              },
+              "SNARE": {
+                "f1": 0.5987394957983193,
+                "fn": 600,
+                "fp": 546,
+                "meanAbsoluteTimingErrorMs": 15.450219883033633,
+                "precision": 0.6102783725910065,
+                "recall": 0.5876288659793815,
+                "support": 1455,
+                "tp": 855
+              },
+              "TAMBOURINE": {
+                "f1": 0.0,
+                "fn": 915,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 915,
+                "tp": 0
+              },
+              "TOM": {
+                "f1": 0.21935483870967742,
+                "fn": 112,
+                "fp": 9,
+                "meanAbsoluteTimingErrorMs": 16.617294117622805,
+                "precision": 0.6538461538461539,
+                "recall": 0.13178294573643412,
+                "support": 129,
+                "tp": 17
+              }
+            },
+            "predictedEvents": 7001,
+            "referenceEvents": 7319,
+            "supportedClassCount": 6,
+            "supportedMacroF1": 0.4309601515202073
+          }
+        }
+      }
+    },
+    "outOfFoldFusion": {
+      "f1": 0.6066176470588235,
+      "fn": 2864,
+      "fp": 2914,
+      "tp": 4455
+    },
+    "selectedModes": {
+      "CLOSED_HIHAT": "union:5",
+      "CRASH": "union:6",
+      "CROSS_STICK": "base",
+      "FLOOR_TOM": "base",
+      "HIGH_TOM": "base",
+      "KICK": "base",
+      "LOW_TOM": "base",
+      "MID_TOM": "base",
+      "OPEN_HIHAT": "base",
+      "PEDAL_HIHAT": "base",
+      "RIDE": "base",
+      "RIDE_BELL": "base",
+      "SNARE": "base",
+      "TAMBOURINE": "base"
+    },
+    "v19Original": {
+      "f1": 0.5928770949720671,
+      "fn": 3074,
+      "fp": 2756,
+      "tp": 4245
+    }
+  },
+  "features": {
+    "clipEpsilon": 1e-05,
+    "frameSeconds": 0.009977324263038548,
+    "offsetFrames": [
+      -6,
+      -4,
+      -2,
+      0,
+      2,
+      4,
+      6
+    ],
+    "sourceOrder": [
+      "stemEnsemble",
+      "stemSpecialist",
+      "mixtureEnsemble",
+      "mixtureSpecialist"
+    ]
+  },
+  "fusionRules": {
+    "CLOSED_HIHAT": {
+      "mode": "union",
+      "radiusFrames": 5
+    },
+    "CRASH": {
+      "mode": "union",
+      "radiusFrames": 6
+    },
+    "CROSS_STICK": {
+      "mode": "base",
+      "radiusFrames": 0
+    },
+    "FLOOR_TOM": {
+      "mode": "base",
+      "radiusFrames": 0
+    },
+    "HIGH_TOM": {
+      "mode": "base",
+      "radiusFrames": 0
+    },
+    "KICK": {
+      "mode": "base",
+      "radiusFrames": 0
+    },
+    "LOW_TOM": {
+      "mode": "base",
+      "radiusFrames": 0
+    },
+    "MID_TOM": {
+      "mode": "base",
+      "radiusFrames": 0
+    },
+    "OPEN_HIHAT": {
+      "mode": "base",
+      "radiusFrames": 0
+    },
+    "PEDAL_HIHAT": {
+      "mode": "base",
+      "radiusFrames": 0
+    },
+    "RIDE": {
+      "mode": "base",
+      "radiusFrames": 0
+    },
+    "RIDE_BELL": {
+      "mode": "base",
+      "radiusFrames": 0
+    },
+    "SNARE": {
+      "mode": "base",
+      "radiusFrames": 0
+    },
+    "TAMBOURINE": {
+      "mode": "base",
+      "radiusFrames": 0
+    }
+  },
+  "limitations": [
+    "This stacker is trained and calibrated on CC BY-NC RWC references.",
+    "It is research-only and cannot be deployed in the paid product.",
+    "The 39-song RWC remainder was previously opened by v19 and is secondary evidence only."
+  ],
+  "modelVersion": "rwc-temporal-stacker-v20-research",
+  "productionApproved": false,
+  "schemaVersion": 1,
+  "stackerDecoderRules": {
+    "CLOSED_HIHAT": {
+      "onsetShiftFrames": -1,
+      "peakDistanceFrames": 6,
+      "threshold": 0.625
+    },
+    "CRASH": {
+      "onsetShiftFrames": -2,
+      "peakDistanceFrames": 8,
+      "threshold": 0.7999999999999999
+    },
+    "CROSS_STICK": {
+      "onsetShiftFrames": 0,
+      "peakDistanceFrames": 4,
+      "threshold": 0.9
+    },
+    "FLOOR_TOM": {
+      "onsetShiftFrames": 0,
+      "peakDistanceFrames": 3,
+      "threshold": 0.875
+    },
+    "HIGH_TOM": {
+      "onsetShiftFrames": 0,
+      "peakDistanceFrames": 3,
+      "threshold": 0.875
+    },
+    "KICK": {
+      "onsetShiftFrames": 0,
+      "peakDistanceFrames": 6,
+      "threshold": 0.65
+    },
+    "LOW_TOM": {
+      "onsetShiftFrames": 0,
+      "peakDistanceFrames": 3,
+      "threshold": 0.7999999999999999
+    },
+    "MID_TOM": {
+      "onsetShiftFrames": 0,
+      "peakDistanceFrames": 3,
+      "threshold": 0.85
+    },
+    "OPEN_HIHAT": {
+      "onsetShiftFrames": -2,
+      "peakDistanceFrames": 12,
+      "threshold": 0.7999999999999999
+    },
+    "PEDAL_HIHAT": {
+      "onsetShiftFrames": 0,
+      "peakDistanceFrames": 4,
+      "threshold": 0.825
+    },
+    "RIDE": {
+      "onsetShiftFrames": 0,
+      "peakDistanceFrames": 5,
+      "threshold": 0.875
+    },
+    "RIDE_BELL": {
+      "onsetShiftFrames": 0,
+      "peakDistanceFrames": 6,
+      "threshold": 0.775
+    },
+    "SNARE": {
+      "onsetShiftFrames": 0,
+      "peakDistanceFrames": 4,
+      "threshold": 0.65
+    },
+    "TAMBOURINE": {
+      "onsetShiftFrames": 0,
+      "peakDistanceFrames": 5,
+      "threshold": 0.775
+    }
+  },
+  "training": {
+    "corpus": "RWC Popular first 50 opened development songs",
+    "corpusLicense": "CC BY-NC 4.0",
+    "epochs": 20,
+    "finalTrainingLoss": 0.03188735283911228,
+    "folds": 5,
+    "seed": 20260904,
+    "selectionManifestSha256": "20e0f3c39d3d41cd0e822e678a941da11fe0135b268748f0c67fe61cd3f36451",
+    "trackCount": 50
+  }
+}
