@@ -23,6 +23,7 @@ for source_root in (
     if str(source_root) not in sys.path:
         sys.path.insert(0, str(source_root))
 
+from _consensus_gate import apply_low_confidence_consensus_gate
 from _midi_contract import write_hits_contract
 from adtof_pytorch import (
     calculate_n_bins,
@@ -44,7 +45,10 @@ from run_competitive_drum_benchmark import (
     predict_stacked_probabilities,
 )
 
-PROVIDER = "drumscribe-recall-fusion-v3"
+DEFAULT_PROVIDER = "drumscribe-recall-fusion-v4"
+SUPPORTED_PROVIDERS = frozenset(
+    ("drumscribe-recall-fusion-v3", "drumscribe-recall-fusion-v4")
+)
 FAMILIES = ("KICK", "SNARE", "TOM", "HIHAT", "CYMBAL")
 ADTOF_CLASS_INDEX = {family: index for index, family in enumerate(FAMILIES)}
 FAMILY_BY_INSTRUMENT = {
@@ -97,10 +101,30 @@ def resolve(repository: Path, value: str) -> Path:
 
 
 def validate_config(config: dict[str, Any], repository: Path) -> None:
-    if config.get("schemaVersion") != 1 or config.get("modelVersion") != PROVIDER:
+    if (
+        config.get("schemaVersion") != 1
+        or config.get("modelVersion") not in SUPPORTED_PROVIDERS
+    ):
         raise RuntimeError("recall-fusion config has an unsupported contract")
     if config.get("productionApproved") is not True:
         raise RuntimeError("recall-fusion config is not production approved")
+    gate = config.get("fullMix", {}).get("lowConfidenceConsensusGate")
+    if config.get("modelVersion") == "drumscribe-recall-fusion-v4":
+        if not isinstance(gate, dict) or gate.get("enabled") is not True:
+            raise RuntimeError("v4 recall-fusion config requires its consensus gate")
+        family_rules = gate.get("familyRules")
+        if not isinstance(family_rules, dict):
+            raise RuntimeError("v4 consensus gate requires family rules")
+        families = set(family_rules)
+        if not families or not families <= set(FAMILIES):
+            raise RuntimeError("consensus gate contains unsupported families")
+        for family_rule in family_rules.values():
+            if not 0 <= float(family_rule.get("minimumConfidence", -1)) <= 1:
+                raise RuntimeError(
+                    "consensus gate confidence must be between zero and one"
+                )
+            if not 0 < float(family_rule.get("matchSeconds", 0)) <= 0.2:
+                raise RuntimeError("consensus gate match window is invalid")
     for component in config["components"].values():
         path = resolve(repository, str(component["path"]))
         if sha256(path) != str(component["sha256"]):
@@ -141,8 +165,7 @@ def process_activation(
     )
     residual = np.maximum(0.0, activation - moving_average)
     return [
-        (time, min(1.0, max(0.0, float(residual[round(time * 100)]))))
-        for time in times
+        (time, min(1.0, max(0.0, float(residual[round(time * 100)])))) for time in times
     ]
 
 
@@ -153,12 +176,16 @@ def load_ensemble_probabilities(
     device: str,
 ) -> tuple[np.ndarray, float, StackedEnsembleConfig]:
     configuration = StackedEnsembleConfig.load(ensemble_config_path)
-    with tempfile.TemporaryDirectory(prefix="drumscribe-recall-fusion-features-") as directory:
+    with tempfile.TemporaryDirectory(
+        prefix="drumscribe-recall-fusion-features-"
+    ) as directory:
         feature_path = Path(directory) / "features.npz"
         cache_log_mel(
             audio,
             feature_path,
-            PreparationConfig(seed="recall-fusion-v2-inference", augmentation_variants=0),
+            PreparationConfig(
+                seed="recall-fusion-v2-inference", augmentation_variants=0
+            ),
         )
         with np.load(feature_path, allow_pickle=False) as arrays:
             mel_bands = int(arrays["features"].shape[1])
@@ -213,7 +240,9 @@ def near(onset: float, hits: list[Hit], tolerance: float) -> bool:
     return any(abs(onset - hit.onset) <= tolerance for hit in hits)
 
 
-def merge_family_hits(base: list[Hit], additions: list[Hit], tolerance: float) -> list[Hit]:
+def merge_family_hits(
+    base: list[Hit], additions: list[Hit], tolerance: float
+) -> list[Hit]:
     result = list(base)
     for addition in additions:
         nearby = [
@@ -346,9 +375,7 @@ def drum_only_fusion(
             )
         ]
         before = len(hits)
-        hits = merge_family_hits(
-            hits, additions, float(rules["unionToleranceSeconds"])
-        )
+        hits = merge_family_hits(hits, additions, float(rules["unionToleranceSeconds"]))
         added_by_union += len(hits) - before
     hits, recovered = recover_consensus_hits(
         hits,
@@ -361,9 +388,7 @@ def drum_only_fusion(
     return hits, {"unionAdded": added_by_union, "consensusRecovered": recovered}
 
 
-def acoustic_precision_hits(
-    adtof: np.ndarray, rules: dict[str, Any]
-) -> list[Hit]:
+def acoustic_precision_hits(adtof: np.ndarray, rules: dict[str, Any]) -> list[Hit]:
     """Decode isolated acoustic drums without the electronic-kit specialist."""
     profile = rules["profiles"]["acoustic_precision"]
     latency = float(profile.get("latencyCompensationSeconds", 0.0))
@@ -428,9 +453,7 @@ def full_mix_fusion(
     return sorted(hits, key=lambda hit: (hit.onset, hit.instrument))
 
 
-def stem_baseline_hits(
-    stem: np.ndarray, rules: dict[str, Any]
-) -> list[Hit]:
+def stem_baseline_hits(stem: np.ndarray, rules: dict[str, Any]) -> list[Hit]:
     """Decode the separated stem with the stable ADTOF family thresholds."""
     hits: list[Hit] = []
     for family in FAMILIES:
@@ -475,9 +498,7 @@ def regular_tambourine_hits(stem: Path, rules: dict[str, Any]) -> list[Hit]:
         )
     )
     frequencies = librosa.fft_frequencies(sr=sample_rate, n_fft=2_048)
-    high_frequency = spectrum[
-        frequencies > float(rules["minimumFrequencyHz"])
-    ]
+    high_frequency = spectrum[frequencies > float(rules["minimumFrequencyHz"])]
     onset_strength = librosa.onset.onset_strength(
         S=high_frequency,
         sr=sample_rate,
@@ -532,9 +553,7 @@ def guarded_full_mix_fusion(
     """Fuse recall specialists without replacing a stronger stem family."""
     baseline = stem_baseline_hits(stem, rules)
     fused = full_mix_fusion(direct, stem, rules)
-    articulation = ensemble_hits(
-        ensemble, frame_seconds, ensemble_configuration
-    )
+    articulation = ensemble_hits(ensemble, frame_seconds, ensemble_configuration)
     guard = rules["guardedRouting"]
     rms_ratio = audio_rms_ratio(mixture_path, stem_path)
 
@@ -549,21 +568,24 @@ def guarded_full_mix_fusion(
         selected_routes[str(family)] = "direct_stem_fusion"
 
     if rms_ratio < float(guard["weakStemRmsRatio"]):
-        if baseline_counts["KICK"] > 0 and fused_counts["KICK"] <= float(
-            guard["kickFusionMaximumCountRatio"]
-        ) * baseline_counts["KICK"]:
+        if (
+            baseline_counts["KICK"] > 0
+            and fused_counts["KICK"]
+            <= float(guard["kickFusionMaximumCountRatio"]) * baseline_counts["KICK"]
+        ):
             selected_routes["KICK"] = "direct_stem_fusion"
-        if baseline_counts["SNARE"] > 0 and fused_counts["SNARE"] >= float(
-            guard["snareFusionMinimumCountRatio"]
-        ) * baseline_counts["SNARE"]:
+        if (
+            baseline_counts["SNARE"] > 0
+            and fused_counts["SNARE"]
+            >= float(guard["snareFusionMinimumCountRatio"]) * baseline_counts["SNARE"]
+        ):
             selected_routes["SNARE"] = "direct_stem_fusion"
 
     baseline_hihats = baseline_counts["HIHAT"]
     fused_hihats = fused_counts["HIHAT"]
     if (
         baseline_hihats >= int(guard["hihatFusionMinimumBaselineHits"])
-        and fused_hihats - baseline_hihats
-        >= int(guard["hihatFusionMinimumAddedHits"])
+        and fused_hihats - baseline_hihats >= int(guard["hihatFusionMinimumAddedHits"])
         and fused_hihats
         >= float(guard["hihatFusionMinimumCountRatio"]) * baseline_hihats
         and rms_ratio < float(guard["weakStemRmsRatio"])
@@ -573,8 +595,7 @@ def guarded_full_mix_fusion(
     baseline_toms = baseline_counts["TOM"]
     fused_toms = fused_counts["TOM"]
     if (
-        baseline_toms > 0
-        and rms_ratio < float(guard["tomFusionMaximumStemRmsRatio"])
+        baseline_toms > 0 and rms_ratio < float(guard["tomFusionMaximumStemRmsRatio"])
     ) or (
         baseline_toms == 0
         and fused_toms >= int(guard["tomFusionNoBaselineMinimumHits"])
@@ -589,21 +610,15 @@ def guarded_full_mix_fusion(
             hit
             for family in FAMILIES
             for hit in (
-                fused
-                if selected_routes[family] == "direct_stem_fusion"
-                else baseline
+                fused if selected_routes[family] == "direct_stem_fusion" else baseline
             )
             if hit.family == family
         ),
         key=lambda hit: (hit.onset, hit.instrument),
     )
 
-    cross_sticks = [
-        hit for hit in articulation if hit.instrument == "CROSS_STICK"
-    ]
-    articulation_snares = [
-        hit for hit in articulation if hit.instrument == "SNARE"
-    ]
+    cross_sticks = [hit for hit in articulation if hit.instrument == "CROSS_STICK"]
+    articulation_snares = [hit for hit in articulation if hit.instrument == "SNARE"]
     cross_stick_mode = bool(cross_sticks) and len(cross_sticks) > float(
         guard["crossStickDominanceRatio"]
     ) * len(articulation_snares)
@@ -622,21 +637,21 @@ def guarded_full_mix_fusion(
                 relabeled.append(hit)
         hits = relabeled
 
-    articulation_hihats = [
-        hit for hit in articulation if hit.family == "HIHAT"
-    ]
-    hihat_rescue = (
-        baseline_hihats <= int(guard["hihatRescueMaximumBaselineHits"])
-        and len(articulation_hihats)
-        >= int(guard["hihatRescueMinimumArticulationHits"])
-    )
+    articulation_hihats = [hit for hit in articulation if hit.family == "HIHAT"]
+    hihat_rescue = baseline_hihats <= int(
+        guard["hihatRescueMaximumBaselineHits"]
+    ) and len(articulation_hihats) >= int(guard["hihatRescueMinimumArticulationHits"])
     if hihat_rescue:
         hits = [hit for hit in hits if hit.family != "HIHAT"]
         hits.extend(articulation_hihats)
 
-    tambourines = regular_tambourine_hits(
-        stem_path, rules["tambourineRecovery"]
+    hits, consensus_metadata = apply_low_confidence_consensus_gate(
+        hits,
+        articulation,
+        rules.get("lowConfidenceConsensusGate"),
     )
+
+    tambourines = regular_tambourine_hits(stem_path, rules["tambourineRecovery"])
     if tambourines and rules["tambourineRecovery"].get(
         "suppressBaselineHihatWhenActive", False
     ):
@@ -653,6 +668,7 @@ def guarded_full_mix_fusion(
         "relabeledCrossStickCount": relabeled_cross_sticks,
         "hihatRescue": hihat_rescue,
         "tambourineRecovered": len(tambourines),
+        **consensus_metadata,
     }
 
 
@@ -697,9 +713,7 @@ def transcribe(
             "tempoAwareRecovery": False,
         }
 
-    ensemble_path = resolve(
-        repository, config["components"]["stackedEnsemble"]["path"]
-    )
+    ensemble_path = resolve(repository, config["components"]["stackedEnsemble"]["path"])
     probabilities, frame_seconds, ensemble_config = load_ensemble_probabilities(
         stem, repository, ensemble_path, device
     )
@@ -728,7 +742,7 @@ def main() -> int:
     parser.add_argument(
         "--config",
         type=Path,
-        default=Path("ml/configs/drumscribe-recall-fusion-v3.json"),
+        default=Path("ml/configs/drumscribe-recall-fusion-v4.json"),
     )
     parser.add_argument("--device", choices=("cpu", "cuda", "mps"), default="cpu")
     parser.add_argument(
@@ -744,6 +758,8 @@ def main() -> int:
         if args.config.is_absolute()
         else (repository / args.config).resolve(strict=True)
     )
+    configuration = json.loads(config_path.read_text(encoding="utf-8"))
+    provider = str(configuration.get("modelVersion", DEFAULT_PROVIDER))
     stem = args.input.resolve(strict=True)
     mixture = args.mixture_input.resolve(strict=True) if args.mixture_input else None
     hits, metadata = transcribe(
@@ -768,10 +784,10 @@ def main() -> int:
     )
     write_hits_contract(
         args.output.resolve(),
-        provider=PROVIDER,
+        provider=provider,
         hits=filtered,
         metadata={
-            "decoderVersion": PROVIDER,
+            "decoderVersion": provider,
             "configSha256": sha256(config_path),
             "adjustments": list(adjustments),
             "removedHitCount": len(payload_hits) - len(filtered),

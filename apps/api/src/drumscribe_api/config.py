@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     hybrid_command: str | None = None
     hybrid_model_version: str = "drumscribe-hybrid-v1"
     recall_fusion_command: str | None = None
-    recall_fusion_model_version: str = "drumscribe-recall-fusion-v3"
+    recall_fusion_model_version: str = "drumscribe-recall-fusion-v4"
 
     audioshake_api_url: str = "https://api.audioshake.ai"
     audioshake_api_key: SecretStr | None = None
@@ -154,8 +154,7 @@ class Settings(BaseSettings):
             )
             if (
                 owner_approved_provider_selected
-                and self.commercial_provider_approval_reference
-                != "OWNER-ATTESTATION-2026-09-05"
+                and self.commercial_provider_approval_reference != "OWNER-ATTESTATION-2026-09-05"
             ):
                 raise ValueError(
                     "self-hosted production providers require the pinned owner approval reference"
@@ -184,7 +183,11 @@ class Settings(BaseSettings):
                 raise ValueError("production recall-fusion command is missing")
             if (
                 transcription_provider == "drumscribe_recall_fusion"
-                and self.recall_fusion_model_version != "drumscribe-recall-fusion-v3"
+                and self.recall_fusion_model_version
+                not in {
+                    "drumscribe-recall-fusion-v3",
+                    "drumscribe-recall-fusion-v4",
+                }
             ):
                 raise ValueError("production recall-fusion model version is not approved")
             if (

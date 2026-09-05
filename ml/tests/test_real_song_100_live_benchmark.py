@@ -72,3 +72,24 @@ def test_group_scores_keeps_small_genres_visible():
     assert result["jazz"]["recordCount"] == 1
     assert result["jazz"]["drumscribe"]["50ms"]["micro"]["f1"] == 1.0
     assert result["pop"]["drum2notes"]["50ms"]["micro"]["f1"] == pytest.approx(2 / 3)
+
+
+def test_competitor_reuse_requires_matching_successful_evidence(tmp_path):
+    reuse = _module()["reuse_competitor_results"]
+    source = tmp_path / "source"
+    destination = tmp_path / "destination"
+    source.mkdir()
+    (source / "001.job.json").write_text(
+        json.dumps({"state": "ok", "sourceAudioSha256": "audio-hash"}),
+        encoding="utf-8",
+    )
+    (source / "001.music.json").write_text("{}", encoding="utf-8")
+    records = [{"sequence": 1, "audioSha256": "audio-hash"}]
+
+    reuse(records, source, destination)
+
+    assert (destination / "001.job.json").is_file()
+    assert (destination / "001.music.json").is_file()
+    records[0]["audioSha256"] = "different"
+    with pytest.raises(RuntimeError, match="cannot be reused"):
+        reuse(records, source, destination)

@@ -231,10 +231,15 @@ def test_owner_approved_adtof_and_demucs_are_production_safe():
 
 def test_owner_approved_recall_fusion_is_production_safe():
     provider = DrumScribeRecallFusionTranscriptionProvider(
+        ("/safe/runner",), model_version="drumscribe-recall-fusion-v4"
+    )
+    rollback = DrumScribeRecallFusionTranscriptionProvider(
         ("/safe/runner",), model_version="drumscribe-recall-fusion-v3"
     )
     assert provider.license.status.value == "commercial_allowed"
+    assert provider.provider_id == "drumscribe-recall-fusion-v4"
     require_production_safe(provider, production=True)
+    require_production_safe(rollback, production=True)
 
 
 def test_recall_fusion_passes_mixture_and_stem_as_separate_argv(monkeypatch, tmp_path):
@@ -261,12 +266,8 @@ def test_recall_fusion_passes_mixture_and_stem_as_separate_argv(monkeypatch, tmp
     )
 
     assert provider.transcribe_multiview(mixture, stem) == []
-    assert observed["argv"][observed["argv"].index("--input") + 1] == str(
-        stem.resolve()
-    )
-    assert observed["argv"][observed["argv"].index("--mixture-input") + 1] == str(
-        mixture.resolve()
-    )
+    assert observed["argv"][observed["argv"].index("--input") + 1] == str(stem.resolve())
+    assert observed["argv"][observed["argv"].index("--mixture-input") + 1] == str(mixture.resolve())
     assert observed["kwargs"]["shell"] is False
 
 

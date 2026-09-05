@@ -2,6 +2,7 @@ import hashlib
 import importlib.util
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import mido
 import pytest
@@ -138,13 +139,10 @@ def test_adtof_decoder_suppresses_slow_swing_kick_hihat_collisions() -> None:
     filtered, adjustments = runner.filter_rhythm_inconsistencies(hits)
 
     assert "suppress-slow-swing-kick-hihat-collisions" in adjustments
-    remaining_hihats = [
-        hit for hit in filtered if hit["instrument"] == "CLOSED_HIHAT"
-    ]
+    remaining_hihats = [hit for hit in filtered if hit["instrument"] == "CLOSED_HIHAT"]
     assert len(remaining_hihats) == len(kicks)
     assert all(
-        not runner._near_any(float(hit["onsetSeconds"]), kicks, 0.04)
-        for hit in remaining_hihats
+        not runner._near_any(float(hit["onsetSeconds"]), kicks, 0.04) for hit in remaining_hihats
     )
 
 
@@ -159,3 +157,38 @@ def test_adtof_decoder_leaves_an_ordinary_rock_pattern_unchanged() -> None:
 
     assert adjustments == ()
     assert filtered == hits
+
+
+def test_recall_fusion_v4_keeps_weak_hits_only_with_independent_consensus() -> None:
+    gate = _runner_module("_consensus_gate.py", "recall_fusion_consensus_test")
+    hits = [
+        SimpleNamespace(instrument="SNARE", family="SNARE", onset=1.0, confidence=0.20),
+        SimpleNamespace(instrument="MID_TOM", family="TOM", onset=2.0, confidence=0.20),
+        SimpleNamespace(instrument="CLOSED_HIHAT", family="HIHAT", onset=3.0, confidence=0.30),
+        SimpleNamespace(instrument="KICK", family="KICK", onset=4.0, confidence=0.10),
+    ]
+    articulation = [
+        SimpleNamespace(instrument="SNARE", family="SNARE", onset=1.04, confidence=0.90)
+    ]
+
+    filtered, metadata = gate.apply_low_confidence_consensus_gate(
+        hits,
+        articulation,
+        {
+            "enabled": True,
+            "familyRules": {
+                "SNARE": {"minimumConfidence": 0.34, "matchSeconds": 0.10},
+                "TOM": {"minimumConfidence": 0.34, "matchSeconds": 0.07},
+                "HIHAT": {"minimumConfidence": 0.26, "matchSeconds": 0.02},
+                "CYMBAL": {"minimumConfidence": 0.28, "matchSeconds": 0.10},
+            },
+        },
+    )
+
+    assert [(hit.instrument, hit.onset) for hit in filtered] == [
+        ("SNARE", 1.0),
+        ("CLOSED_HIHAT", 3.0),
+        ("KICK", 4.0),
+    ]
+    assert metadata["lowConfidenceConsensusGate"] is True
+    assert metadata["lowConfidenceConsensusRemoved"]["TOM"] == 1

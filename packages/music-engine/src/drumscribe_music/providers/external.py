@@ -61,9 +61,7 @@ class ExternalModelTranscriptionProvider:
             raise FileNotFoundError(source)
         return self._invoke(source)
 
-    def _invoke(
-        self, source: Path, *, extra_arguments: Sequence[str] = ()
-    ) -> list[RawDrumHit]:
+    def _invoke(self, source: Path, *, extra_arguments: Sequence[str] = ()) -> list[RawDrumHit]:
         with tempfile.TemporaryDirectory(prefix=f"drumscribe-{self.provider_id}-") as directory:
             output = Path(directory) / "hits.json"
             argv = (
@@ -225,8 +223,10 @@ class ADTOFResearchTranscriptionProvider(ExternalModelTranscriptionProvider):
 class DrumScribeRecallFusionTranscriptionProvider(ExternalModelTranscriptionProvider):
     """Production fusion of the approved ADTOF and first-party checkpoints."""
 
-    provider_id = "drumscribe-recall-fusion-v3"
-    approved_model_version = provider_id
+    provider_id = "drumscribe-recall-fusion-v4"
+    approved_model_versions = frozenset(
+        ("drumscribe-recall-fusion-v3", "drumscribe-recall-fusion-v4")
+    )
     license = ProviderLicense(
         provider_id=provider_id,
         status=LicenseStatus.COMMERCIAL_ALLOWED,
@@ -257,9 +257,11 @@ class DrumScribeRecallFusionTranscriptionProvider(ExternalModelTranscriptionProv
         timeout_seconds: float = 1_800,
     ) -> None:
         super().__init__(command, model_version=model_version, timeout_seconds=timeout_seconds)
-        if self.version != self.approved_model_version:
+        self.provider_id = self.version
+        self.license = replace(type(self).license, provider_id=self.version)
+        if self.version not in self.approved_model_versions:
             self.license = replace(
-                type(self).license,
+                self.license,
                 status=LicenseStatus.UNRESOLVED,
                 decision=(
                     f"Model {self.version!r} is outside OWNER-ATTESTATION-2026-09-05; "
@@ -267,9 +269,7 @@ class DrumScribeRecallFusionTranscriptionProvider(ExternalModelTranscriptionProv
                 ),
             )
 
-    def transcribe_multiview(
-        self, mixture_path: Path, drum_stem_path: Path
-    ) -> list[RawDrumHit]:
+    def transcribe_multiview(self, mixture_path: Path, drum_stem_path: Path) -> list[RawDrumHit]:
         mixture = Path(mixture_path).resolve()
         stem = Path(drum_stem_path).resolve()
         if not mixture.is_file():

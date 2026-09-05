@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare production DrumScribe v3 and live Drum2Notes on 100 song excerpts.
+"""Compare production DrumScribe and live Drum2Notes on 100 song excerpts.
 
 The frozen suite combines all 89 available drum-containing RWC Popular clips
 with the 11-song MDB Drums MIREX test partition.  Every item is a 20-second
@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import subprocess
 import sys
 import time
@@ -57,13 +58,14 @@ DEFAULT_RWC_ROOTS = (
 DEFAULT_MDB_DATASET = Path("data/research-corpus/MDBDrums/MDB Drums")
 DEFAULT_MDB_SOURCE = Path("output/mdb-real-test11-inputs")
 DEFAULT_MDB_STEM_EVIDENCE = Path("output/mdb-recall-fusion-v3-live-test11-2026-09-06")
-DEFAULT_OUTPUT = Path("output/real-song-100-v3-vs-drum2notes-2026-09-06")
+DEFAULT_OUTPUT = Path("output/real-song-100-v4-vs-drum2notes-2026-09-06")
 DEFAULT_COMPACT_OUTPUT = Path(
-    "docs/benchmarks/data/REAL_SONG_100_V3_VS_DRUM2NOTES.json"
+    "docs/benchmarks/data/REAL_SONG_100_V4_VS_DRUM2NOTES.json"
 )
 DEFAULT_ADTOF_PYTHON = Path(".research-models/adtof-env/bin/python")
 DEFAULT_RUNNER = Path("scripts/model_runners/drumscribe_recall_fusion_runner.py")
-MODEL_VERSION = "drumscribe-recall-fusion-v3"
+DEFAULT_CONFIG = Path("ml/configs/drumscribe-recall-fusion-v4.json")
+MODEL_VERSION = "drumscribe-recall-fusion-v4"
 WINDOW_SECONDS = 20.0
 TOLERANCES_MS = (20, 50, 100)
 FAMILY5 = frozenset(("KICK", "SNARE", "HIHAT", "TOM", "CYMBAL"))
@@ -83,10 +85,17 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--compact-output", type=Path, default=DEFAULT_COMPACT_OUTPUT)
     parser.add_argument("--adtof-python", type=Path, default=DEFAULT_ADTOF_PYTHON)
     parser.add_argument("--runner", type=Path, default=DEFAULT_RUNNER)
+    parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
+    parser.add_argument("--model-version", default=MODEL_VERSION)
     parser.add_argument("--device", choices=("cpu", "cuda", "mps"), default="cpu")
     parser.add_argument("--workers", type=int, default=3)
     parser.add_argument("--poll-seconds", type=float, default=4.0)
     parser.add_argument("--timeout-seconds", type=float, default=600.0)
+    parser.add_argument(
+        "--reuse-drum2notes-from",
+        type=Path,
+        help="Reuse hash-matched retained live results instead of submitting again.",
+    )
     parser.add_argument("--score-only", action="store_true")
     return parser.parse_args()
 
@@ -362,6 +371,26 @@ def _process_competitor(
         return retained
 
 
+def reuse_competitor_results(
+    records: list[dict[str, Any]], source_root: Path, destination_root: Path
+) -> None:
+    destination_root.mkdir(parents=True, exist_ok=True)
+    for record in records:
+        sequence = int(record["sequence"])
+        stem = f"{sequence:03d}"
+        source_job = source_root / f"{stem}.job.json"
+        source_music = source_root / f"{stem}.music.json"
+        job = json.loads(source_job.read_text(encoding="utf-8"))
+        if (
+            job.get("state") != "ok"
+            or job.get("sourceAudioSha256") != record["audioSha256"]
+            or not source_music.is_file()
+        ):
+            raise RuntimeError(f"competitor evidence cannot be reused: {source_job}")
+        shutil.copy2(source_job, destination_root / source_job.name)
+        shutil.copy2(source_music, destination_root / source_music.name)
+
+
 def run_predictions(
     records: list[dict[str, Any]],
     repository: Path,
@@ -380,15 +409,26 @@ def run_predictions(
             str(repository),
             "--device",
             args.device,
+            "--config",
+            str(resolve(repository, args.config)),
         ),
-        model_version=MODEL_VERSION,
+        model_version=args.model_version,
         timeout_seconds=3_600,
     )
     require_production_safe(transcription, production=True)
 
-    with ThreadPoolExecutor(max_workers=args.workers) as executor:
+    if args.reuse_drum2notes_from:
+        reuse_competitor_results(
+            records,
+            resolve(repository, args.reuse_drum2notes_from) / "drum2notes-raw",
+            competitor_root,
+        )
+        futures: dict[Any, int] = {}
+        executor_context = None
+    else:
+        executor_context = ThreadPoolExecutor(max_workers=args.workers)
         futures = {
-            executor.submit(
+            executor_context.submit(
                 _process_competitor,
                 record,
                 competitor_root,
@@ -397,6 +437,7 @@ def run_predictions(
             ): int(record["sequence"])
             for record in records
         }
+    try:
         for completed, record in enumerate(records, 1):
             sequence = int(record["sequence"])
             destination = drumscribe_root / f"{sequence:03d}.json"
@@ -405,6 +446,7 @@ def run_predictions(
                 if (
                     retained.get("source", {}).get("fullMixSha256")
                     == record["audioSha256"]
+                    and retained.get("modelVersion") == args.model_version
                 ):
                     print(
                         json.dumps(
@@ -472,6 +514,9 @@ def run_predictions(
                 ),
                 flush=True,
             )
+    finally:
+        if executor_context is not None:
+            executor_context.shutdown(wait=True)
 
 
 def _group_scores(
@@ -501,7 +546,13 @@ def _group_scores(
 
 
 def build_report(
-    records: list[dict[str, Any]], output_root: Path, processing_seconds: float | None
+    records: list[dict[str, Any]],
+    output_root: Path,
+    processing_seconds: float | None,
+    *,
+    model_version: str = MODEL_VERSION,
+    competitor_evidence_reused: bool = False,
+    drumscribe_predictions_fresh: bool = True,
 ) -> dict[str, Any]:
     references: list[list[Event]] = []
     drumscribe_predictions: list[list[Event]] = []
@@ -526,6 +577,8 @@ def build_report(
             != record["audioSha256"]
         ):
             raise RuntimeError(f"DrumScribe input hash mismatch: {record['recordId']}")
+        if prediction_payload.get("modelVersion") != model_version:
+            raise RuntimeError(f"DrumScribe model mismatch: {record['recordId']}")
         if job.get("sourceAudioSha256") != record["audioSha256"]:
             raise RuntimeError(f"Drum2Notes input hash mismatch: {record['recordId']}")
         state = str(job.get("state", "missing"))
@@ -584,11 +637,27 @@ def build_report(
             }
         )
 
+    development_indices = list(range(50))
+    verification_indices = list(range(50, 100))
+
+    def split_scores(indices: list[int]) -> dict[str, Any]:
+        return {
+            "recordCount": len(indices),
+            "drumscribe": _aggregate(
+                [references[index] for index in indices],
+                [drumscribe_predictions[index] for index in indices],
+            ),
+            "drum2notes": _aggregate(
+                [references[index] for index in indices],
+                [competitor_predictions[index] for index in indices],
+            ),
+        }
+
     return {
         "schemaVersion": 1,
         "createdAt": datetime.now(UTC).isoformat(),
         "benchmark": {
-            "name": "100 real-song excerpt production-v3 live comparison",
+            "name": f"100 real-song excerpt {model_version} comparison",
             "status": "opened_development_same_audio_live_comparison",
             "recordCount": len(records),
             "uniqueAudioHashCount": len({record["audioSha256"] for record in records}),
@@ -603,7 +672,8 @@ def build_report(
             "matcher": "five-family class-aware one-to-one onset matching",
             "referenceUnisonRule": "exact same-time events in one family count once",
             "tolerancesMilliseconds": list(TOLERANCES_MS),
-            "predictionsGeneratedFreshForBenchmark": True,
+            "drumscribePredictionsGeneratedFreshForBenchmark": drumscribe_predictions_fresh,
+            "drum2notesEvidenceReused": competitor_evidence_reused,
             "sameAudioBytesForBothSystems": True,
             "separation": "hash-validated cached htdemucs_ft stems from the same excerpts",
             "researchOnly": True,
@@ -620,7 +690,7 @@ def build_report(
         },
         "systems": {
             "drumscribe": {
-                "provider": MODEL_VERSION,
+                "provider": model_version,
                 "pipeline": "htdemucs_ft + guarded direct/stem ADTOF fusion + first-party articulation recovery",
                 "commercialRightsReference": APPROVAL_REFERENCE,
                 "productionProviderGatePassed": True,
@@ -629,6 +699,11 @@ def build_report(
                 "product": "Klangio Drum2Notes",
                 "surface": "live public demo",
                 "modelSetting": "solo / all drum notes",
+                "evidence": (
+                    "hash-validated retained live responses for identical audio bytes"
+                    if competitor_evidence_reused
+                    else "fresh live responses"
+                ),
                 "resultStates": dict(sorted(states.items())),
             },
         },
@@ -658,6 +733,18 @@ def build_report(
             competitor_predictions,
             "performanceType",
         ),
+        "validationSplits": {
+            "development50": {
+                "role": "decoder selection",
+                "sequenceRange": [1, 50],
+                **split_scores(development_indices),
+            },
+            "verification50": {
+                "role": "not used to choose the v4 consensus-gate rules",
+                "sequenceRange": [51, 100],
+                **split_scores(verification_indices),
+            },
+        },
         "tracks": rows,
         "processingSeconds": round(processing_seconds, 3)
         if processing_seconds is not None
@@ -743,6 +830,7 @@ def write_compact_report(
             "datasets": report["datasets"],
             "genres": report["genres"],
             "performanceTypes": report["performanceTypes"],
+            "validationSplits": report["validationSplits"],
             "tracks": compact_tracks,
             "evidence": {
                 "fullReportRelativePath": str(
@@ -792,15 +880,31 @@ def main() -> int:
     if not args.score_only:
         run_predictions(records, repository, output_root, args)
     retained_processing_seconds = None
+    retained_report = None
     retained_report_path = output_root / "benchmark-result.json"
     if args.score_only and retained_report_path.exists():
-        retained_processing_seconds = json.loads(
-            retained_report_path.read_text(encoding="utf-8")
-        ).get("processingSeconds")
+        retained_report = json.loads(retained_report_path.read_text(encoding="utf-8"))
+        retained_processing_seconds = retained_report.get("processingSeconds")
+    retained_benchmark = (retained_report or {}).get("benchmark", {})
     report = build_report(
         records,
         output_root,
         retained_processing_seconds if args.score_only else time.monotonic() - started,
+        model_version=args.model_version,
+        competitor_evidence_reused=(
+            bool(args.reuse_drum2notes_from)
+            if not args.score_only
+            else bool(retained_benchmark.get("drum2notesEvidenceReused"))
+        ),
+        drumscribe_predictions_fresh=(
+            True
+            if not args.score_only
+            else bool(
+                retained_benchmark.get(
+                    "drumscribePredictionsGeneratedFreshForBenchmark"
+                )
+            )
+        ),
     )
     destination = output_root / "benchmark-result.json"
     write_json(destination, report)

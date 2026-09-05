@@ -108,7 +108,12 @@ and all raw service responses are under
 ```bash
 PYTHONPATH='ml/src:packages/music-engine/src:scripts' \
   .research-models/adtof-env/bin/python \
-  scripts/run_real_song_100_live_benchmark.py --workers 3 --device cpu
+  scripts/run_real_song_100_live_benchmark.py \
+  --model-version drumscribe-recall-fusion-v3 \
+  --config ml/configs/drumscribe-recall-fusion-v3.json \
+  --output output/real-song-100-v3-vs-drum2notes-2026-09-06 \
+  --compact-output docs/benchmarks/data/REAL_SONG_100_V3_VS_DRUM2NOTES.json \
+  --workers 3 --device cpu
 ```
 
 To recompute metrics from the retained raw evidence without submitting new
@@ -117,5 +122,10 @@ jobs:
 ```bash
 PYTHONPATH='ml/src:packages/music-engine/src:scripts' \
   .research-models/adtof-env/bin/python \
-  scripts/run_real_song_100_live_benchmark.py --score-only
+  scripts/run_real_song_100_live_benchmark.py \
+  --model-version drumscribe-recall-fusion-v3 \
+  --config ml/configs/drumscribe-recall-fusion-v3.json \
+  --output output/real-song-100-v3-vs-drum2notes-2026-09-06 \
+  --compact-output docs/benchmarks/data/REAL_SONG_100_V3_VS_DRUM2NOTES.json \
+  --score-only
 ```
