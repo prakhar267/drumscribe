@@ -50,7 +50,7 @@ export function HomeDemo() {
         </div>
       </div>
       <div style={{ display: "flex", justifyContent: "center", marginTop: 20 }}>
-        <Link className="button button-small" href="/projects/demo-groove">Open the full demo editor</Link>
+        <Link className="button button-small" href="/projects/demo-groove?tour=1">Take the guided product tour</Link>
       </div>
     </section>
   );

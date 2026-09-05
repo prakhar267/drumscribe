@@ -52,3 +52,26 @@ test("editor adds, deletes, undoes, loops, saves and exports", async ({ page }) 
   await expect(page.getByTestId("export-modal")).toBeVisible();
   await expect(page.getByTestId("export-midi")).toBeVisible();
 });
+
+test("guided product tour demonstrates the real editor workflow", async ({ page }) => {
+  await page.goto("/projects/demo-groove?tour=1");
+
+  const tour = page.getByTestId("product-tour");
+  await expect(tour).toBeVisible();
+  await expect(tour.getByText("Audio becomes readable notation.")).toBeVisible();
+
+  await page.getByTestId("tour-next").click();
+  await expect(tour.getByText("Attention goes where it matters.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Review 9" })).toHaveClass(/is-active/);
+
+  await page.getByTestId("tour-next").click();
+  await expect(tour.getByText("Correct the groove, not a spreadsheet.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Edit", exact: true })).toHaveClass(/is-active/);
+
+  await page.getByTestId("tour-next").click();
+  await expect(tour.getByRole("link", { name: "Open practice" })).toHaveAttribute("href", "/projects/demo-groove/practice");
+  await page.getByTestId("tour-next").click();
+  await page.getByTestId("tour-export").click();
+
+  await expect(page.getByTestId("export-modal")).toBeVisible();
+});

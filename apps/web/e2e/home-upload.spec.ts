@@ -23,6 +23,7 @@ test("homepage communicates the product and runs the synchronized demo", async (
   await page.goto("/");
   await expect(page.getByRole("heading", { name: /Turn any song into an editable drum chart/i })).toBeVisible();
   await expect(page.getByRole("link", { name: "Transcribe a song" }).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: "Take product tour" })).toHaveAttribute("href", "/projects/demo-groove?tour=1");
   const playhead = page.getByTestId("home-playhead");
   const before = await playhead.getAttribute("style");
   await page.getByTestId("demo-play").click();

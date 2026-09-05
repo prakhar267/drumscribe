@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Check, ChevronDown, CirclePlay, Cloud, Download, Eye, EyeOff, Grid3X3, HelpCircle, Minus, PanelBottomClose, PanelBottomOpen, Plus, Redo2, Settings, Undo2 } from "lucide-react";
+import { Check, ChevronDown, CirclePlay, Cloud, Download, Eye, EyeOff, Grid3X3, HelpCircle, Minus, PanelBottomClose, PanelBottomOpen, Plus, Redo2, Settings, Sparkles, Undo2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Brand } from "@/components/brand";
 import { useTransport } from "@/components/transport-provider";
@@ -14,6 +14,7 @@ import { createEvent, diffDrumEvents, gridStepSeconds, lowConfidenceEvents, move
 import { DrumGrid } from "@/components/editor/drum-grid";
 import { ExportModal } from "@/components/editor/export-modal";
 import { NoteInspector } from "@/components/editor/note-inspector";
+import { ProductTour } from "@/components/editor/product-tour";
 import { ShortcutsModal } from "@/components/editor/shortcuts-modal";
 import { TransportBar } from "@/components/editor/transport-bar";
 import { TimingEditor } from "@/components/editor/timing-editor";
@@ -40,6 +41,7 @@ export function EditorClient({ projectId }: { projectId: string }) {
   const searchParams = useSearchParams();
   const transport = useTransport();
   const { loadAudioSources } = transport;
+  const isDemoProject = demoProjects.some((item) => item.id === projectId);
   const [project, setProject] = useState<DrumProject>({ ...demoProject, id: projectId });
   const { events, apply, replace, undo, redo, canUndo, canRedo } = useEditorHistory(createDemoEvents().map((event) => ({ ...event, projectId })));
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -47,10 +49,11 @@ export function EditorClient({ projectId }: { projectId: string }) {
   const [zoom, setZoom] = useState(2.25);
   const [confidenceOverlay, setConfidenceOverlay] = useState(false);
   const [gridCollapsed, setGridCollapsed] = useState(false);
-  const [waveform, setWaveform] = useState<number[] | null>(() => demoProjects.some((item) => item.id === projectId) ? demoWaveform : null);
+  const [waveform, setWaveform] = useState<number[] | null>(() => isDemoProject ? demoWaveform : null);
   const [saveState, setSaveState] = useState<SaveState>("saved");
   const [exportOpen, setExportOpen] = useState(searchParams.get("export") === "1");
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [tourStep, setTourStep] = useState<number | null>(isDemoProject && searchParams.get("tour") === "1" ? 0 : null);
   const [mode, setMode] = useState<EditorMode>(
     searchParams.get("mode") === "timing" ? "timing" : searchParams.get("mode") === "review" ? "review" : "edit",
   );
@@ -253,6 +256,19 @@ export function EditorClient({ projectId }: { projectId: string }) {
     setMode("timing");
   }, [project.beatsPerMeasure, project.bpm, transport]);
 
+  const changeTourStep = useCallback((nextStep: number) => {
+    setTourStep(nextStep);
+    if (nextStep === 1) {
+      setMode("review");
+      setConfidenceOverlay(true);
+    } else if (nextStep === 2) {
+      setMode("edit");
+      setGridCollapsed(false);
+    } else if (nextStep === 0) {
+      setMode("edit");
+    }
+  }, []);
+
   const reviewNext = useCallback(() => {
     if (!uncertain.length) return;
     const currentIndex = uncertain.findIndex((event) => selectedIds.has(event.id));
@@ -333,7 +349,7 @@ export function EditorClient({ projectId }: { projectId: string }) {
   }
 
   return (
-    <div className="editor-shell" data-testid="editor">
+    <div className="editor-shell" data-testid="editor" data-demo-step={tourStep ?? undefined}>
       <header className="editor-toolbar">
         <div className="editor-brand">
           <Brand compact />
@@ -354,6 +370,7 @@ export function EditorClient({ projectId }: { projectId: string }) {
         </div>
         <div className="editor-actions">
           <button className="icon-button" type="button" aria-label="Keyboard shortcuts" onClick={() => setShortcutsOpen(true)}><HelpCircle /></button>
+          {isDemoProject && <button aria-label="Open product tour" className="button button-small demo-tour-trigger" title="Open product tour" type="button" onClick={() => changeTourStep(0)} data-testid="open-product-tour"><Sparkles /> <span>Demo guide</span></button>}
           <Link className="button button-small editor-practice-button" href={`/projects/${project.id}/practice`}><CirclePlay /> Practice</Link>
           <button className="button button-primary button-small" type="button" onClick={() => setExportOpen(true)} data-testid="open-export"><Download size={15} /> Export</button>
           <Link className="icon-button" href={`/projects/${project.id}/settings`} aria-label="Project settings"><Settings /></Link>
@@ -383,6 +400,16 @@ export function EditorClient({ projectId }: { projectId: string }) {
         <NoteInspector key={selected[0]?.id ?? mode} selected={selected} uncertainCount={uncertain.length} reviewMode={mode === "review"} onChange={changeSelected} onReviewNext={reviewNext} onDelete={deleteSelected} onClose={() => setSelectedIds(new Set())} />
       </div>}
       <TransportBar />
+      {isDemoProject && tourStep !== null && (
+        <ProductTour
+          projectId={project.id}
+          step={tourStep}
+          uncertainCount={uncertain.length}
+          onClose={() => setTourStep(null)}
+          onStepChange={changeTourStep}
+          onExport={() => { setTourStep(null); setExportOpen(true); }}
+        />
+      )}
       {exportOpen && <ExportModal project={project} events={events} beforeExport={flushPendingChanges} onClose={() => setExportOpen(false)} />}
       {shortcutsOpen && <ShortcutsModal onClose={() => setShortcutsOpen(false)} />}
     </div>

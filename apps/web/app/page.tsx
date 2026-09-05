@@ -17,7 +17,7 @@ export default function HomePage() {
               <div>
                 <div className="hero-actions">
                   <Link className="button button-primary" href="/upload">Transcribe a song <ArrowRight size={17} /></Link>
-                  <Link className="button" href="/projects/demo-groove"><PlayCircle size={17} /> Try demo</Link>
+                  <Link className="button" href="/projects/demo-groove?tour=1"><PlayCircle size={17} /> Take product tour</Link>
                 </div>
               </div>
               <p>Upload a recording. DrumScribe isolates the drums, detects the groove, creates notation, and lets you correct, practise and export it.</p>
