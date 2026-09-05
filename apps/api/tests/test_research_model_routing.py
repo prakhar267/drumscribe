@@ -113,7 +113,7 @@ def test_owner_approved_recall_fusion_can_be_selected_in_production() -> None:
         commercial_provider_license_confirmed=True,
         commercial_provider_approval_reference="OWNER-ATTESTATION-2026-09-05",
         recall_fusion_command="/approved/recall-fusion",
-        recall_fusion_model_version="drumscribe-recall-fusion-v2",
+        recall_fusion_model_version="drumscribe-recall-fusion-v3",
         cookie_secure=True,
         dev_expose_magic_link=False,
         magic_link_delivery="webhook",

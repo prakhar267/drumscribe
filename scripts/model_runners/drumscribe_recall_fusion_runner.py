@@ -44,7 +44,7 @@ from run_competitive_drum_benchmark import (
     predict_stacked_probabilities,
 )
 
-PROVIDER = "drumscribe-recall-fusion-v2"
+PROVIDER = "drumscribe-recall-fusion-v3"
 FAMILIES = ("KICK", "SNARE", "TOM", "HIHAT", "CYMBAL")
 ADTOF_CLASS_INDEX = {family: index for index, family in enumerate(FAMILIES)}
 FAMILY_BY_INSTRUMENT = {
@@ -61,6 +61,7 @@ FAMILY_BY_INSTRUMENT = {
     "CRASH": "CYMBAL",
     "RIDE": "CYMBAL",
     "RIDE_BELL": "CYMBAL",
+    "TAMBOURINE": "OTHER",
 }
 GENERIC_INSTRUMENT = {
     "KICK": "KICK",
@@ -427,6 +428,234 @@ def full_mix_fusion(
     return sorted(hits, key=lambda hit: (hit.onset, hit.instrument))
 
 
+def stem_baseline_hits(
+    stem: np.ndarray, rules: dict[str, Any]
+) -> list[Hit]:
+    """Decode the separated stem with the stable ADTOF family thresholds."""
+    hits: list[Hit] = []
+    for family in FAMILIES:
+        class_index = ADTOF_CLASS_INDEX[family]
+        hits.extend(
+            Hit(GENERIC_INSTRUMENT[family], onset, confidence)
+            for onset, confidence in process_activation(
+                stem[:, class_index], rules["stemBaselinePeakRules"][family]
+            )
+        )
+    return sorted(hits, key=lambda hit: (hit.onset, hit.instrument))
+
+
+def audio_rms_ratio(mixture: Path, stem: Path) -> float:
+    """Return a bounded, scale-independent separation-strength proxy."""
+    import librosa
+
+    mixture_audio, _ = librosa.load(mixture, sr=44_100, mono=True)
+    stem_audio, _ = librosa.load(stem, sr=44_100, mono=True)
+    sample_count = min(len(mixture_audio), len(stem_audio))
+    if sample_count == 0:
+        return 0.0
+    mixture_rms = float(
+        np.sqrt(np.mean(np.square(mixture_audio[:sample_count])) + 1e-12)
+    )
+    stem_rms = float(np.sqrt(np.mean(np.square(stem_audio[:sample_count])) + 1e-12))
+    return min(4.0, stem_rms / mixture_rms)
+
+
+def regular_tambourine_hits(stem: Path, rules: dict[str, Any]) -> list[Hit]:
+    """Recover a stable high-frequency auxiliary-percussion line."""
+    import librosa
+
+    audio, sample_rate = librosa.load(stem, sr=44_100, mono=True)
+    hop_length = 441
+    spectrum = np.abs(
+        librosa.stft(
+            audio,
+            n_fft=2_048,
+            hop_length=hop_length,
+            center=True,
+        )
+    )
+    frequencies = librosa.fft_frequencies(sr=sample_rate, n_fft=2_048)
+    high_frequency = spectrum[
+        frequencies > float(rules["minimumFrequencyHz"])
+    ]
+    onset_strength = librosa.onset.onset_strength(
+        S=high_frequency,
+        sr=sample_rate,
+        hop_length=hop_length,
+        lag=1,
+        max_size=3,
+    )
+    peak_frames = librosa.util.peak_pick(
+        onset_strength,
+        pre_max=2,
+        post_max=2,
+        pre_avg=10,
+        post_avg=2,
+        delta=float(rules["peakDelta"]),
+        wait=5,
+    )
+    peak_times = peak_frames.astype(np.float64) * hop_length / sample_rate
+    if len(peak_times) < int(rules["minimumPeakCount"]):
+        return []
+    intervals = np.diff(peak_times)
+    median_period = float(np.median(intervals))
+    mean_period = float(np.mean(intervals))
+    coefficient_of_variation = (
+        float(np.std(intervals)) / mean_period if mean_period > 0 else float("inf")
+    )
+    if not (
+        float(rules["minimumMedianPeriodSeconds"])
+        <= median_period
+        <= float(rules["maximumMedianPeriodSeconds"])
+        and coefficient_of_variation
+        <= float(rules["maximumIntervalCoefficientOfVariation"])
+    ):
+        return []
+    compensation = float(rules.get("latencyCompensationSeconds", 0.0))
+    confidence = max(0.5, min(0.99, 1.0 - coefficient_of_variation))
+    return [
+        Hit("TAMBOURINE", max(0.0, float(onset) + compensation), confidence)
+        for onset in peak_times
+    ]
+
+
+def guarded_full_mix_fusion(
+    direct: np.ndarray,
+    stem: np.ndarray,
+    ensemble: np.ndarray,
+    frame_seconds: float,
+    ensemble_configuration: StackedEnsembleConfig,
+    mixture_path: Path,
+    stem_path: Path,
+    rules: dict[str, Any],
+) -> tuple[list[Hit], dict[str, Any]]:
+    """Fuse recall specialists without replacing a stronger stem family."""
+    baseline = stem_baseline_hits(stem, rules)
+    fused = full_mix_fusion(direct, stem, rules)
+    articulation = ensemble_hits(
+        ensemble, frame_seconds, ensemble_configuration
+    )
+    guard = rules["guardedRouting"]
+    rms_ratio = audio_rms_ratio(mixture_path, stem_path)
+
+    baseline_counts = {
+        family: sum(hit.family == family for hit in baseline) for family in FAMILIES
+    }
+    fused_counts = {
+        family: sum(hit.family == family for hit in fused) for family in FAMILIES
+    }
+    selected_routes = {family: "stem_baseline" for family in FAMILIES}
+    for family in guard["directStemFamilies"]:
+        selected_routes[str(family)] = "direct_stem_fusion"
+
+    if rms_ratio < float(guard["weakStemRmsRatio"]):
+        if baseline_counts["KICK"] > 0 and fused_counts["KICK"] <= float(
+            guard["kickFusionMaximumCountRatio"]
+        ) * baseline_counts["KICK"]:
+            selected_routes["KICK"] = "direct_stem_fusion"
+        if baseline_counts["SNARE"] > 0 and fused_counts["SNARE"] >= float(
+            guard["snareFusionMinimumCountRatio"]
+        ) * baseline_counts["SNARE"]:
+            selected_routes["SNARE"] = "direct_stem_fusion"
+
+    baseline_hihats = baseline_counts["HIHAT"]
+    fused_hihats = fused_counts["HIHAT"]
+    if (
+        baseline_hihats >= int(guard["hihatFusionMinimumBaselineHits"])
+        and fused_hihats - baseline_hihats
+        >= int(guard["hihatFusionMinimumAddedHits"])
+        and fused_hihats
+        >= float(guard["hihatFusionMinimumCountRatio"]) * baseline_hihats
+        and rms_ratio < float(guard["weakStemRmsRatio"])
+    ):
+        selected_routes["HIHAT"] = "direct_stem_fusion"
+
+    baseline_toms = baseline_counts["TOM"]
+    fused_toms = fused_counts["TOM"]
+    if (
+        baseline_toms > 0
+        and rms_ratio < float(guard["tomFusionMaximumStemRmsRatio"])
+    ) or (
+        baseline_toms == 0
+        and fused_toms >= int(guard["tomFusionNoBaselineMinimumHits"])
+        and float(guard["tomFusionNoBaselineMinimumStemRmsRatio"])
+        <= rms_ratio
+        < float(guard["weakStemRmsRatio"])
+    ):
+        selected_routes["TOM"] = "direct_stem_fusion"
+
+    hits = sorted(
+        (
+            hit
+            for family in FAMILIES
+            for hit in (
+                fused
+                if selected_routes[family] == "direct_stem_fusion"
+                else baseline
+            )
+            if hit.family == family
+        ),
+        key=lambda hit: (hit.onset, hit.instrument),
+    )
+
+    cross_sticks = [
+        hit for hit in articulation if hit.instrument == "CROSS_STICK"
+    ]
+    articulation_snares = [
+        hit for hit in articulation if hit.instrument == "SNARE"
+    ]
+    cross_stick_mode = bool(cross_sticks) and len(cross_sticks) > float(
+        guard["crossStickDominanceRatio"]
+    ) * len(articulation_snares)
+    relabeled_cross_sticks = 0
+    if cross_stick_mode:
+        relabeled: list[Hit] = []
+        for hit in hits:
+            if hit.instrument == "SNARE" and near(
+                hit.onset,
+                cross_sticks,
+                float(guard["articulationMatchSeconds"]),
+            ):
+                relabeled.append(replace(hit, instrument="CROSS_STICK"))
+                relabeled_cross_sticks += 1
+            else:
+                relabeled.append(hit)
+        hits = relabeled
+
+    articulation_hihats = [
+        hit for hit in articulation if hit.family == "HIHAT"
+    ]
+    hihat_rescue = (
+        baseline_hihats <= int(guard["hihatRescueMaximumBaselineHits"])
+        and len(articulation_hihats)
+        >= int(guard["hihatRescueMinimumArticulationHits"])
+    )
+    if hihat_rescue:
+        hits = [hit for hit in hits if hit.family != "HIHAT"]
+        hits.extend(articulation_hihats)
+
+    tambourines = regular_tambourine_hits(
+        stem_path, rules["tambourineRecovery"]
+    )
+    if tambourines and rules["tambourineRecovery"].get(
+        "suppressBaselineHihatWhenActive", False
+    ):
+        hits = [hit for hit in hits if hit.family != "HIHAT"]
+    hits.extend(tambourines)
+    hits.sort(key=lambda hit: (hit.onset, hit.instrument))
+    return hits, {
+        "route": "guarded_direct+stem+articulation",
+        "directStemFusion": True,
+        "tempoAwareRecovery": bool(tambourines),
+        "stemToMixtureRmsRatio": round(rms_ratio, 6),
+        "familyRoutes": selected_routes,
+        "crossStickMode": cross_stick_mode,
+        "relabeledCrossStickCount": relabeled_cross_sticks,
+        "hihatRescue": hihat_rescue,
+        "tambourineRecovered": len(tambourines),
+    }
+
+
 def transcribe(
     *,
     stem: Path,
@@ -443,13 +672,22 @@ def transcribe(
     stem_activations = adtof_activations(model, stem, device)
     if mixture is not None:
         direct_activations = adtof_activations(model, mixture, device)
-        return full_mix_fusion(
-            direct_activations, stem_activations, config["fullMix"]
-        ), {
-            "route": "direct+htdemucs_ft_stem",
-            "directStemFusion": True,
-            "tempoAwareRecovery": False,
-        }
+        ensemble_path = resolve(
+            repository, config["components"]["stackedEnsemble"]["path"]
+        )
+        probabilities, frame_seconds, ensemble_config = load_ensemble_probabilities(
+            stem, repository, ensemble_path, device
+        )
+        return guarded_full_mix_fusion(
+            direct_activations,
+            stem_activations,
+            probabilities,
+            frame_seconds,
+            ensemble_config,
+            mixture,
+            stem,
+            config["fullMix"],
+        )
 
     if drum_only_profile == "acoustic":
         return acoustic_precision_hits(stem_activations, config["drumOnly"]), {
@@ -490,7 +728,7 @@ def main() -> int:
     parser.add_argument(
         "--config",
         type=Path,
-        default=Path("ml/configs/drumscribe-recall-fusion-v2.json"),
+        default=Path("ml/configs/drumscribe-recall-fusion-v3.json"),
     )
     parser.add_argument("--device", choices=("cpu", "cuda", "mps"), default="cpu")
     parser.add_argument(

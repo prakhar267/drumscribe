@@ -178,6 +178,19 @@ distribution. The general and 99% gates remain blocked pending an external
 acoustic confirmation, stronger snare, exact articulation and full-song results.
 See `docs/benchmarks/RECALL_FUSION_V1.md`.
 
+A new production-v3 rerun then exercised all 11 real full-band MDB test
+excerpts against 11 newly completed live Drum2Notes jobs. The first pass
+exposed a regression in v2 (79.67% versus 80.25%); v3 added guarded family
+routing, first-party cross-stick/hi-hat articulation recovery and conservative
+periodic tambourine recovery. The corrected same-audio result reached **90.52%**
+six-family micro F1 at 50 ms versus **80.25%** for Drum2Notes and won 10 of 11
+tracks. The opened four-item STAR full-mixture regression also held at 85.19%.
+However, the MDB labels informed this correction, only 219.84 seconds were
+scored, tom F1 remains 56.60%, and swing jazz remains 78.38%. This clears 90%
+only for the named opened benchmark; it does not clear the independent,
+per-class, duration or 99% release gates. See
+`docs/benchmarks/RECALL_FUSION_V3_MDB_LIVE.md`.
+
 A balanced follow-up processed 100 real human GMD drum performances (25 each
 for rock/punk, pop/soul, funk/hip-hop and jazz/world). DrumScribe v16 reached
 91.70% detailed event micro F1 at 50 ms, versus 54.45% for the open-source

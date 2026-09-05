@@ -705,10 +705,10 @@ def run_inference(
             )
         transcription = DrumScribeRecallFusionTranscriptionProvider(
             tuple(recall_fusion_command),
-            model_version="drumscribe-recall-fusion-v2",
+            model_version="drumscribe-recall-fusion-v3",
             timeout_seconds=3_600,
         )
-        decoder = "drumscribe-recall-fusion-v2"
+        decoder = "drumscribe-recall-fusion-v3"
     else:
         adtof_runner = resolve(repository, args.adtof_runner)
         adtof_executable = resolve_executable(repository, args.adtof_executable)

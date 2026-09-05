@@ -225,7 +225,7 @@ class ADTOFResearchTranscriptionProvider(ExternalModelTranscriptionProvider):
 class DrumScribeRecallFusionTranscriptionProvider(ExternalModelTranscriptionProvider):
     """Production fusion of the approved ADTOF and first-party checkpoints."""
 
-    provider_id = "drumscribe-recall-fusion-v2"
+    provider_id = "drumscribe-recall-fusion-v3"
     approved_model_version = provider_id
     license = ProviderLicense(
         provider_id=provider_id,

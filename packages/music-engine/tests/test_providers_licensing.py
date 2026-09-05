@@ -231,7 +231,7 @@ def test_owner_approved_adtof_and_demucs_are_production_safe():
 
 def test_owner_approved_recall_fusion_is_production_safe():
     provider = DrumScribeRecallFusionTranscriptionProvider(
-        ("/safe/runner",), model_version="drumscribe-recall-fusion-v2"
+        ("/safe/runner",), model_version="drumscribe-recall-fusion-v3"
     )
     assert provider.license.status.value == "commercial_allowed"
     require_production_safe(provider, production=True)
@@ -249,7 +249,7 @@ def test_recall_fusion_passes_mixture_and_stem_as_separate_argv(monkeypatch, tmp
         observed["kwargs"] = kwargs
         output = Path(argv[argv.index("--output") + 1])
         output.write_text(
-            '{"schemaVersion":1,"provider":"drumscribe-recall-fusion-v2","hits":[]}',
+            '{"schemaVersion":1,"provider":"drumscribe-recall-fusion-v3","hits":[]}',
             encoding="utf-8",
         )
         return subprocess.CompletedProcess(argv, 0, stdout=b"", stderr=b"")
@@ -257,7 +257,7 @@ def test_recall_fusion_passes_mixture_and_stem_as_separate_argv(monkeypatch, tmp
     monkeypatch.setattr("drumscribe_music.providers.external.subprocess.run", fake_run)
     provider = DrumScribeRecallFusionTranscriptionProvider(
         ("/safe/python", "/safe/runner.py"),
-        model_version="drumscribe-recall-fusion-v2",
+        model_version="drumscribe-recall-fusion-v3",
     )
 
     assert provider.transcribe_multiview(mixture, stem) == []

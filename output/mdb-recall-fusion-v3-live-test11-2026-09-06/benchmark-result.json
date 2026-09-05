@@ -1,0 +1,4415 @@
+{
+  "aggregate": {
+    "drum2notes": {
+      "100ms": {
+        "meanAbsoluteTimingErrorMs": 13.634735537807869,
+        "micro": {
+          "f1": 0.8182157521463232,
+          "fn": 242,
+          "fp": 245,
+          "precision": 0.8173005219985086,
+          "recall": 0.8191330343796711,
+          "tp": 1096
+        },
+        "perClass": {
+          "CYMBAL": {
+            "f1": 0.7987421383647799,
+            "fn": 22,
+            "fp": 42,
+            "meanAbsoluteTimingErrorMs": 14.249675967688544,
+            "precision": 0.7514792899408284,
+            "recall": 0.8523489932885906,
+            "support": 149,
+            "tp": 127
+          },
+          "HIHAT": {
+            "f1": 0.8509174311926605,
+            "fn": 59,
+            "fp": 71,
+            "meanAbsoluteTimingErrorMs": 11.70824246384708,
+            "precision": 0.8393665158371041,
+            "recall": 0.8627906976744186,
+            "support": 430,
+            "tp": 371
+          },
+          "KICK": {
+            "f1": 0.8977272727272727,
+            "fn": 17,
+            "fp": 55,
+            "meanAbsoluteTimingErrorMs": 11.421718845901191,
+            "precision": 0.8517520215633423,
+            "recall": 0.948948948948949,
+            "support": 333,
+            "tp": 316
+          },
+          "OTHER": {
+            "f1": 0.0,
+            "fn": 36,
+            "fp": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "support": 36,
+            "tp": 0
+          },
+          "SNARE": {
+            "f1": 0.7734487734487735,
+            "fn": 98,
+            "fp": 59,
+            "meanAbsoluteTimingErrorMs": 18.599590269212573,
+            "precision": 0.8195718654434251,
+            "recall": 0.73224043715847,
+            "support": 366,
+            "tp": 268
+          },
+          "TOM": {
+            "f1": 0.5,
+            "fn": 10,
+            "fp": 18,
+            "meanAbsoluteTimingErrorMs": 14.017857142854751,
+            "precision": 0.4375,
+            "recall": 0.5833333333333334,
+            "support": 24,
+            "tp": 14
+          }
+        },
+        "predictedEvents": 1341,
+        "referenceEvents": 1338,
+        "supportedMacroF1": 0.6368059359555811
+      },
+      "20ms": {
+        "meanAbsoluteTimingErrorMs": 8.559718695890533,
+        "micro": {
+          "f1": 0.6532288167226578,
+          "fn": 463,
+          "fp": 466,
+          "precision": 0.6524981357196122,
+          "recall": 0.6539611360239163,
+          "tp": 875
+        },
+        "perClass": {
+          "CYMBAL": {
+            "f1": 0.6352201257861635,
+            "fn": 48,
+            "fp": 68,
+            "meanAbsoluteTimingErrorMs": 8.414326732672814,
+            "precision": 0.5976331360946746,
+            "recall": 0.6778523489932886,
+            "support": 149,
+            "tp": 101
+          },
+          "HIHAT": {
+            "f1": 0.694954128440367,
+            "fn": 127,
+            "fp": 139,
+            "meanAbsoluteTimingErrorMs": 8.400971068132083,
+            "precision": 0.6855203619909502,
+            "recall": 0.7046511627906977,
+            "support": 430,
+            "tp": 303
+          },
+          "KICK": {
+            "f1": 0.78125,
+            "fn": 58,
+            "fp": 96,
+            "meanAbsoluteTimingErrorMs": 8.49338663267886,
+            "precision": 0.7412398921832885,
+            "recall": 0.8258258258258259,
+            "support": 333,
+            "tp": 275
+          },
+          "OTHER": {
+            "f1": 0.0,
+            "fn": 36,
+            "fp": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "support": 36,
+            "tp": 0
+          },
+          "SNARE": {
+            "f1": 0.5339105339105339,
+            "fn": 181,
+            "fp": 142,
+            "meanAbsoluteTimingErrorMs": 9.047196223100084,
+            "precision": 0.5657492354740061,
+            "recall": 0.505464480874317,
+            "support": 366,
+            "tp": 185
+          },
+          "TOM": {
+            "f1": 0.39285714285714285,
+            "fn": 13,
+            "fp": 21,
+            "meanAbsoluteTimingErrorMs": 7.727272727276297,
+            "precision": 0.34375,
+            "recall": 0.4583333333333333,
+            "support": 24,
+            "tp": 11
+          }
+        },
+        "predictedEvents": 1341,
+        "referenceEvents": 1338,
+        "supportedMacroF1": 0.5063653218323679
+      },
+      "50ms": {
+        "meanAbsoluteTimingErrorMs": 12.235687343612415,
+        "micro": {
+          "f1": 0.8025382605449795,
+          "fn": 263,
+          "fp": 266,
+          "precision": 0.8016405667412378,
+          "recall": 0.8034379671150972,
+          "tp": 1075
+        },
+        "perClass": {
+          "CYMBAL": {
+            "f1": 0.7735849056603774,
+            "fn": 26,
+            "fp": 46,
+            "meanAbsoluteTimingErrorMs": 12.103400136816745,
+            "precision": 0.727810650887574,
+            "recall": 0.825503355704698,
+            "support": 149,
+            "tp": 123
+          },
+          "HIHAT": {
+            "f1": 0.8486238532110092,
+            "fn": 60,
+            "fp": 72,
+            "meanAbsoluteTimingErrorMs": 11.598689090359542,
+            "precision": 0.8371040723981901,
+            "recall": 0.8604651162790697,
+            "support": 430,
+            "tp": 370
+          },
+          "KICK": {
+            "f1": 0.8835227272727273,
+            "fn": 22,
+            "fp": 60,
+            "meanAbsoluteTimingErrorMs": 10.547696867705456,
+            "precision": 0.8382749326145552,
+            "recall": 0.933933933933934,
+            "support": 333,
+            "tp": 311
+          },
+          "OTHER": {
+            "f1": 0.0,
+            "fn": 36,
+            "fp": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "support": 36,
+            "tp": 0
+          },
+          "SNARE": {
+            "f1": 0.7417027417027418,
+            "fn": 109,
+            "fp": 70,
+            "meanAbsoluteTimingErrorMs": 15.161661432939663,
+            "precision": 0.7859327217125383,
+            "recall": 0.7021857923497268,
+            "support": 366,
+            "tp": 257
+          },
+          "TOM": {
+            "f1": 0.5,
+            "fn": 10,
+            "fp": 18,
+            "meanAbsoluteTimingErrorMs": 14.017857142854751,
+            "precision": 0.4375,
+            "recall": 0.5833333333333334,
+            "support": 24,
+            "tp": 14
+          }
+        },
+        "predictedEvents": 1341,
+        "referenceEvents": 1338,
+        "supportedMacroF1": 0.6245723713078093
+      }
+    },
+    "drumscribe": {
+      "100ms": {
+        "meanAbsoluteTimingErrorMs": 12.475063829786423,
+        "micro": {
+          "f1": 0.9082125603864735,
+          "fn": 116,
+          "fp": 131,
+          "precision": 0.9031781226903178,
+          "recall": 0.9133034379671151,
+          "tp": 1222
+        },
+        "perClass": {
+          "CYMBAL": {
+            "f1": 0.8866666666666667,
+            "fn": 16,
+            "fp": 18,
+            "meanAbsoluteTimingErrorMs": 11.734586466160476,
+            "precision": 0.8807947019867549,
+            "recall": 0.8926174496644296,
+            "support": 149,
+            "tp": 133
+          },
+          "HIHAT": {
+            "f1": 0.9298642533936652,
+            "fn": 19,
+            "fp": 43,
+            "meanAbsoluteTimingErrorMs": 11.047829683697659,
+            "precision": 0.9052863436123348,
+            "recall": 0.9558139534883721,
+            "support": 430,
+            "tp": 411
+          },
+          "KICK": {
+            "f1": 0.9560117302052786,
+            "fn": 7,
+            "fp": 23,
+            "meanAbsoluteTimingErrorMs": 13.557024539876872,
+            "precision": 0.9340974212034384,
+            "recall": 0.978978978978979,
+            "support": 333,
+            "tp": 326
+          },
+          "OTHER": {
+            "f1": 0.9090909090909091,
+            "fn": 6,
+            "fp": 0,
+            "meanAbsoluteTimingErrorMs": 9.03400000000016,
+            "precision": 1.0,
+            "recall": 0.8333333333333334,
+            "support": 36,
+            "tp": 30
+          },
+          "SNARE": {
+            "f1": 0.8696883852691218,
+            "fn": 59,
+            "fp": 33,
+            "meanAbsoluteTimingErrorMs": 12.614201954397616,
+            "precision": 0.9029411764705882,
+            "recall": 0.8387978142076503,
+            "support": 366,
+            "tp": 307
+          },
+          "TOM": {
+            "f1": 0.5660377358490566,
+            "fn": 9,
+            "fp": 14,
+            "meanAbsoluteTimingErrorMs": 38.666666666666394,
+            "precision": 0.5172413793103449,
+            "recall": 0.625,
+            "support": 24,
+            "tp": 15
+          }
+        },
+        "predictedEvents": 1353,
+        "referenceEvents": 1338,
+        "supportedMacroF1": 0.8528932800791164
+      },
+      "20ms": {
+        "meanAbsoluteTimingErrorMs": 10.183578564937697,
+        "micro": {
+          "f1": 0.8182831661092531,
+          "fn": 237,
+          "fp": 252,
+          "precision": 0.8137472283813747,
+          "recall": 0.8228699551569507,
+          "tp": 1101
+        },
+        "perClass": {
+          "CYMBAL": {
+            "f1": 0.8533333333333334,
+            "fn": 21,
+            "fp": 23,
+            "meanAbsoluteTimingErrorMs": 9.174609374995368,
+            "precision": 0.847682119205298,
+            "recall": 0.8590604026845637,
+            "support": 149,
+            "tp": 128
+          },
+          "HIHAT": {
+            "f1": 0.830316742081448,
+            "fn": 63,
+            "fp": 87,
+            "meanAbsoluteTimingErrorMs": 9.313972752041117,
+            "precision": 0.8083700440528634,
+            "recall": 0.8534883720930233,
+            "support": 430,
+            "tp": 367
+          },
+          "KICK": {
+            "f1": 0.8181818181818182,
+            "fn": 54,
+            "fp": 70,
+            "meanAbsoluteTimingErrorMs": 10.705379928311295,
+            "precision": 0.7994269340974212,
+            "recall": 0.8378378378378378,
+            "support": 333,
+            "tp": 279
+          },
+          "OTHER": {
+            "f1": 0.8787878787878788,
+            "fn": 7,
+            "fp": 1,
+            "meanAbsoluteTimingErrorMs": 8.65586206896533,
+            "precision": 0.9666666666666667,
+            "recall": 0.8055555555555556,
+            "support": 36,
+            "tp": 29
+          },
+          "SNARE": {
+            "f1": 0.8016997167138811,
+            "fn": 83,
+            "fp": 57,
+            "meanAbsoluteTimingErrorMs": 11.525515901056902,
+            "precision": 0.8323529411764706,
+            "recall": 0.773224043715847,
+            "support": 366,
+            "tp": 283
+          },
+          "TOM": {
+            "f1": 0.5660377358490566,
+            "fn": 9,
+            "fp": 14,
+            "meanAbsoluteTimingErrorMs": 7.999999999997297,
+            "precision": 0.5172413793103449,
+            "recall": 0.625,
+            "support": 24,
+            "tp": 15
+          }
+        },
+        "predictedEvents": 1353,
+        "referenceEvents": 1338,
+        "supportedMacroF1": 0.7913928708245693
+      },
+      "50ms": {
+        "meanAbsoluteTimingErrorMs": 11.676472085385013,
+        "micro": {
+          "f1": 0.9052396878483835,
+          "fn": 120,
+          "fp": 135,
+          "precision": 0.9002217294900222,
+          "recall": 0.9103139013452914,
+          "tp": 1218
+        },
+        "perClass": {
+          "CYMBAL": {
+            "f1": 0.88,
+            "fn": 17,
+            "fp": 19,
+            "meanAbsoluteTimingErrorMs": 9.626515151510452,
+            "precision": 0.8741721854304636,
+            "recall": 0.8859060402684564,
+            "support": 149,
+            "tp": 132
+          },
+          "HIHAT": {
+            "f1": 0.9298642533936652,
+            "fn": 19,
+            "fp": 43,
+            "meanAbsoluteTimingErrorMs": 10.829347931872858,
+            "precision": 0.9052863436123348,
+            "recall": 0.9558139534883721,
+            "support": 430,
+            "tp": 411
+          },
+          "KICK": {
+            "f1": 0.9472140762463344,
+            "fn": 10,
+            "fp": 26,
+            "meanAbsoluteTimingErrorMs": 13.11703095975167,
+            "precision": 0.9255014326647565,
+            "recall": 0.96996996996997,
+            "support": 333,
+            "tp": 323
+          },
+          "OTHER": {
+            "f1": 0.9090909090909091,
+            "fn": 6,
+            "fp": 0,
+            "meanAbsoluteTimingErrorMs": 9.03400000000016,
+            "precision": 1.0,
+            "recall": 0.8333333333333334,
+            "support": 36,
+            "tp": 30
+          },
+          "SNARE": {
+            "f1": 0.8696883852691218,
+            "fn": 59,
+            "fp": 33,
+            "meanAbsoluteTimingErrorMs": 12.614201954397616,
+            "precision": 0.9029411764705882,
+            "recall": 0.8387978142076503,
+            "support": 366,
+            "tp": 307
+          },
+          "TOM": {
+            "f1": 0.5660377358490566,
+            "fn": 9,
+            "fp": 14,
+            "meanAbsoluteTimingErrorMs": 7.999999999997297,
+            "precision": 0.5172413793103449,
+            "recall": 0.625,
+            "support": 24,
+            "tp": 15
+          }
+        },
+        "predictedEvents": 1353,
+        "referenceEvents": 1338,
+        "supportedMacroF1": 0.8503158933081812
+      }
+    }
+  },
+  "benchmark": {
+    "competitorFailurePolicy": "An accepted item with no usable result is retained as zero predictions.",
+    "datasetLicense": "CC BY-NC-SA 4.0",
+    "inputType": "real human performances in full-band mixtures",
+    "limitations": [
+      "The 11-track MDB MIREX test partition was opened during earlier development; this is not a sealed or independent audit.",
+      "Only the first 20 seconds of each track are scored.",
+      "MDB is research-only evidence and is not production training material.",
+      "Drum2Notes is measured through its live public demo and MusicJSON result.",
+      "A result on this corpus does not establish universal accuracy across commercial songs."
+    ],
+    "matcher": "six-family class-aware one-to-one onset matching",
+    "name": "MDB real full-mixture production-v3 live comparison",
+    "predictionsGeneratedFresh": true,
+    "primaryMetric": "six-family class-aware micro F1 at 50ms",
+    "referenceSource": "MDB Drums manually reviewed class annotations",
+    "researchOnly": true,
+    "sameAudioBytesForBothSystems": true,
+    "status": "opened_development_same_audio_live_comparison",
+    "tolerancesMilliseconds": [
+      20,
+      50,
+      100
+    ],
+    "totalScoredAudioSeconds": 219.843946,
+    "trackCount": 11,
+    "windowSecondsPerTrack": 20.0
+  },
+  "createdAt": "2026-09-05T19:07:30.249154+00:00",
+  "processingSeconds": null,
+  "schemaVersion": 1,
+  "systems": {
+    "drum2notes": {
+      "modelSetting": "solo / all drum notes",
+      "product": "Klangio Drum2Notes",
+      "resultStates": {
+        "ok": 11
+      },
+      "surface": "live public demo"
+    },
+    "drumscribe": {
+      "commercialRightsReference": "OWNER-ATTESTATION-2026-09-05",
+      "modelVersion": "drumscribe-recall-fusion-v3",
+      "pipeline": "htdemucs_ft + guarded direct/stem activation fusion + first-party articulation recovery",
+      "productionProviderGatePassed": true,
+      "provider": "drumscribe-recall-fusion-v3"
+    }
+  },
+  "tracks": [
+    {
+      "drum2notesEstimatedBpm": 107.0,
+      "drum2notesJobId": "3478e762-78e6-4b44-b99f-580320754859",
+      "drum2notesState": "ok",
+      "eventCounts": {
+        "drum2notes": 89,
+        "drumscribe": 82,
+        "reference": 86
+      },
+      "genre": "rock/pop",
+      "hashes": {
+        "drum2notesRaw": "3934fdb71c78d80140be7045dd2e20fc50b51a41d1a2320976be11c3846ce73a",
+        "drumStem": "52bfb9c25ed35b262ee233b90b866b75b886d1560780ab1091af6db067a5c77a",
+        "drumscribePrediction": "6b1ff94b908cf1ee5644fa4738ee5520fcf0d8e010aa0ac5ec45bd75f376ef73",
+        "fullMixExcerpt": "bfd3fdf84e864c7b27705892fc7e1b2b603a873b2c165fd255652c6c23eca0d9",
+        "referenceAnnotation": "228aa364e124421875d8a23c9136e9a0342cd26196c0626e94d73eb8636e8ffb"
+      },
+      "scores": {
+        "drum2notes": {
+          "100ms": {
+            "meanAbsoluteTimingErrorMs": 11.620370370370333,
+            "micro": {
+              "f1": 0.6171428571428571,
+              "fn": 32,
+              "fp": 35,
+              "precision": 0.6067415730337079,
+              "recall": 0.627906976744186,
+              "tp": 54
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 0.0,
+                "fn": 0,
+                "fp": 22,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 0,
+                "tp": 0
+              },
+              "KICK": {
+                "f1": 0.9818181818181818,
+                "fn": 0,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 12.870370370370344,
+                "precision": 0.9642857142857143,
+                "recall": 1.0,
+                "support": 27,
+                "tp": 27
+              },
+              "OTHER": {
+                "f1": 0.0,
+                "fn": 18,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 18,
+                "tp": 0
+              },
+              "SNARE": {
+                "f1": 0.8181818181818182,
+                "fn": 7,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 11.805555555555577,
+                "precision": 0.9473684210526315,
+                "recall": 0.72,
+                "support": 25,
+                "tp": 18
+              },
+              "TOM": {
+                "f1": 0.5,
+                "fn": 7,
+                "fp": 11,
+                "meanAbsoluteTimingErrorMs": 7.499999999999816,
+                "precision": 0.45,
+                "recall": 0.5625,
+                "support": 16,
+                "tp": 9
+              }
+            },
+            "predictedEvents": 89,
+            "referenceEvents": 86,
+            "supportedMacroF1": 0.575
+          },
+          "20ms": {
+            "meanAbsoluteTimingErrorMs": 8.206521739130254,
+            "micro": {
+              "f1": 0.5257142857142857,
+              "fn": 40,
+              "fp": 43,
+              "precision": 0.5168539325842697,
+              "recall": 0.5348837209302325,
+              "tp": 46
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 0.0,
+                "fn": 0,
+                "fp": 22,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 0,
+                "tp": 0
+              },
+              "KICK": {
+                "f1": 0.8,
+                "fn": 5,
+                "fp": 6,
+                "meanAbsoluteTimingErrorMs": 9.090909090909017,
+                "precision": 0.7857142857142857,
+                "recall": 0.8148148148148148,
+                "support": 27,
+                "tp": 22
+              },
+              "OTHER": {
+                "f1": 0.0,
+                "fn": 18,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 18,
+                "tp": 0
+              },
+              "SNARE": {
+                "f1": 0.6818181818181818,
+                "fn": 10,
+                "fp": 4,
+                "meanAbsoluteTimingErrorMs": 7.333333333332999,
+                "precision": 0.7894736842105263,
+                "recall": 0.6,
+                "support": 25,
+                "tp": 15
+              },
+              "TOM": {
+                "f1": 0.5,
+                "fn": 7,
+                "fp": 11,
+                "meanAbsoluteTimingErrorMs": 7.499999999999816,
+                "precision": 0.45,
+                "recall": 0.5625,
+                "support": 16,
+                "tp": 9
+              }
+            },
+            "predictedEvents": 89,
+            "referenceEvents": 86,
+            "supportedMacroF1": 0.4954545454545455
+          },
+          "50ms": {
+            "meanAbsoluteTimingErrorMs": 11.620370370370333,
+            "micro": {
+              "f1": 0.6171428571428571,
+              "fn": 32,
+              "fp": 35,
+              "precision": 0.6067415730337079,
+              "recall": 0.627906976744186,
+              "tp": 54
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 0.0,
+                "fn": 0,
+                "fp": 22,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 0,
+                "tp": 0
+              },
+              "KICK": {
+                "f1": 0.9818181818181818,
+                "fn": 0,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 12.870370370370344,
+                "precision": 0.9642857142857143,
+                "recall": 1.0,
+                "support": 27,
+                "tp": 27
+              },
+              "OTHER": {
+                "f1": 0.0,
+                "fn": 18,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 18,
+                "tp": 0
+              },
+              "SNARE": {
+                "f1": 0.8181818181818182,
+                "fn": 7,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 11.805555555555577,
+                "precision": 0.9473684210526315,
+                "recall": 0.72,
+                "support": 25,
+                "tp": 18
+              },
+              "TOM": {
+                "f1": 0.5,
+                "fn": 7,
+                "fp": 11,
+                "meanAbsoluteTimingErrorMs": 7.499999999999816,
+                "precision": 0.45,
+                "recall": 0.5625,
+                "support": 16,
+                "tp": 9
+              }
+            },
+            "predictedEvents": 89,
+            "referenceEvents": 86,
+            "supportedMacroF1": 0.575
+          }
+        },
+        "drumscribe": {
+          "100ms": {
+            "meanAbsoluteTimingErrorMs": 9.591830985915381,
+            "micro": {
+              "f1": 0.8452380952380952,
+              "fn": 15,
+              "fp": 11,
+              "precision": 0.8658536585365854,
+              "recall": 0.8255813953488372,
+              "tp": 71
+            },
+            "perClass": {
+              "KICK": {
+                "f1": 0.9629629629629629,
+                "fn": 1,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 11.53846153846154,
+                "precision": 0.9629629629629629,
+                "recall": 0.9629629629629629,
+                "support": 27,
+                "tp": 26
+              },
+              "OTHER": {
+                "f1": 1.0,
+                "fn": 0,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 6.723333333333285,
+                "precision": 1.0,
+                "recall": 1.0,
+                "support": 18,
+                "tp": 18
+              },
+              "SNARE": {
+                "f1": 0.8372093023255814,
+                "fn": 7,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 9.999999999999835,
+                "precision": 1.0,
+                "recall": 0.72,
+                "support": 25,
+                "tp": 18
+              },
+              "TOM": {
+                "f1": 0.5142857142857142,
+                "fn": 7,
+                "fp": 10,
+                "meanAbsoluteTimingErrorMs": 8.888888888888427,
+                "precision": 0.47368421052631576,
+                "recall": 0.5625,
+                "support": 16,
+                "tp": 9
+              }
+            },
+            "predictedEvents": 82,
+            "referenceEvents": 86,
+            "supportedMacroF1": 0.8286144948935646
+          },
+          "20ms": {
+            "meanAbsoluteTimingErrorMs": 9.591830985915381,
+            "micro": {
+              "f1": 0.8452380952380952,
+              "fn": 15,
+              "fp": 11,
+              "precision": 0.8658536585365854,
+              "recall": 0.8255813953488372,
+              "tp": 71
+            },
+            "perClass": {
+              "KICK": {
+                "f1": 0.9629629629629629,
+                "fn": 1,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 11.53846153846154,
+                "precision": 0.9629629629629629,
+                "recall": 0.9629629629629629,
+                "support": 27,
+                "tp": 26
+              },
+              "OTHER": {
+                "f1": 1.0,
+                "fn": 0,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 6.723333333333285,
+                "precision": 1.0,
+                "recall": 1.0,
+                "support": 18,
+                "tp": 18
+              },
+              "SNARE": {
+                "f1": 0.8372093023255814,
+                "fn": 7,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 9.999999999999835,
+                "precision": 1.0,
+                "recall": 0.72,
+                "support": 25,
+                "tp": 18
+              },
+              "TOM": {
+                "f1": 0.5142857142857142,
+                "fn": 7,
+                "fp": 10,
+                "meanAbsoluteTimingErrorMs": 8.888888888888427,
+                "precision": 0.47368421052631576,
+                "recall": 0.5625,
+                "support": 16,
+                "tp": 9
+              }
+            },
+            "predictedEvents": 82,
+            "referenceEvents": 86,
+            "supportedMacroF1": 0.8286144948935646
+          },
+          "50ms": {
+            "meanAbsoluteTimingErrorMs": 9.591830985915381,
+            "micro": {
+              "f1": 0.8452380952380952,
+              "fn": 15,
+              "fp": 11,
+              "precision": 0.8658536585365854,
+              "recall": 0.8255813953488372,
+              "tp": 71
+            },
+            "perClass": {
+              "KICK": {
+                "f1": 0.9629629629629629,
+                "fn": 1,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 11.53846153846154,
+                "precision": 0.9629629629629629,
+                "recall": 0.9629629629629629,
+                "support": 27,
+                "tp": 26
+              },
+              "OTHER": {
+                "f1": 1.0,
+                "fn": 0,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 6.723333333333285,
+                "precision": 1.0,
+                "recall": 1.0,
+                "support": 18,
+                "tp": 18
+              },
+              "SNARE": {
+                "f1": 0.8372093023255814,
+                "fn": 7,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 9.999999999999835,
+                "precision": 1.0,
+                "recall": 0.72,
+                "support": 25,
+                "tp": 18
+              },
+              "TOM": {
+                "f1": 0.5142857142857142,
+                "fn": 7,
+                "fp": 10,
+                "meanAbsoluteTimingErrorMs": 8.888888888888427,
+                "precision": 0.47368421052631576,
+                "recall": 0.5625,
+                "support": 16,
+                "tp": 9
+              }
+            },
+            "predictedEvents": 82,
+            "referenceEvents": 86,
+            "supportedMacroF1": 0.8286144948935646
+          }
+        }
+      },
+      "track": "MusicDelta_Beatles"
+    },
+    {
+      "drum2notesEstimatedBpm": 103.0,
+      "drum2notesJobId": "21c35b6c-eaef-4387-a0d3-92063eeecf7a",
+      "drum2notesState": "ok",
+      "eventCounts": {
+        "drum2notes": 86,
+        "drumscribe": 59,
+        "reference": 59
+      },
+      "genre": "country",
+      "hashes": {
+        "drum2notesRaw": "eea67271c51761b1ca3ac6e384f307cbe496ac72ea9bd8db26cb129782fb34a7",
+        "drumStem": "9b9c91c6fc31d034f2dd502c57e0d03afff7fd3fa66d1d3d80f970600176847a",
+        "drumscribePrediction": "86939337a77dc6037fbdefb1756604e147a67193dd8440c7def93f35f49a1084",
+        "fullMixExcerpt": "c29b5e9153d12c5055a71c73a3c8e789bf6bceed61c1d32b567308fe85d30267",
+        "referenceAnnotation": "63f864a960220c648871ffe961ec67f9913768a1e44732bab8eb8c9f45b9a87e"
+      },
+      "scores": {
+        "drum2notes": {
+          "100ms": {
+            "meanAbsoluteTimingErrorMs": 10.022078947368277,
+            "micro": {
+              "f1": 0.5241379310344828,
+              "fn": 21,
+              "fp": 48,
+              "precision": 0.4418604651162791,
+              "recall": 0.6440677966101694,
+              "tp": 38
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.0,
+                "fn": 0,
+                "fp": 1,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 0,
+                "tp": 0
+              },
+              "HIHAT": {
+                "f1": 0.5588235294117647,
+                "fn": 3,
+                "fp": 27,
+                "meanAbsoluteTimingErrorMs": 9.06073684210533,
+                "precision": 0.41304347826086957,
+                "recall": 0.8636363636363636,
+                "support": 22,
+                "tp": 19
+              },
+              "KICK": {
+                "f1": 1.0,
+                "fn": 0,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 10.983421052631225,
+                "precision": 1.0,
+                "recall": 1.0,
+                "support": 19,
+                "tp": 19
+              },
+              "OTHER": {
+                "f1": 0.0,
+                "fn": 18,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 18,
+                "tp": 0
+              },
+              "SNARE": {
+                "f1": 0.0,
+                "fn": 0,
+                "fp": 20,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 0,
+                "tp": 0
+              }
+            },
+            "predictedEvents": 86,
+            "referenceEvents": 59,
+            "supportedMacroF1": 0.5196078431372549
+          },
+          "20ms": {
+            "meanAbsoluteTimingErrorMs": 9.029361111110928,
+            "micro": {
+              "f1": 0.496551724137931,
+              "fn": 23,
+              "fp": 50,
+              "precision": 0.4186046511627907,
+              "recall": 0.6101694915254238,
+              "tp": 36
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.0,
+                "fn": 0,
+                "fp": 1,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 0,
+                "tp": 0
+              },
+              "HIHAT": {
+                "f1": 0.5,
+                "fn": 5,
+                "fp": 29,
+                "meanAbsoluteTimingErrorMs": 6.84541176470589,
+                "precision": 0.3695652173913043,
+                "recall": 0.7727272727272727,
+                "support": 22,
+                "tp": 17
+              },
+              "KICK": {
+                "f1": 1.0,
+                "fn": 0,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 10.983421052631225,
+                "precision": 1.0,
+                "recall": 1.0,
+                "support": 19,
+                "tp": 19
+              },
+              "OTHER": {
+                "f1": 0.0,
+                "fn": 18,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 18,
+                "tp": 0
+              },
+              "SNARE": {
+                "f1": 0.0,
+                "fn": 0,
+                "fp": 20,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 0,
+                "tp": 0
+              }
+            },
+            "predictedEvents": 86,
+            "referenceEvents": 59,
+            "supportedMacroF1": 0.5
+          },
+          "50ms": {
+            "meanAbsoluteTimingErrorMs": 10.022078947368277,
+            "micro": {
+              "f1": 0.5241379310344828,
+              "fn": 21,
+              "fp": 48,
+              "precision": 0.4418604651162791,
+              "recall": 0.6440677966101694,
+              "tp": 38
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.0,
+                "fn": 0,
+                "fp": 1,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 0,
+                "tp": 0
+              },
+              "HIHAT": {
+                "f1": 0.5588235294117647,
+                "fn": 3,
+                "fp": 27,
+                "meanAbsoluteTimingErrorMs": 9.06073684210533,
+                "precision": 0.41304347826086957,
+                "recall": 0.8636363636363636,
+                "support": 22,
+                "tp": 19
+              },
+              "KICK": {
+                "f1": 1.0,
+                "fn": 0,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 10.983421052631225,
+                "precision": 1.0,
+                "recall": 1.0,
+                "support": 19,
+                "tp": 19
+              },
+              "OTHER": {
+                "f1": 0.0,
+                "fn": 18,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 18,
+                "tp": 0
+              },
+              "SNARE": {
+                "f1": 0.0,
+                "fn": 0,
+                "fp": 20,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 0,
+                "tp": 0
+              }
+            },
+            "predictedEvents": 86,
+            "referenceEvents": 59,
+            "supportedMacroF1": 0.5196078431372549
+          }
+        },
+        "drumscribe": {
+          "100ms": {
+            "meanAbsoluteTimingErrorMs": 13.23651923076948,
+            "micro": {
+              "f1": 0.8813559322033898,
+              "fn": 7,
+              "fp": 7,
+              "precision": 0.8813559322033898,
+              "recall": 0.8813559322033898,
+              "tp": 52
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 0.8571428571428571,
+                "fn": 1,
+                "fp": 6,
+                "meanAbsoluteTimingErrorMs": 11.88638095238128,
+                "precision": 0.7777777777777778,
+                "recall": 0.9545454545454546,
+                "support": 22,
+                "tp": 21
+              },
+              "KICK": {
+                "f1": 1.0,
+                "fn": 0,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 15.193947368421219,
+                "precision": 1.0,
+                "recall": 1.0,
+                "support": 19,
+                "tp": 19
+              },
+              "OTHER": {
+                "f1": 0.8,
+                "fn": 6,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 12.500000000000233,
+                "precision": 1.0,
+                "recall": 0.6666666666666666,
+                "support": 18,
+                "tp": 12
+              },
+              "TOM": {
+                "f1": 0.0,
+                "fn": 0,
+                "fp": 1,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 0,
+                "tp": 0
+              }
+            },
+            "predictedEvents": 59,
+            "referenceEvents": 59,
+            "supportedMacroF1": 0.8857142857142857
+          },
+          "20ms": {
+            "meanAbsoluteTimingErrorMs": 10.802145833333476,
+            "micro": {
+              "f1": 0.8135593220338984,
+              "fn": 11,
+              "fp": 11,
+              "precision": 0.8135593220338984,
+              "recall": 0.8135593220338984,
+              "tp": 48
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 0.8571428571428571,
+                "fn": 1,
+                "fp": 6,
+                "meanAbsoluteTimingErrorMs": 7.610380952381292,
+                "precision": 0.7777777777777778,
+                "recall": 0.9545454545454546,
+                "support": 22,
+                "tp": 21
+              },
+              "KICK": {
+                "f1": 0.8421052631578947,
+                "fn": 3,
+                "fp": 3,
+                "meanAbsoluteTimingErrorMs": 14.292812499999998,
+                "precision": 0.8421052631578947,
+                "recall": 0.8421052631578947,
+                "support": 19,
+                "tp": 16
+              },
+              "OTHER": {
+                "f1": 0.7333333333333333,
+                "fn": 7,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 11.818181818181788,
+                "precision": 0.9166666666666666,
+                "recall": 0.6111111111111112,
+                "support": 18,
+                "tp": 11
+              },
+              "TOM": {
+                "f1": 0.0,
+                "fn": 0,
+                "fp": 1,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 0,
+                "tp": 0
+              }
+            },
+            "predictedEvents": 59,
+            "referenceEvents": 59,
+            "supportedMacroF1": 0.810860484544695
+          },
+          "50ms": {
+            "meanAbsoluteTimingErrorMs": 11.50967307692333,
+            "micro": {
+              "f1": 0.8813559322033898,
+              "fn": 7,
+              "fp": 7,
+              "precision": 0.8813559322033898,
+              "recall": 0.8813559322033898,
+              "tp": 52
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 0.8571428571428571,
+                "fn": 1,
+                "fp": 6,
+                "meanAbsoluteTimingErrorMs": 7.610380952381292,
+                "precision": 0.7777777777777778,
+                "recall": 0.9545454545454546,
+                "support": 22,
+                "tp": 21
+              },
+              "KICK": {
+                "f1": 1.0,
+                "fn": 0,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 15.193947368421219,
+                "precision": 1.0,
+                "recall": 1.0,
+                "support": 19,
+                "tp": 19
+              },
+              "OTHER": {
+                "f1": 0.8,
+                "fn": 6,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 12.500000000000233,
+                "precision": 1.0,
+                "recall": 0.6666666666666666,
+                "support": 18,
+                "tp": 12
+              },
+              "TOM": {
+                "f1": 0.0,
+                "fn": 0,
+                "fp": 1,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 0,
+                "tp": 0
+              }
+            },
+            "predictedEvents": 59,
+            "referenceEvents": 59,
+            "supportedMacroF1": 0.8857142857142857
+          }
+        }
+      },
+      "track": "MusicDelta_Country1"
+    },
+    {
+      "drum2notesEstimatedBpm": 107.0,
+      "drum2notesJobId": "ee5f024f-8db2-4499-9630-445bcf8aa874",
+      "drum2notesState": "ok",
+      "eventCounts": {
+        "drum2notes": 121,
+        "drumscribe": 103,
+        "reference": 114
+      },
+      "genre": "free jazz",
+      "hashes": {
+        "drum2notesRaw": "c642ca6ccc176cd5da82685a6f13ef57e4c6b30cc3677805b2d4ed5ee4368f5f",
+        "drumStem": "064d051b9cef67ea3c1d1a4711ab1cd4e6c2677c90d93625a30a7ba6b67f8dde",
+        "drumscribePrediction": "aa84d349f7ac449a42ac5a6231b31075e349b894d7f5f485ded7a12fbccfeee2",
+        "fullMixExcerpt": "bf7bdbf5031d453d0bf75d4038f7026e2ceb0f8d389010647d54cf4d4111acdf",
+        "referenceAnnotation": "cc7a1b10240284c15b1e2618737bf08f4ef5c57f8c74045cf4fc0ed4d94fde1b"
+      },
+      "scores": {
+        "drum2notes": {
+          "100ms": {
+            "meanAbsoluteTimingErrorMs": 27.19842194092866,
+            "micro": {
+              "f1": 0.6723404255319149,
+              "fn": 35,
+              "fp": 42,
+              "precision": 0.6528925619834711,
+              "recall": 0.6929824561403509,
+              "tp": 79
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.7526881720430108,
+                "fn": 7,
+                "fp": 16,
+                "meanAbsoluteTimingErrorMs": 18.77198095238107,
+                "precision": 0.6862745098039216,
+                "recall": 0.8333333333333334,
+                "support": 42,
+                "tp": 35
+              },
+              "HIHAT": {
+                "f1": 0.0,
+                "fn": 1,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 1,
+                "tp": 0
+              },
+              "KICK": {
+                "f1": 0.5423728813559322,
+                "fn": 8,
+                "fp": 19,
+                "meanAbsoluteTimingErrorMs": 23.827458333334057,
+                "precision": 0.45714285714285713,
+                "recall": 0.6666666666666666,
+                "support": 24,
+                "tp": 16
+              },
+              "SNARE": {
+                "f1": 0.6829268292682927,
+                "fn": 19,
+                "fp": 7,
+                "meanAbsoluteTimingErrorMs": 39.65773809523864,
+                "precision": 0.8,
+                "recall": 0.5957446808510638,
+                "support": 47,
+                "tp": 28
+              }
+            },
+            "predictedEvents": 121,
+            "referenceEvents": 114,
+            "supportedMacroF1": 0.4944969706668089
+          },
+          "20ms": {
+            "meanAbsoluteTimingErrorMs": 10.958730158730488,
+            "micro": {
+              "f1": 0.3574468085106383,
+              "fn": 72,
+              "fp": 79,
+              "precision": 0.34710743801652894,
+              "recall": 0.3684210526315789,
+              "tp": 42
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.4731182795698925,
+                "fn": 20,
+                "fp": 29,
+                "meanAbsoluteTimingErrorMs": 10.0809090909091,
+                "precision": 0.43137254901960786,
+                "recall": 0.5238095238095238,
+                "support": 42,
+                "tp": 22
+              },
+              "HIHAT": {
+                "f1": 0.0,
+                "fn": 1,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 1,
+                "tp": 0
+              },
+              "KICK": {
+                "f1": 0.3050847457627119,
+                "fn": 15,
+                "fp": 26,
+                "meanAbsoluteTimingErrorMs": 11.40592592592683,
+                "precision": 0.2571428571428571,
+                "recall": 0.375,
+                "support": 24,
+                "tp": 9
+              },
+              "SNARE": {
+                "f1": 0.2682926829268293,
+                "fn": 36,
+                "fp": 24,
+                "meanAbsoluteTimingErrorMs": 12.348484848485347,
+                "precision": 0.3142857142857143,
+                "recall": 0.23404255319148937,
+                "support": 47,
+                "tp": 11
+              }
+            },
+            "predictedEvents": 121,
+            "referenceEvents": 114,
+            "supportedMacroF1": 0.26162392706485843
+          },
+          "50ms": {
+            "meanAbsoluteTimingErrorMs": 19.494089201878285,
+            "micro": {
+              "f1": 0.6042553191489362,
+              "fn": 43,
+              "fp": 50,
+              "precision": 0.5867768595041323,
+              "recall": 0.6228070175438597,
+              "tp": 71
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.7311827956989247,
+                "fn": 8,
+                "fp": 17,
+                "meanAbsoluteTimingErrorMs": 17.387480392157002,
+                "precision": 0.6666666666666666,
+                "recall": 0.8095238095238095,
+                "support": 42,
+                "tp": 34
+              },
+              "HIHAT": {
+                "f1": 0.0,
+                "fn": 1,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 1,
+                "tp": 0
+              },
+              "KICK": {
+                "f1": 0.4745762711864407,
+                "fn": 10,
+                "fp": 21,
+                "meanAbsoluteTimingErrorMs": 18.57066666666763,
+                "precision": 0.4,
+                "recall": 0.5833333333333334,
+                "support": 24,
+                "tp": 14
+              },
+              "SNARE": {
+                "f1": 0.5609756097560976,
+                "fn": 24,
+                "fp": 12,
+                "meanAbsoluteTimingErrorMs": 23.170289855072756,
+                "precision": 0.6571428571428571,
+                "recall": 0.48936170212765956,
+                "support": 47,
+                "tp": 23
+              }
+            },
+            "predictedEvents": 121,
+            "referenceEvents": 114,
+            "supportedMacroF1": 0.4416836691603658
+          }
+        },
+        "drumscribe": {
+          "100ms": {
+            "meanAbsoluteTimingErrorMs": 10.554731958762828,
+            "micro": {
+              "f1": 0.8940092165898618,
+              "fn": 17,
+              "fp": 6,
+              "precision": 0.941747572815534,
+              "recall": 0.8508771929824561,
+              "tp": 97
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.891566265060241,
+                "fn": 5,
+                "fp": 4,
+                "meanAbsoluteTimingErrorMs": 9.444729729729671,
+                "precision": 0.9024390243902439,
+                "recall": 0.8809523809523809,
+                "support": 42,
+                "tp": 37
+              },
+              "HIHAT": {
+                "f1": 0.0,
+                "fn": 1,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 1,
+                "tp": 0
+              },
+              "KICK": {
+                "f1": 0.9130434782608695,
+                "fn": 3,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 9.254952380952224,
+                "precision": 0.9545454545454546,
+                "recall": 0.875,
+                "support": 24,
+                "tp": 21
+              },
+              "SNARE": {
+                "f1": 0.896551724137931,
+                "fn": 8,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 12.307692307692301,
+                "precision": 0.975,
+                "recall": 0.8297872340425532,
+                "support": 47,
+                "tp": 39
+              }
+            },
+            "predictedEvents": 103,
+            "referenceEvents": 114,
+            "supportedMacroF1": 0.6752903668647604
+          },
+          "20ms": {
+            "meanAbsoluteTimingErrorMs": 10.20961702127653,
+            "micro": {
+              "f1": 0.8663594470046083,
+              "fn": 20,
+              "fp": 9,
+              "precision": 0.912621359223301,
+              "recall": 0.8245614035087719,
+              "tp": 94
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.8433734939759037,
+                "fn": 7,
+                "fp": 6,
+                "meanAbsoluteTimingErrorMs": 8.724285714285651,
+                "precision": 0.8536585365853658,
+                "recall": 0.8333333333333334,
+                "support": 42,
+                "tp": 35
+              },
+              "HIHAT": {
+                "f1": 0.0,
+                "fn": 1,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 1,
+                "tp": 0
+              },
+              "KICK": {
+                "f1": 0.9130434782608695,
+                "fn": 3,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 9.254952380952224,
+                "precision": 0.9545454545454546,
+                "recall": 0.875,
+                "support": 24,
+                "tp": 21
+              },
+              "SNARE": {
+                "f1": 0.8735632183908046,
+                "fn": 9,
+                "fp": 2,
+                "meanAbsoluteTimingErrorMs": 12.105263157894719,
+                "precision": 0.95,
+                "recall": 0.8085106382978723,
+                "support": 47,
+                "tp": 38
+              }
+            },
+            "predictedEvents": 103,
+            "referenceEvents": 114,
+            "supportedMacroF1": 0.6574950476568945
+          },
+          "50ms": {
+            "meanAbsoluteTimingErrorMs": 10.554731958762828,
+            "micro": {
+              "f1": 0.8940092165898618,
+              "fn": 17,
+              "fp": 6,
+              "precision": 0.941747572815534,
+              "recall": 0.8508771929824561,
+              "tp": 97
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.891566265060241,
+                "fn": 5,
+                "fp": 4,
+                "meanAbsoluteTimingErrorMs": 9.444729729729671,
+                "precision": 0.9024390243902439,
+                "recall": 0.8809523809523809,
+                "support": 42,
+                "tp": 37
+              },
+              "HIHAT": {
+                "f1": 0.0,
+                "fn": 1,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 1,
+                "tp": 0
+              },
+              "KICK": {
+                "f1": 0.9130434782608695,
+                "fn": 3,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 9.254952380952224,
+                "precision": 0.9545454545454546,
+                "recall": 0.875,
+                "support": 24,
+                "tp": 21
+              },
+              "SNARE": {
+                "f1": 0.896551724137931,
+                "fn": 8,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 12.307692307692301,
+                "precision": 0.975,
+                "recall": 0.8297872340425532,
+                "support": 47,
+                "tp": 39
+              }
+            },
+            "predictedEvents": 103,
+            "referenceEvents": 114,
+            "supportedMacroF1": 0.6752903668647604
+          }
+        }
+      },
+      "track": "MusicDelta_FreeJazz"
+    },
+    {
+      "drum2notesEstimatedBpm": 107.0,
+      "drum2notesJobId": "05825e19-8382-4a26-a314-aa74a7355faa",
+      "drum2notesState": "ok",
+      "eventCounts": {
+        "drum2notes": 84,
+        "drumscribe": 81,
+        "reference": 76
+      },
+      "genre": "gospel",
+      "hashes": {
+        "drum2notesRaw": "44946449a423cad8ef5021f5acdfd72e18dbcf54fc8023e7b0b881e76ab66c1b",
+        "drumStem": "738f0ab94f2f562a66eda648eeea57be5c0dce4c06abf52157735ace8a173890",
+        "drumscribePrediction": "c1b0b61ba485a08a26ab9264e29ccaf04d402757b24717559208418c02e486dc",
+        "fullMixExcerpt": "e52a4808d0dd285a36eb5b5c26c2c098287c05eccddf83581108ea783981dd8a",
+        "referenceAnnotation": "a26434b87bebaea45661c333f622c7e16091368a8293940b65a973a0e765f973"
+      },
+      "scores": {
+        "drum2notes": {
+          "100ms": {
+            "meanAbsoluteTimingErrorMs": 8.61570327102806,
+            "micro": {
+              "f1": 0.95,
+              "fn": 0,
+              "fp": 8,
+              "precision": 0.9047619047619048,
+              "recall": 1.0,
+              "tp": 76
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 0.9315068493150684,
+                "fn": 0,
+                "fp": 5,
+                "meanAbsoluteTimingErrorMs": 8.476264156129838,
+                "precision": 0.8717948717948718,
+                "recall": 1.0,
+                "support": 34,
+                "tp": 34
+              },
+              "KICK": {
+                "f1": 1.0,
+                "fn": 0,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 9.271129622104615,
+                "precision": 1.0,
+                "recall": 1.0,
+                "support": 23,
+                "tp": 23
+              },
+              "SNARE": {
+                "f1": 1.0,
+                "fn": 0,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 8.071815051647997,
+                "precision": 1.0,
+                "recall": 1.0,
+                "support": 19,
+                "tp": 19
+              },
+              "TOM": {
+                "f1": 0.0,
+                "fn": 0,
+                "fp": 3,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 0,
+                "tp": 0
+              }
+            },
+            "predictedEvents": 84,
+            "referenceEvents": 76,
+            "supportedMacroF1": 0.9771689497716896
+          },
+          "20ms": {
+            "meanAbsoluteTimingErrorMs": 7.142426879031185,
+            "micro": {
+              "f1": 0.8875,
+              "fn": 5,
+              "fp": 13,
+              "precision": 0.8452380952380952,
+              "recall": 0.9342105263157895,
+              "tp": 71
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 0.8767123287671232,
+                "fn": 2,
+                "fp": 7,
+                "meanAbsoluteTimingErrorMs": 7.253874707943975,
+                "precision": 0.8205128205128205,
+                "recall": 0.9411764705882353,
+                "support": 34,
+                "tp": 32
+              },
+              "KICK": {
+                "f1": 0.9565217391304348,
+                "fn": 1,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 8.226954120645386,
+                "precision": 0.9565217391304348,
+                "recall": 0.9565217391304348,
+                "support": 23,
+                "tp": 22
+              },
+              "SNARE": {
+                "f1": 0.8947368421052632,
+                "fn": 2,
+                "fp": 2,
+                "meanAbsoluteTimingErrorMs": 5.5291368884004966,
+                "precision": 0.8947368421052632,
+                "recall": 0.8947368421052632,
+                "support": 19,
+                "tp": 17
+              },
+              "TOM": {
+                "f1": 0.0,
+                "fn": 0,
+                "fp": 3,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 0,
+                "tp": 0
+              }
+            },
+            "predictedEvents": 84,
+            "referenceEvents": 76,
+            "supportedMacroF1": 0.9093236366676071
+          },
+          "50ms": {
+            "meanAbsoluteTimingErrorMs": 8.61570327102806,
+            "micro": {
+              "f1": 0.95,
+              "fn": 0,
+              "fp": 8,
+              "precision": 0.9047619047619048,
+              "recall": 1.0,
+              "tp": 76
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 0.9315068493150684,
+                "fn": 0,
+                "fp": 5,
+                "meanAbsoluteTimingErrorMs": 8.476264156129838,
+                "precision": 0.8717948717948718,
+                "recall": 1.0,
+                "support": 34,
+                "tp": 34
+              },
+              "KICK": {
+                "f1": 1.0,
+                "fn": 0,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 9.271129622104615,
+                "precision": 1.0,
+                "recall": 1.0,
+                "support": 23,
+                "tp": 23
+              },
+              "SNARE": {
+                "f1": 1.0,
+                "fn": 0,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 8.071815051647997,
+                "precision": 1.0,
+                "recall": 1.0,
+                "support": 19,
+                "tp": 19
+              },
+              "TOM": {
+                "f1": 0.0,
+                "fn": 0,
+                "fp": 3,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 0,
+                "tp": 0
+              }
+            },
+            "predictedEvents": 84,
+            "referenceEvents": 76,
+            "supportedMacroF1": 0.9771689497716896
+          }
+        },
+        "drumscribe": {
+          "100ms": {
+            "meanAbsoluteTimingErrorMs": 13.529697368420818,
+            "micro": {
+              "f1": 0.9681528662420382,
+              "fn": 0,
+              "fp": 5,
+              "precision": 0.9382716049382716,
+              "recall": 1.0,
+              "tp": 76
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 0.9315068493150684,
+                "fn": 0,
+                "fp": 5,
+                "meanAbsoluteTimingErrorMs": 13.184029411764598,
+                "precision": 0.8717948717948718,
+                "recall": 1.0,
+                "support": 34,
+                "tp": 34
+              },
+              "KICK": {
+                "f1": 1.0,
+                "fn": 0,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 15.217391304347348,
+                "precision": 1.0,
+                "recall": 1.0,
+                "support": 23,
+                "tp": 23
+              },
+              "SNARE": {
+                "f1": 1.0,
+                "fn": 0,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 12.105263157894573,
+                "precision": 1.0,
+                "recall": 1.0,
+                "support": 19,
+                "tp": 19
+              }
+            },
+            "predictedEvents": 81,
+            "referenceEvents": 76,
+            "supportedMacroF1": 0.9771689497716896
+          },
+          "20ms": {
+            "meanAbsoluteTimingErrorMs": 12.676085714285383,
+            "micro": {
+              "f1": 0.89171974522293,
+              "fn": 6,
+              "fp": 11,
+              "precision": 0.8641975308641975,
+              "recall": 0.9210526315789473,
+              "tp": 70
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 0.821917808219178,
+                "fn": 4,
+                "fp": 9,
+                "meanAbsoluteTimingErrorMs": 11.910866666666445,
+                "precision": 0.7692307692307693,
+                "recall": 0.8823529411764706,
+                "support": 34,
+                "tp": 30
+              },
+              "KICK": {
+                "f1": 0.9565217391304348,
+                "fn": 1,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 14.999999999999437,
+                "precision": 0.9565217391304348,
+                "recall": 0.9565217391304348,
+                "support": 23,
+                "tp": 22
+              },
+              "SNARE": {
+                "f1": 0.9473684210526315,
+                "fn": 1,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 11.111111111110874,
+                "precision": 0.9473684210526315,
+                "recall": 0.9473684210526315,
+                "support": 19,
+                "tp": 18
+              }
+            },
+            "predictedEvents": 81,
+            "referenceEvents": 76,
+            "supportedMacroF1": 0.9086026561340814
+          },
+          "50ms": {
+            "meanAbsoluteTimingErrorMs": 13.529697368420818,
+            "micro": {
+              "f1": 0.9681528662420382,
+              "fn": 0,
+              "fp": 5,
+              "precision": 0.9382716049382716,
+              "recall": 1.0,
+              "tp": 76
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 0.9315068493150684,
+                "fn": 0,
+                "fp": 5,
+                "meanAbsoluteTimingErrorMs": 13.184029411764598,
+                "precision": 0.8717948717948718,
+                "recall": 1.0,
+                "support": 34,
+                "tp": 34
+              },
+              "KICK": {
+                "f1": 1.0,
+                "fn": 0,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 15.217391304347348,
+                "precision": 1.0,
+                "recall": 1.0,
+                "support": 23,
+                "tp": 23
+              },
+              "SNARE": {
+                "f1": 1.0,
+                "fn": 0,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 12.105263157894573,
+                "precision": 1.0,
+                "recall": 1.0,
+                "support": 19,
+                "tp": 19
+              }
+            },
+            "predictedEvents": 81,
+            "referenceEvents": 76,
+            "supportedMacroF1": 0.9771689497716896
+          }
+        }
+      },
+      "track": "MusicDelta_Gospel"
+    },
+    {
+      "drum2notesEstimatedBpm": 107.0,
+      "drum2notesJobId": "374d5183-0694-406c-978f-130ea59f3996",
+      "drum2notesState": "ok",
+      "eventCounts": {
+        "drum2notes": 135,
+        "drumscribe": 138,
+        "reference": 136
+      },
+      "genre": "grunge",
+      "hashes": {
+        "drum2notesRaw": "e8b49475e19845522f081a3150841b29cc35a751fdd3b8806b51ca95373a94a3",
+        "drumStem": "e12a4a11a25e4a01c2d0435503be35e79ba9420e61e3578807883b91c7c7becd",
+        "drumscribePrediction": "8b7875a85980f21f999afb7b5fb8f6ad8c70e0b2f8c9568d66e4a2b92f823a70",
+        "fullMixExcerpt": "ceaf0dd6a8393f15f7131290fc26280df273599b3f1528409cb35f869c2df4e3",
+        "referenceAnnotation": "8bd82d43ceed0118a87c79b6d570b5608670fb64189cbe04e79e5cdf65aafeeb"
+      },
+      "scores": {
+        "drum2notes": {
+          "100ms": {
+            "meanAbsoluteTimingErrorMs": 9.369267716535518,
+            "micro": {
+              "f1": 0.9372693726937269,
+              "fn": 9,
+              "fp": 8,
+              "precision": 0.9407407407407408,
+              "recall": 0.9338235294117647,
+              "tp": 127
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.6666666666666666,
+                "fn": 0,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 24.490000000000123,
+                "precision": 0.5,
+                "recall": 1.0,
+                "support": 1,
+                "tp": 1
+              },
+              "HIHAT": {
+                "f1": 0.953125,
+                "fn": 4,
+                "fp": 2,
+                "meanAbsoluteTimingErrorMs": 9.431213114754186,
+                "precision": 0.9682539682539683,
+                "recall": 0.9384615384615385,
+                "support": 65,
+                "tp": 61
+              },
+              "KICK": {
+                "f1": 0.9722222222222222,
+                "fn": 2,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 7.963571428571416,
+                "precision": 1.0,
+                "recall": 0.9459459459459459,
+                "support": 37,
+                "tp": 35
+              },
+              "SNARE": {
+                "f1": 0.9375,
+                "fn": 3,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 10.379266666666853,
+                "precision": 0.967741935483871,
+                "recall": 0.9090909090909091,
+                "support": 33,
+                "tp": 30
+              },
+              "TOM": {
+                "f1": 0.0,
+                "fn": 0,
+                "fp": 4,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 0,
+                "tp": 0
+              }
+            },
+            "predictedEvents": 135,
+            "referenceEvents": 136,
+            "supportedMacroF1": 0.8823784722222222
+          },
+          "20ms": {
+            "meanAbsoluteTimingErrorMs": 7.819763157894839,
+            "micro": {
+              "f1": 0.8413284132841329,
+              "fn": 22,
+              "fp": 21,
+              "precision": 0.8444444444444444,
+              "recall": 0.8382352941176471,
+              "tp": 114
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.0,
+                "fn": 1,
+                "fp": 2,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 1,
+                "tp": 0
+              },
+              "HIHAT": {
+                "f1": 0.84375,
+                "fn": 11,
+                "fp": 9,
+                "meanAbsoluteTimingErrorMs": 7.825925925926043,
+                "precision": 0.8571428571428571,
+                "recall": 0.8307692307692308,
+                "support": 65,
+                "tp": 54
+              },
+              "KICK": {
+                "f1": 0.8611111111111112,
+                "fn": 6,
+                "fp": 4,
+                "meanAbsoluteTimingErrorMs": 5.926612903225825,
+                "precision": 0.8857142857142857,
+                "recall": 0.8378378378378378,
+                "support": 37,
+                "tp": 31
+              },
+              "SNARE": {
+                "f1": 0.90625,
+                "fn": 4,
+                "fp": 2,
+                "meanAbsoluteTimingErrorMs": 9.832000000000159,
+                "precision": 0.9354838709677419,
+                "recall": 0.8787878787878788,
+                "support": 33,
+                "tp": 29
+              },
+              "TOM": {
+                "f1": 0.0,
+                "fn": 0,
+                "fp": 4,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 0,
+                "tp": 0
+              }
+            },
+            "predictedEvents": 135,
+            "referenceEvents": 136,
+            "supportedMacroF1": 0.6527777777777778
+          },
+          "50ms": {
+            "meanAbsoluteTimingErrorMs": 9.369267716535518,
+            "micro": {
+              "f1": 0.9372693726937269,
+              "fn": 9,
+              "fp": 8,
+              "precision": 0.9407407407407408,
+              "recall": 0.9338235294117647,
+              "tp": 127
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.6666666666666666,
+                "fn": 0,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 24.490000000000123,
+                "precision": 0.5,
+                "recall": 1.0,
+                "support": 1,
+                "tp": 1
+              },
+              "HIHAT": {
+                "f1": 0.953125,
+                "fn": 4,
+                "fp": 2,
+                "meanAbsoluteTimingErrorMs": 9.431213114754186,
+                "precision": 0.9682539682539683,
+                "recall": 0.9384615384615385,
+                "support": 65,
+                "tp": 61
+              },
+              "KICK": {
+                "f1": 0.9722222222222222,
+                "fn": 2,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 7.963571428571416,
+                "precision": 1.0,
+                "recall": 0.9459459459459459,
+                "support": 37,
+                "tp": 35
+              },
+              "SNARE": {
+                "f1": 0.9375,
+                "fn": 3,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 10.379266666666853,
+                "precision": 0.967741935483871,
+                "recall": 0.9090909090909091,
+                "support": 33,
+                "tp": 30
+              },
+              "TOM": {
+                "f1": 0.0,
+                "fn": 0,
+                "fp": 4,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 0,
+                "tp": 0
+              }
+            },
+            "predictedEvents": 135,
+            "referenceEvents": 136,
+            "supportedMacroF1": 0.8823784722222222
+          }
+        },
+        "drumscribe": {
+          "100ms": {
+            "meanAbsoluteTimingErrorMs": 9.839861538461424,
+            "micro": {
+              "f1": 0.948905109489051,
+              "fn": 6,
+              "fp": 8,
+              "precision": 0.9420289855072463,
+              "recall": 0.9558823529411765,
+              "tp": 130
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.6666666666666666,
+                "fn": 0,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 4.490000000000105,
+                "precision": 0.5,
+                "recall": 1.0,
+                "support": 1,
+                "tp": 1
+              },
+              "HIHAT": {
+                "f1": 0.9612403100775194,
+                "fn": 3,
+                "fp": 2,
+                "meanAbsoluteTimingErrorMs": 8.166532258064256,
+                "precision": 0.96875,
+                "recall": 0.9538461538461539,
+                "support": 65,
+                "tp": 62
+              },
+              "KICK": {
+                "f1": 0.9863013698630136,
+                "fn": 1,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 11.354861111111077,
+                "precision": 1.0,
+                "recall": 0.972972972972973,
+                "support": 37,
+                "tp": 36
+              },
+              "SNARE": {
+                "f1": 0.9393939393939394,
+                "fn": 2,
+                "fp": 2,
+                "meanAbsoluteTimingErrorMs": 11.599741935483936,
+                "precision": 0.9393939393939394,
+                "recall": 0.9393939393939394,
+                "support": 33,
+                "tp": 31
+              },
+              "TOM": {
+                "f1": 0.0,
+                "fn": 0,
+                "fp": 3,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 0,
+                "tp": 0
+              }
+            },
+            "predictedEvents": 138,
+            "referenceEvents": 136,
+            "supportedMacroF1": 0.8884005715002847
+          },
+          "20ms": {
+            "meanAbsoluteTimingErrorMs": 9.517317460317328,
+            "micro": {
+              "f1": 0.9197080291970803,
+              "fn": 10,
+              "fp": 12,
+              "precision": 0.9130434782608695,
+              "recall": 0.9264705882352942,
+              "tp": 126
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.6666666666666666,
+                "fn": 0,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 4.490000000000105,
+                "precision": 0.5,
+                "recall": 1.0,
+                "support": 1,
+                "tp": 1
+              },
+              "HIHAT": {
+                "f1": 0.9457364341085271,
+                "fn": 4,
+                "fp": 3,
+                "meanAbsoluteTimingErrorMs": 7.972540983606287,
+                "precision": 0.953125,
+                "recall": 0.9384615384615385,
+                "support": 65,
+                "tp": 61
+              },
+              "KICK": {
+                "f1": 0.9863013698630136,
+                "fn": 1,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 11.354861111111077,
+                "precision": 1.0,
+                "recall": 0.972972972972973,
+                "support": 37,
+                "tp": 36
+              },
+              "SNARE": {
+                "f1": 0.8484848484848485,
+                "fn": 5,
+                "fp": 5,
+                "meanAbsoluteTimingErrorMs": 10.69971428571431,
+                "precision": 0.8484848484848485,
+                "recall": 0.8484848484848485,
+                "support": 33,
+                "tp": 28
+              },
+              "TOM": {
+                "f1": 0.0,
+                "fn": 0,
+                "fp": 3,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 0,
+                "tp": 0
+              }
+            },
+            "predictedEvents": 138,
+            "referenceEvents": 136,
+            "supportedMacroF1": 0.861797329780764
+          },
+          "50ms": {
+            "meanAbsoluteTimingErrorMs": 9.839861538461424,
+            "micro": {
+              "f1": 0.948905109489051,
+              "fn": 6,
+              "fp": 8,
+              "precision": 0.9420289855072463,
+              "recall": 0.9558823529411765,
+              "tp": 130
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.6666666666666666,
+                "fn": 0,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 4.490000000000105,
+                "precision": 0.5,
+                "recall": 1.0,
+                "support": 1,
+                "tp": 1
+              },
+              "HIHAT": {
+                "f1": 0.9612403100775194,
+                "fn": 3,
+                "fp": 2,
+                "meanAbsoluteTimingErrorMs": 8.166532258064256,
+                "precision": 0.96875,
+                "recall": 0.9538461538461539,
+                "support": 65,
+                "tp": 62
+              },
+              "KICK": {
+                "f1": 0.9863013698630136,
+                "fn": 1,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 11.354861111111077,
+                "precision": 1.0,
+                "recall": 0.972972972972973,
+                "support": 37,
+                "tp": 36
+              },
+              "SNARE": {
+                "f1": 0.9393939393939394,
+                "fn": 2,
+                "fp": 2,
+                "meanAbsoluteTimingErrorMs": 11.599741935483936,
+                "precision": 0.9393939393939394,
+                "recall": 0.9393939393939394,
+                "support": 33,
+                "tp": 31
+              },
+              "TOM": {
+                "f1": 0.0,
+                "fn": 0,
+                "fp": 3,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 0,
+                "tp": 0
+              }
+            },
+            "predictedEvents": 138,
+            "referenceEvents": 136,
+            "supportedMacroF1": 0.8884005715002847
+          }
+        }
+      },
+      "track": "MusicDelta_Grunge"
+    },
+    {
+      "drum2notesEstimatedBpm": 107.0,
+      "drum2notesJobId": "e84504b8-1d56-4fa0-bfc6-66ff185690f4",
+      "drum2notesState": "ok",
+      "eventCounts": {
+        "drum2notes": 132,
+        "drumscribe": 128,
+        "reference": 128
+      },
+      "genre": "rock",
+      "hashes": {
+        "drum2notesRaw": "3b9307957d6cb136ba6563d0320c38afc1a5986a8f4b0e8730b9e04b7af18479",
+        "drumStem": "cf964f3cb4cdaededdd788d42edbe41159f077221aed35b8c7383e64cc08d8e4",
+        "drumscribePrediction": "75d3c63170404e2ce323f3296a6a965eff613a6b1af3cd4e5afe92effb1c1e58",
+        "fullMixExcerpt": "eb426d54341b27098e6ea2347e5bbb61890c0ecbb004e498b7f563758929b687",
+        "referenceAnnotation": "2293bb59abab5fdc02612601ea022b2b4d26dc843921ed9ed8c0e989b8383e38"
+      },
+      "scores": {
+        "drum2notes": {
+          "100ms": {
+            "meanAbsoluteTimingErrorMs": 14.552065573770546,
+            "micro": {
+              "f1": 0.9384615384615385,
+              "fn": 6,
+              "fp": 10,
+              "precision": 0.9242424242424242,
+              "recall": 0.953125,
+              "tp": 122
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 0.8923076923076924,
+                "fn": 6,
+                "fp": 8,
+                "meanAbsoluteTimingErrorMs": 16.385379310344916,
+                "precision": 0.8787878787878788,
+                "recall": 0.90625,
+                "support": 64,
+                "tp": 58
+              },
+              "KICK": {
+                "f1": 1.0,
+                "fn": 0,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 5.468749999999915,
+                "precision": 1.0,
+                "recall": 1.0,
+                "support": 32,
+                "tp": 32
+              },
+              "SNARE": {
+                "f1": 0.9696969696969697,
+                "fn": 0,
+                "fp": 2,
+                "meanAbsoluteTimingErrorMs": 20.312500000000142,
+                "precision": 0.9411764705882353,
+                "recall": 1.0,
+                "support": 32,
+                "tp": 32
+              }
+            },
+            "predictedEvents": 132,
+            "referenceEvents": 128,
+            "supportedMacroF1": 0.954001554001554
+          },
+          "20ms": {
+            "meanAbsoluteTimingErrorMs": 8.925976744186011,
+            "micro": {
+              "f1": 0.6615384615384615,
+              "fn": 42,
+              "fp": 46,
+              "precision": 0.6515151515151515,
+              "recall": 0.671875,
+              "tp": 86
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 0.5692307692307692,
+                "fn": 27,
+                "fp": 29,
+                "meanAbsoluteTimingErrorMs": 11.050918918918859,
+                "precision": 0.5606060606060606,
+                "recall": 0.578125,
+                "support": 64,
+                "tp": 37
+              },
+              "KICK": {
+                "f1": 1.0,
+                "fn": 0,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 5.468749999999915,
+                "precision": 1.0,
+                "recall": 1.0,
+                "support": 32,
+                "tp": 32
+              },
+              "SNARE": {
+                "f1": 0.5151515151515151,
+                "fn": 15,
+                "fp": 17,
+                "meanAbsoluteTimingErrorMs": 10.808823529411875,
+                "precision": 0.5,
+                "recall": 0.53125,
+                "support": 32,
+                "tp": 17
+              }
+            },
+            "predictedEvents": 132,
+            "referenceEvents": 128,
+            "supportedMacroF1": 0.6947940947940948
+          },
+          "50ms": {
+            "meanAbsoluteTimingErrorMs": 14.552065573770546,
+            "micro": {
+              "f1": 0.9384615384615385,
+              "fn": 6,
+              "fp": 10,
+              "precision": 0.9242424242424242,
+              "recall": 0.953125,
+              "tp": 122
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 0.8923076923076924,
+                "fn": 6,
+                "fp": 8,
+                "meanAbsoluteTimingErrorMs": 16.385379310344916,
+                "precision": 0.8787878787878788,
+                "recall": 0.90625,
+                "support": 64,
+                "tp": 58
+              },
+              "KICK": {
+                "f1": 1.0,
+                "fn": 0,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 5.468749999999915,
+                "precision": 1.0,
+                "recall": 1.0,
+                "support": 32,
+                "tp": 32
+              },
+              "SNARE": {
+                "f1": 0.9696969696969697,
+                "fn": 0,
+                "fp": 2,
+                "meanAbsoluteTimingErrorMs": 20.312500000000142,
+                "precision": 0.9411764705882353,
+                "recall": 1.0,
+                "support": 32,
+                "tp": 32
+              }
+            },
+            "predictedEvents": 132,
+            "referenceEvents": 128,
+            "supportedMacroF1": 0.954001554001554
+          }
+        },
+        "drumscribe": {
+          "100ms": {
+            "meanAbsoluteTimingErrorMs": 14.035062499999967,
+            "micro": {
+              "f1": 1.0,
+              "fn": 0,
+              "fp": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "tp": 128
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 1.0,
+                "fn": 0,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 16.195124999999983,
+                "precision": 1.0,
+                "recall": 1.0,
+                "support": 64,
+                "tp": 64
+              },
+              "KICK": {
+                "f1": 1.0,
+                "fn": 0,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 7.187499999999873,
+                "precision": 1.0,
+                "recall": 1.0,
+                "support": 32,
+                "tp": 32
+              },
+              "SNARE": {
+                "f1": 1.0,
+                "fn": 0,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 16.562500000000025,
+                "precision": 1.0,
+                "recall": 1.0,
+                "support": 32,
+                "tp": 32
+              }
+            },
+            "predictedEvents": 128,
+            "referenceEvents": 128,
+            "supportedMacroF1": 1.0
+          },
+          "20ms": {
+            "meanAbsoluteTimingErrorMs": 10.184354838709593,
+            "micro": {
+              "f1": 0.7265625,
+              "fn": 35,
+              "fp": 35,
+              "precision": 0.7265625,
+              "recall": 0.7265625,
+              "tp": 93
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 0.609375,
+                "fn": 25,
+                "fp": 25,
+                "meanAbsoluteTimingErrorMs": 11.465256410256416,
+                "precision": 0.609375,
+                "recall": 0.609375,
+                "support": 64,
+                "tp": 39
+              },
+              "KICK": {
+                "f1": 1.0,
+                "fn": 0,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 7.187499999999873,
+                "precision": 1.0,
+                "recall": 1.0,
+                "support": 32,
+                "tp": 32
+              },
+              "SNARE": {
+                "f1": 0.6875,
+                "fn": 10,
+                "fp": 10,
+                "meanAbsoluteTimingErrorMs": 12.272727272727087,
+                "precision": 0.6875,
+                "recall": 0.6875,
+                "support": 32,
+                "tp": 22
+              }
+            },
+            "predictedEvents": 128,
+            "referenceEvents": 128,
+            "supportedMacroF1": 0.765625
+          },
+          "50ms": {
+            "meanAbsoluteTimingErrorMs": 14.035062499999967,
+            "micro": {
+              "f1": 1.0,
+              "fn": 0,
+              "fp": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "tp": 128
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 1.0,
+                "fn": 0,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 16.195124999999983,
+                "precision": 1.0,
+                "recall": 1.0,
+                "support": 64,
+                "tp": 64
+              },
+              "KICK": {
+                "f1": 1.0,
+                "fn": 0,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 7.187499999999873,
+                "precision": 1.0,
+                "recall": 1.0,
+                "support": 32,
+                "tp": 32
+              },
+              "SNARE": {
+                "f1": 1.0,
+                "fn": 0,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 16.562500000000025,
+                "precision": 1.0,
+                "recall": 1.0,
+                "support": 32,
+                "tp": 32
+              }
+            },
+            "predictedEvents": 128,
+            "referenceEvents": 128,
+            "supportedMacroF1": 1.0
+          }
+        }
+      },
+      "track": "MusicDelta_Hendrix"
+    },
+    {
+      "drum2notesEstimatedBpm": 107.0,
+      "drum2notesJobId": "ed49252c-bd32-4b55-ae8c-4a5bc2d14650",
+      "drum2notesState": "ok",
+      "eventCounts": {
+        "drum2notes": 183,
+        "drumscribe": 210,
+        "reference": 199
+      },
+      "genre": "Latin jazz",
+      "hashes": {
+        "drum2notesRaw": "7334e5fa14d0faae42bf901e6eed47b6634d6cd661e0f3b21f81e84863c5d6d6",
+        "drumStem": "1d9165dc799b5e07181788216d2f7ab41f62c4aa93ed8c776e224f7340a0d768",
+        "drumscribePrediction": "30fd23c44453e151e2272a85a3a20f1e87110c01112e3f0612fe171925fe57b0",
+        "fullMixExcerpt": "16d930c8bcc42e48da465a16250835e1ec2c5f5a0c43156155cb816a69678259",
+        "referenceAnnotation": "65cb632d57a448dedff43429ebcd05af9feb3abc5fa2693bd52526dba694372d"
+      },
+      "scores": {
+        "drum2notes": {
+          "100ms": {
+            "meanAbsoluteTimingErrorMs": 10.513787585759802,
+            "micro": {
+              "f1": 0.9057591623036649,
+              "fn": 26,
+              "fp": 10,
+              "precision": 0.9453551912568307,
+              "recall": 0.8693467336683417,
+              "tp": 173
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 0.9423076923076923,
+                "fn": 10,
+                "fp": 2,
+                "meanAbsoluteTimingErrorMs": 10.115139805454785,
+                "precision": 0.98,
+                "recall": 0.9074074074074074,
+                "support": 108,
+                "tp": 98
+              },
+              "KICK": {
+                "f1": 0.9863013698630136,
+                "fn": 1,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 10.600344496365897,
+                "precision": 1.0,
+                "recall": 0.972972972972973,
+                "support": 37,
+                "tp": 36
+              },
+              "SNARE": {
+                "f1": 0.7722772277227723,
+                "fn": 15,
+                "fp": 8,
+                "meanAbsoluteTimingErrorMs": 11.435619218787298,
+                "precision": 0.8297872340425532,
+                "recall": 0.7222222222222222,
+                "support": 54,
+                "tp": 39
+              }
+            },
+            "predictedEvents": 183,
+            "referenceEvents": 199,
+            "supportedMacroF1": 0.9002954299644927
+          },
+          "20ms": {
+            "meanAbsoluteTimingErrorMs": 8.269551761322756,
+            "micro": {
+              "f1": 0.8167539267015707,
+              "fn": 43,
+              "fp": 27,
+              "precision": 0.8524590163934426,
+              "recall": 0.7839195979899497,
+              "tp": 156
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 0.8461538461538461,
+                "fn": 20,
+                "fp": 12,
+                "meanAbsoluteTimingErrorMs": 7.763627761257317,
+                "precision": 0.88,
+                "recall": 0.8148148148148148,
+                "support": 108,
+                "tp": 88
+              },
+              "KICK": {
+                "f1": 0.8767123287671232,
+                "fn": 5,
+                "fp": 4,
+                "meanAbsoluteTimingErrorMs": 7.854468750000371,
+                "precision": 0.8888888888888888,
+                "recall": 0.8648648648648649,
+                "support": 37,
+                "tp": 32
+              },
+              "SNARE": {
+                "f1": 0.7128712871287128,
+                "fn": 18,
+                "fp": 11,
+                "meanAbsoluteTimingErrorMs": 9.875217549324836,
+                "precision": 0.7659574468085106,
+                "recall": 0.6666666666666666,
+                "support": 54,
+                "tp": 36
+              }
+            },
+            "predictedEvents": 183,
+            "referenceEvents": 199,
+            "supportedMacroF1": 0.8119124873498941
+          },
+          "50ms": {
+            "meanAbsoluteTimingErrorMs": 9.994831994315982,
+            "micro": {
+              "f1": 0.8952879581151832,
+              "fn": 28,
+              "fp": 12,
+              "precision": 0.9344262295081968,
+              "recall": 0.8592964824120602,
+              "tp": 171
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 0.9326923076923077,
+                "fn": 11,
+                "fp": 3,
+                "meanAbsoluteTimingErrorMs": 9.680832064745998,
+                "precision": 0.97,
+                "recall": 0.8981481481481481,
+                "support": 108,
+                "tp": 97
+              },
+              "KICK": {
+                "f1": 0.958904109589041,
+                "fn": 2,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 9.25961174899904,
+                "precision": 0.9722222222222222,
+                "recall": 0.9459459459459459,
+                "support": 37,
+                "tp": 35
+              },
+              "SNARE": {
+                "f1": 0.7722772277227723,
+                "fn": 15,
+                "fp": 8,
+                "meanAbsoluteTimingErrorMs": 11.435619218787298,
+                "precision": 0.8297872340425532,
+                "recall": 0.7222222222222222,
+                "support": 54,
+                "tp": 39
+              }
+            },
+            "predictedEvents": 183,
+            "referenceEvents": 199,
+            "supportedMacroF1": 0.8879578816680403
+          }
+        },
+        "drumscribe": {
+          "100ms": {
+            "meanAbsoluteTimingErrorMs": 9.148205263158061,
+            "micro": {
+              "f1": 0.9290953545232273,
+              "fn": 9,
+              "fp": 20,
+              "precision": 0.9047619047619048,
+              "recall": 0.9547738693467337,
+              "tp": 190
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 0.966824644549763,
+                "fn": 6,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 7.350931372549197,
+                "precision": 0.9902912621359223,
+                "recall": 0.9444444444444444,
+                "support": 108,
+                "tp": 102
+              },
+              "KICK": {
+                "f1": 1.0,
+                "fn": 0,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 5.717918918919182,
+                "precision": 1.0,
+                "recall": 1.0,
+                "support": 37,
+                "tp": 37
+              },
+              "SNARE": {
+                "f1": 0.8225806451612904,
+                "fn": 3,
+                "fp": 19,
+                "meanAbsoluteTimingErrorMs": 15.231392156862821,
+                "precision": 0.7285714285714285,
+                "recall": 0.9444444444444444,
+                "support": 54,
+                "tp": 51
+              }
+            },
+            "predictedEvents": 210,
+            "referenceEvents": 199,
+            "supportedMacroF1": 0.9298017632370178
+          },
+          "20ms": {
+            "meanAbsoluteTimingErrorMs": 8.211994444444567,
+            "micro": {
+              "f1": 0.8801955990220048,
+              "fn": 19,
+              "fp": 30,
+              "precision": 0.8571428571428571,
+              "recall": 0.9045226130653267,
+              "tp": 180
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 0.966824644549763,
+                "fn": 6,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 7.350931372549197,
+                "precision": 0.9902912621359223,
+                "recall": 0.9444444444444444,
+                "support": 108,
+                "tp": 102
+              },
+              "KICK": {
+                "f1": 0.972972972972973,
+                "fn": 1,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 5.321194444444677,
+                "precision": 0.972972972972973,
+                "recall": 0.972972972972973,
+                "support": 37,
+                "tp": 36
+              },
+              "SNARE": {
+                "f1": 0.6774193548387096,
+                "fn": 12,
+                "fp": 28,
+                "meanAbsoluteTimingErrorMs": 12.780976190476087,
+                "precision": 0.6,
+                "recall": 0.7777777777777778,
+                "support": 54,
+                "tp": 42
+              }
+            },
+            "predictedEvents": 210,
+            "referenceEvents": 199,
+            "supportedMacroF1": 0.8724056574538152
+          },
+          "50ms": {
+            "meanAbsoluteTimingErrorMs": 9.148205263158061,
+            "micro": {
+              "f1": 0.9290953545232273,
+              "fn": 9,
+              "fp": 20,
+              "precision": 0.9047619047619048,
+              "recall": 0.9547738693467337,
+              "tp": 190
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 0.966824644549763,
+                "fn": 6,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 7.350931372549197,
+                "precision": 0.9902912621359223,
+                "recall": 0.9444444444444444,
+                "support": 108,
+                "tp": 102
+              },
+              "KICK": {
+                "f1": 1.0,
+                "fn": 0,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 5.717918918919182,
+                "precision": 1.0,
+                "recall": 1.0,
+                "support": 37,
+                "tp": 37
+              },
+              "SNARE": {
+                "f1": 0.8225806451612904,
+                "fn": 3,
+                "fp": 19,
+                "meanAbsoluteTimingErrorMs": 15.231392156862821,
+                "precision": 0.7285714285714285,
+                "recall": 0.9444444444444444,
+                "support": 54,
+                "tp": 51
+              }
+            },
+            "predictedEvents": 210,
+            "referenceEvents": 199,
+            "supportedMacroF1": 0.9298017632370178
+          }
+        }
+      },
+      "track": "MusicDelta_LatinJazz"
+    },
+    {
+      "drum2notesEstimatedBpm": 103.0,
+      "drum2notesJobId": "21e6b3e2-a3a6-45e2-b994-5c352f5ecdb7",
+      "drum2notesState": "ok",
+      "eventCounts": {
+        "drum2notes": 143,
+        "drumscribe": 192,
+        "reference": 160
+      },
+      "genre": "modal jazz",
+      "hashes": {
+        "drum2notesRaw": "91d208ae5c9b5f5b90c3a1eb4966ecacb9de719a7c0b4fc67f63ba7dacd0ffc5",
+        "drumStem": "64f9fb4f8ae43eb169009d959814857786e3c7c0d83be6ca26d4e9292b4f815b",
+        "drumscribePrediction": "700e38edf0c13f3a72fefc97379b09de495f1beaa09b07e6a0d208d7577000d9",
+        "fullMixExcerpt": "e95ad251c0dc6a233e395d46bf26fb4a6c719c074fff7e9b807156fad2254c85",
+        "referenceAnnotation": "e8011ee681320c822305daa5c668c02403c6f770a731dbca4104e88eec2eb842"
+      },
+      "scores": {
+        "drum2notes": {
+          "100ms": {
+            "meanAbsoluteTimingErrorMs": 18.056570363832442,
+            "micro": {
+              "f1": 0.6534653465346535,
+              "fn": 61,
+              "fp": 44,
+              "precision": 0.6923076923076923,
+              "recall": 0.61875,
+              "tp": 99
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.8366013071895425,
+                "fn": 9,
+                "fp": 16,
+                "meanAbsoluteTimingErrorMs": 11.665101790048437,
+                "precision": 0.8,
+                "recall": 0.8767123287671232,
+                "support": 73,
+                "tp": 64
+              },
+              "HIHAT": {
+                "f1": 0.0,
+                "fn": 33,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 33,
+                "tp": 0
+              },
+              "KICK": {
+                "f1": 0.3076923076923077,
+                "fn": 2,
+                "fp": 16,
+                "meanAbsoluteTimingErrorMs": 9.088499999999513,
+                "precision": 0.2,
+                "recall": 0.6666666666666666,
+                "support": 6,
+                "tp": 4
+              },
+              "SNARE": {
+                "f1": 0.6813186813186813,
+                "fn": 17,
+                "fp": 12,
+                "meanAbsoluteTimingErrorMs": 32.40903069213915,
+                "precision": 0.7209302325581395,
+                "recall": 0.6458333333333334,
+                "support": 48,
+                "tp": 31
+              }
+            },
+            "predictedEvents": 143,
+            "referenceEvents": 160,
+            "supportedMacroF1": 0.4564030740501329
+          },
+          "20ms": {
+            "meanAbsoluteTimingErrorMs": 6.527406343042045,
+            "micro": {
+              "f1": 0.49504950495049505,
+              "fn": 85,
+              "fp": 68,
+              "precision": 0.5244755244755245,
+              "recall": 0.46875,
+              "tp": 75
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.7450980392156863,
+                "fn": 16,
+                "fp": 23,
+                "meanAbsoluteTimingErrorMs": 6.564719298245584,
+                "precision": 0.7125,
+                "recall": 0.7808219178082192,
+                "support": 73,
+                "tp": 57
+              },
+              "HIHAT": {
+                "f1": 0.0,
+                "fn": 33,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 33,
+                "tp": 0
+              },
+              "KICK": {
+                "f1": 0.3076923076923077,
+                "fn": 2,
+                "fp": 16,
+                "meanAbsoluteTimingErrorMs": 9.088499999999513,
+                "precision": 0.2,
+                "recall": 0.6666666666666666,
+                "support": 6,
+                "tp": 4
+              },
+              "SNARE": {
+                "f1": 0.3076923076923077,
+                "fn": 34,
+                "fp": 29,
+                "meanAbsoluteTimingErrorMs": 5.643748266296933,
+                "precision": 0.32558139534883723,
+                "recall": 0.2916666666666667,
+                "support": 48,
+                "tp": 14
+              }
+            },
+            "predictedEvents": 143,
+            "referenceEvents": 160,
+            "supportedMacroF1": 0.3401206636500754
+          },
+          "50ms": {
+            "meanAbsoluteTimingErrorMs": 11.35346256742172,
+            "micro": {
+              "f1": 0.594059405940594,
+              "fn": 70,
+              "fp": 53,
+              "precision": 0.6293706293706294,
+              "recall": 0.5625,
+              "tp": 90
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.7973856209150327,
+                "fn": 12,
+                "fp": 19,
+                "meanAbsoluteTimingErrorMs": 8.056080057297414,
+                "precision": 0.7625,
+                "recall": 0.8356164383561644,
+                "support": 73,
+                "tp": 61
+              },
+              "HIHAT": {
+                "f1": 0.0,
+                "fn": 33,
+                "fp": 0,
+                "precision": 0.0,
+                "recall": 0.0,
+                "support": 33,
+                "tp": 0
+              },
+              "KICK": {
+                "f1": 0.3076923076923077,
+                "fn": 2,
+                "fp": 16,
+                "meanAbsoluteTimingErrorMs": 9.088499999999513,
+                "precision": 0.2,
+                "recall": 0.6666666666666666,
+                "support": 6,
+                "tp": 4
+              },
+              "SNARE": {
+                "f1": 0.5494505494505495,
+                "fn": 23,
+                "fp": 18,
+                "meanAbsoluteTimingErrorMs": 19.761469902912573,
+                "precision": 0.5813953488372093,
+                "recall": 0.5208333333333334,
+                "support": 48,
+                "tp": 25
+              }
+            },
+            "predictedEvents": 143,
+            "referenceEvents": 160,
+            "supportedMacroF1": 0.4136321195144725
+          }
+        },
+        "drumscribe": {
+          "100ms": {
+            "meanAbsoluteTimingErrorMs": 12.091520270270255,
+            "micro": {
+              "f1": 0.8409090909090909,
+              "fn": 12,
+              "fp": 44,
+              "precision": 0.7708333333333334,
+              "recall": 0.925,
+              "tp": 148
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.9333333333333333,
+                "fn": 3,
+                "fp": 7,
+                "meanAbsoluteTimingErrorMs": 13.023628571428647,
+                "precision": 0.9090909090909091,
+                "recall": 0.958904109589041,
+                "support": 73,
+                "tp": 70
+              },
+              "HIHAT": {
+                "f1": 0.6987951807228916,
+                "fn": 4,
+                "fp": 21,
+                "meanAbsoluteTimingErrorMs": 12.783655172413816,
+                "precision": 0.58,
+                "recall": 0.8787878787878788,
+                "support": 33,
+                "tp": 29
+              },
+              "KICK": {
+                "f1": 0.47619047619047616,
+                "fn": 1,
+                "fp": 10,
+                "meanAbsoluteTimingErrorMs": 7.102000000000075,
+                "precision": 0.3333333333333333,
+                "recall": 0.8333333333333334,
+                "support": 6,
+                "tp": 5
+              },
+              "SNARE": {
+                "f1": 0.8979591836734694,
+                "fn": 4,
+                "fp": 6,
+                "meanAbsoluteTimingErrorMs": 10.719431818181619,
+                "precision": 0.88,
+                "recall": 0.9166666666666666,
+                "support": 48,
+                "tp": 44
+              }
+            },
+            "predictedEvents": 192,
+            "referenceEvents": 160,
+            "supportedMacroF1": 0.7515695434800427
+          },
+          "20ms": {
+            "meanAbsoluteTimingErrorMs": 9.55780147058819,
+            "micro": {
+              "f1": 0.7727272727272727,
+              "fn": 24,
+              "fp": 56,
+              "precision": 0.7083333333333334,
+              "recall": 0.85,
+              "tp": 136
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.92,
+                "fn": 4,
+                "fp": 8,
+                "meanAbsoluteTimingErrorMs": 9.562565217391368,
+                "precision": 0.8961038961038961,
+                "recall": 0.9452054794520548,
+                "support": 73,
+                "tp": 69
+              },
+              "HIHAT": {
+                "f1": 0.5301204819277109,
+                "fn": 11,
+                "fp": 28,
+                "meanAbsoluteTimingErrorMs": 9.676318181818244,
+                "precision": 0.44,
+                "recall": 0.6666666666666666,
+                "support": 33,
+                "tp": 22
+              },
+              "KICK": {
+                "f1": 0.47619047619047616,
+                "fn": 1,
+                "fp": 10,
+                "meanAbsoluteTimingErrorMs": 7.102000000000075,
+                "precision": 0.3333333333333333,
+                "recall": 0.8333333333333334,
+                "support": 6,
+                "tp": 5
+              },
+              "SNARE": {
+                "f1": 0.8163265306122449,
+                "fn": 8,
+                "fp": 10,
+                "meanAbsoluteTimingErrorMs": 9.791374999999691,
+                "precision": 0.8,
+                "recall": 0.8333333333333334,
+                "support": 48,
+                "tp": 40
+              }
+            },
+            "predictedEvents": 192,
+            "referenceEvents": 160,
+            "supportedMacroF1": 0.685659372182608
+          },
+          "50ms": {
+            "meanAbsoluteTimingErrorMs": 10.537466216216199,
+            "micro": {
+              "f1": 0.8409090909090909,
+              "fn": 12,
+              "fp": 44,
+              "precision": 0.7708333333333334,
+              "recall": 0.925,
+              "tp": 148
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.9333333333333333,
+                "fn": 3,
+                "fp": 7,
+                "meanAbsoluteTimingErrorMs": 9.737914285714355,
+                "precision": 0.9090909090909091,
+                "recall": 0.958904109589041,
+                "support": 73,
+                "tp": 70
+              },
+              "HIHAT": {
+                "f1": 0.6987951807228916,
+                "fn": 4,
+                "fp": 21,
+                "meanAbsoluteTimingErrorMs": 12.783655172413816,
+                "precision": 0.58,
+                "recall": 0.8787878787878788,
+                "support": 33,
+                "tp": 29
+              },
+              "KICK": {
+                "f1": 0.47619047619047616,
+                "fn": 1,
+                "fp": 10,
+                "meanAbsoluteTimingErrorMs": 7.102000000000075,
+                "precision": 0.3333333333333333,
+                "recall": 0.8333333333333334,
+                "support": 6,
+                "tp": 5
+              },
+              "SNARE": {
+                "f1": 0.8979591836734694,
+                "fn": 4,
+                "fp": 6,
+                "meanAbsoluteTimingErrorMs": 10.719431818181619,
+                "precision": 0.88,
+                "recall": 0.9166666666666666,
+                "support": 48,
+                "tp": 44
+              }
+            },
+            "predictedEvents": 192,
+            "referenceEvents": 160,
+            "supportedMacroF1": 0.7515695434800427
+          }
+        }
+      },
+      "track": "MusicDelta_ModalJazz"
+    },
+    {
+      "drum2notesEstimatedBpm": 143.0,
+      "drum2notesJobId": "70da786a-9199-4f6e-9452-9ea348c5885d",
+      "drum2notesState": "ok",
+      "eventCounts": {
+        "drum2notes": 147,
+        "drumscribe": 141,
+        "reference": 148
+      },
+      "genre": "punk",
+      "hashes": {
+        "drum2notesRaw": "a82229a6381085c984c918cd8737c84211aa38d1d0e192916ed38ca36f0e032f",
+        "drumStem": "f0fb1d0245263ec74d04b58ca1a46dc82dcc241fb1d8c5e89203baf91d4b69cb",
+        "drumscribePrediction": "e0259f5283981f6ed20142689ae65986e7841cb989421c19f9b6608f4ad21163",
+        "fullMixExcerpt": "abe60b569c5dcb5fcfc701cebb04f1466cb6763822e2ca526e74da48a37e5d71",
+        "referenceAnnotation": "feffd4e7e5d1ed74b37bc3a6587a471b2d1adcd9316643665bd3581ad75fcc0a"
+      },
+      "scores": {
+        "drum2notes": {
+          "100ms": {
+            "meanAbsoluteTimingErrorMs": 13.532392874841713,
+            "micro": {
+              "f1": 0.8610169491525423,
+              "fn": 21,
+              "fp": 20,
+              "precision": 0.8639455782312925,
+              "recall": 0.8581081081081081,
+              "tp": 127
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.8387096774193549,
+                "fn": 5,
+                "fp": 5,
+                "meanAbsoluteTimingErrorMs": 14.101269230769368,
+                "precision": 0.8387096774193549,
+                "recall": 0.8387096774193549,
+                "support": 31,
+                "tp": 26
+              },
+              "HIHAT": {
+                "f1": 0.9491525423728814,
+                "fn": 2,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 13.016357142856714,
+                "precision": 0.9655172413793104,
+                "recall": 0.9333333333333333,
+                "support": 30,
+                "tp": 28
+              },
+              "KICK": {
+                "f1": 0.8771929824561403,
+                "fn": 1,
+                "fp": 13,
+                "meanAbsoluteTimingErrorMs": 12.390657902098065,
+                "precision": 0.7936507936507936,
+                "recall": 0.9803921568627451,
+                "support": 51,
+                "tp": 50
+              },
+              "SNARE": {
+                "f1": 0.7659574468085106,
+                "fn": 10,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 13.29111111111126,
+                "precision": 0.9473684210526315,
+                "recall": 0.6428571428571429,
+                "support": 28,
+                "tp": 18
+              },
+              "TOM": {
+                "f1": 0.7692307692307693,
+                "fn": 3,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 25.75000000000003,
+                "precision": 1.0,
+                "recall": 0.625,
+                "support": 8,
+                "tp": 5
+              }
+            },
+            "predictedEvents": 147,
+            "referenceEvents": 148,
+            "supportedMacroF1": 0.8400486836575313
+          },
+          "20ms": {
+            "meanAbsoluteTimingErrorMs": 10.205906542056075,
+            "micro": {
+              "f1": 0.7254237288135593,
+              "fn": 41,
+              "fp": 40,
+              "precision": 0.7278911564625851,
+              "recall": 0.722972972972973,
+              "tp": 107
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.6774193548387096,
+                "fn": 10,
+                "fp": 10,
+                "meanAbsoluteTimingErrorMs": 11.375142857143047,
+                "precision": 0.6774193548387096,
+                "recall": 0.6774193548387096,
+                "support": 31,
+                "tp": 21
+              },
+              "HIHAT": {
+                "f1": 0.7796610169491526,
+                "fn": 7,
+                "fp": 6,
+                "meanAbsoluteTimingErrorMs": 9.868956521738692,
+                "precision": 0.7931034482758621,
+                "recall": 0.7666666666666667,
+                "support": 30,
+                "tp": 23
+              },
+              "KICK": {
+                "f1": 0.8070175438596491,
+                "fn": 5,
+                "fp": 17,
+                "meanAbsoluteTimingErrorMs": 9.878869565217443,
+                "precision": 0.7301587301587301,
+                "recall": 0.9019607843137255,
+                "support": 51,
+                "tp": 46
+              },
+              "SNARE": {
+                "f1": 0.6382978723404256,
+                "fn": 13,
+                "fp": 4,
+                "meanAbsoluteTimingErrorMs": 10.282666666666909,
+                "precision": 0.7894736842105263,
+                "recall": 0.5357142857142857,
+                "support": 28,
+                "tp": 15
+              },
+              "TOM": {
+                "f1": 0.3076923076923077,
+                "fn": 6,
+                "fp": 3,
+                "meanAbsoluteTimingErrorMs": 8.750000000000036,
+                "precision": 0.4,
+                "recall": 0.25,
+                "support": 8,
+                "tp": 2
+              }
+            },
+            "predictedEvents": 147,
+            "referenceEvents": 148,
+            "supportedMacroF1": 0.6420176191360489
+          },
+          "50ms": {
+            "meanAbsoluteTimingErrorMs": 12.884992063492048,
+            "micro": {
+              "f1": 0.8542372881355932,
+              "fn": 22,
+              "fp": 21,
+              "precision": 0.8571428571428571,
+              "recall": 0.8513513513513513,
+              "tp": 126
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.8387096774193549,
+                "fn": 5,
+                "fp": 5,
+                "meanAbsoluteTimingErrorMs": 14.101269230769368,
+                "precision": 0.8387096774193549,
+                "recall": 0.8387096774193549,
+                "support": 31,
+                "tp": 26
+              },
+              "HIHAT": {
+                "f1": 0.9491525423728814,
+                "fn": 2,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 13.016357142856714,
+                "precision": 0.9655172413793104,
+                "recall": 0.9333333333333333,
+                "support": 30,
+                "tp": 28
+              },
+              "KICK": {
+                "f1": 0.8596491228070176,
+                "fn": 2,
+                "fp": 14,
+                "meanAbsoluteTimingErrorMs": 10.702612244898033,
+                "precision": 0.7777777777777778,
+                "recall": 0.9607843137254902,
+                "support": 51,
+                "tp": 49
+              },
+              "SNARE": {
+                "f1": 0.7659574468085106,
+                "fn": 10,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 13.29111111111126,
+                "precision": 0.9473684210526315,
+                "recall": 0.6428571428571429,
+                "support": 28,
+                "tp": 18
+              },
+              "TOM": {
+                "f1": 0.7692307692307693,
+                "fn": 3,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 25.75000000000003,
+                "precision": 1.0,
+                "recall": 0.625,
+                "support": 8,
+                "tp": 5
+              }
+            },
+            "predictedEvents": 147,
+            "referenceEvents": 148,
+            "supportedMacroF1": 0.8365399117277068
+          }
+        },
+        "drumscribe": {
+          "100ms": {
+            "meanAbsoluteTimingErrorMs": 14.895154471544698,
+            "micro": {
+              "f1": 0.8512110726643599,
+              "fn": 25,
+              "fp": 18,
+              "precision": 0.8723404255319149,
+              "recall": 0.831081081081081,
+              "tp": 123
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.7666666666666667,
+                "fn": 8,
+                "fp": 6,
+                "meanAbsoluteTimingErrorMs": 11.960913043478238,
+                "precision": 0.7931034482758621,
+                "recall": 0.7419354838709677,
+                "support": 31,
+                "tp": 23
+              },
+              "HIHAT": {
+                "f1": 0.9285714285714286,
+                "fn": 4,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 11.697923076922985,
+                "precision": 1.0,
+                "recall": 0.8666666666666667,
+                "support": 30,
+                "tp": 26
+              },
+              "KICK": {
+                "f1": 0.9026548672566371,
+                "fn": 0,
+                "fp": 11,
+                "meanAbsoluteTimingErrorMs": 12.115960784313819,
+                "precision": 0.8225806451612904,
+                "recall": 1.0,
+                "support": 51,
+                "tp": 51
+              },
+              "SNARE": {
+                "f1": 0.7391304347826086,
+                "fn": 11,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 7.937823529411544,
+                "precision": 0.9444444444444444,
+                "recall": 0.6071428571428571,
+                "support": 28,
+                "tp": 17
+              },
+              "TOM": {
+                "f1": 0.8571428571428571,
+                "fn": 2,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 83.33333333333333,
+                "precision": 1.0,
+                "recall": 0.75,
+                "support": 8,
+                "tp": 6
+              }
+            },
+            "predictedEvents": 141,
+            "referenceEvents": 148,
+            "supportedMacroF1": 0.8388332508840396
+          },
+          "20ms": {
+            "meanAbsoluteTimingErrorMs": 10.01449572649568,
+            "micro": {
+              "f1": 0.8096885813148789,
+              "fn": 31,
+              "fp": 24,
+              "precision": 0.8297872340425532,
+              "recall": 0.7905405405405406,
+              "tp": 117
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.6666666666666666,
+                "fn": 11,
+                "fp": 9,
+                "meanAbsoluteTimingErrorMs": 8.234649999999903,
+                "precision": 0.6896551724137931,
+                "recall": 0.6451612903225806,
+                "support": 31,
+                "tp": 20
+              },
+              "HIHAT": {
+                "f1": 0.8928571428571429,
+                "fn": 5,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 10.165839999999875,
+                "precision": 0.9615384615384616,
+                "recall": 0.8333333333333334,
+                "support": 30,
+                "tp": 25
+              },
+              "KICK": {
+                "f1": 0.8672566371681416,
+                "fn": 2,
+                "fp": 13,
+                "meanAbsoluteTimingErrorMs": 11.794163265306192,
+                "precision": 0.7903225806451613,
+                "recall": 0.9607843137254902,
+                "support": 51,
+                "tp": 49
+              },
+              "SNARE": {
+                "f1": 0.7391304347826086,
+                "fn": 11,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 7.937823529411544,
+                "precision": 0.9444444444444444,
+                "recall": 0.6071428571428571,
+                "support": 28,
+                "tp": 17
+              },
+              "TOM": {
+                "f1": 0.8571428571428571,
+                "fn": 2,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 6.666666666666672,
+                "precision": 1.0,
+                "recall": 0.75,
+                "support": 8,
+                "tp": 6
+              }
+            },
+            "predictedEvents": 141,
+            "referenceEvents": 148,
+            "supportedMacroF1": 0.8046107477234834
+          },
+          "50ms": {
+            "meanAbsoluteTimingErrorMs": 10.754950819672114,
+            "micro": {
+              "f1": 0.8442906574394463,
+              "fn": 26,
+              "fp": 19,
+              "precision": 0.8652482269503546,
+              "recall": 0.8243243243243243,
+              "tp": 122
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.7333333333333333,
+                "fn": 9,
+                "fp": 7,
+                "meanAbsoluteTimingErrorMs": 9.777318181818153,
+                "precision": 0.7586206896551724,
+                "recall": 0.7096774193548387,
+                "support": 31,
+                "tp": 22
+              },
+              "HIHAT": {
+                "f1": 0.9285714285714286,
+                "fn": 4,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 11.697923076922985,
+                "precision": 1.0,
+                "recall": 0.8666666666666667,
+                "support": 30,
+                "tp": 26
+              },
+              "KICK": {
+                "f1": 0.9026548672566371,
+                "fn": 0,
+                "fp": 11,
+                "meanAbsoluteTimingErrorMs": 12.115960784313819,
+                "precision": 0.8225806451612904,
+                "recall": 1.0,
+                "support": 51,
+                "tp": 51
+              },
+              "SNARE": {
+                "f1": 0.7391304347826086,
+                "fn": 11,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 7.937823529411544,
+                "precision": 0.9444444444444444,
+                "recall": 0.6071428571428571,
+                "support": 28,
+                "tp": 17
+              },
+              "TOM": {
+                "f1": 0.8571428571428571,
+                "fn": 2,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 6.666666666666672,
+                "precision": 1.0,
+                "recall": 0.75,
+                "support": 8,
+                "tp": 6
+              }
+            },
+            "predictedEvents": 141,
+            "referenceEvents": 148,
+            "supportedMacroF1": 0.8321665842173729
+          }
+        }
+      },
+      "track": "MusicDelta_Punk"
+    },
+    {
+      "drum2notesEstimatedBpm": 107.0,
+      "drum2notesJobId": "aca57ff6-b0a1-4d02-bb77-f5188dccd8fb",
+      "drum2notesState": "ok",
+      "eventCounts": {
+        "drum2notes": 155,
+        "drumscribe": 153,
+        "reference": 150
+      },
+      "genre": "speed metal",
+      "hashes": {
+        "drum2notesRaw": "738d1ee31c32513e4bb046fe4e840427dd9ceaf28e868c27789e7f7833158b11",
+        "drumStem": "05c91248ae07fa92478c3194d6657a1418c6d30b896ffa1963efa6368fb402ed",
+        "drumscribePrediction": "d3013abef4b922ec651b84d18a2cb84cf13ff37fe11116880ae989082ca4d6d1",
+        "fullMixExcerpt": "16c07e039b80bbc7618a95e210e190eec6de473b692c95508e04ea69a2985eb3",
+        "referenceAnnotation": "ce69aac0c6d28d6dfb5745310ee9536999bdd2ac71d88f573f84f4b915434891"
+      },
+      "scores": {
+        "drum2notes": {
+          "100ms": {
+            "meanAbsoluteTimingErrorMs": 13.17068965517241,
+            "micro": {
+              "f1": 0.9508196721311475,
+              "fn": 5,
+              "fp": 10,
+              "precision": 0.9354838709677419,
+              "recall": 0.9666666666666667,
+              "tp": 145
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.3333333333333333,
+                "fn": 1,
+                "fp": 3,
+                "meanAbsoluteTimingErrorMs": 14.99999999999968,
+                "precision": 0.25,
+                "recall": 0.5,
+                "support": 2,
+                "tp": 1
+              },
+              "HIHAT": {
+                "f1": 0.9911504424778761,
+                "fn": 0,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 12.669446428571469,
+                "precision": 0.9824561403508771,
+                "recall": 1.0,
+                "support": 56,
+                "tp": 56
+              },
+              "KICK": {
+                "f1": 0.9411764705882353,
+                "fn": 3,
+                "fp": 4,
+                "meanAbsoluteTimingErrorMs": 12.54160714285722,
+                "precision": 0.9333333333333333,
+                "recall": 0.9491525423728814,
+                "support": 59,
+                "tp": 56
+              },
+              "SNARE": {
+                "f1": 0.9552238805970149,
+                "fn": 1,
+                "fp": 2,
+                "meanAbsoluteTimingErrorMs": 15.091593749999785,
+                "precision": 0.9411764705882353,
+                "recall": 0.9696969696969697,
+                "support": 33,
+                "tp": 32
+              }
+            },
+            "predictedEvents": 155,
+            "referenceEvents": 150,
+            "supportedMacroF1": 0.8052210317491149
+          },
+          "20ms": {
+            "meanAbsoluteTimingErrorMs": 9.298761061946855,
+            "micro": {
+              "f1": 0.740983606557377,
+              "fn": 37,
+              "fp": 42,
+              "precision": 0.7290322580645161,
+              "recall": 0.7533333333333333,
+              "tp": 113
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.3333333333333333,
+                "fn": 1,
+                "fp": 3,
+                "meanAbsoluteTimingErrorMs": 14.99999999999968,
+                "precision": 0.25,
+                "recall": 0.5,
+                "support": 2,
+                "tp": 1
+              },
+              "HIHAT": {
+                "f1": 0.7964601769911505,
+                "fn": 11,
+                "fp": 12,
+                "meanAbsoluteTimingErrorMs": 9.007311111111152,
+                "precision": 0.7894736842105263,
+                "recall": 0.8035714285714286,
+                "support": 56,
+                "tp": 45
+              },
+              "KICK": {
+                "f1": 0.7563025210084033,
+                "fn": 14,
+                "fp": 15,
+                "meanAbsoluteTimingErrorMs": 9.388888888888856,
+                "precision": 0.75,
+                "recall": 0.7627118644067796,
+                "support": 59,
+                "tp": 45
+              },
+              "SNARE": {
+                "f1": 0.6567164179104478,
+                "fn": 11,
+                "fp": 12,
+                "meanAbsoluteTimingErrorMs": 9.451409090908841,
+                "precision": 0.6470588235294118,
+                "recall": 0.6666666666666666,
+                "support": 33,
+                "tp": 22
+              }
+            },
+            "predictedEvents": 155,
+            "referenceEvents": 150,
+            "supportedMacroF1": 0.6357031123108338
+          },
+          "50ms": {
+            "meanAbsoluteTimingErrorMs": 13.17068965517241,
+            "micro": {
+              "f1": 0.9508196721311475,
+              "fn": 5,
+              "fp": 10,
+              "precision": 0.9354838709677419,
+              "recall": 0.9666666666666667,
+              "tp": 145
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 0.3333333333333333,
+                "fn": 1,
+                "fp": 3,
+                "meanAbsoluteTimingErrorMs": 14.99999999999968,
+                "precision": 0.25,
+                "recall": 0.5,
+                "support": 2,
+                "tp": 1
+              },
+              "HIHAT": {
+                "f1": 0.9911504424778761,
+                "fn": 0,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 12.669446428571469,
+                "precision": 0.9824561403508771,
+                "recall": 1.0,
+                "support": 56,
+                "tp": 56
+              },
+              "KICK": {
+                "f1": 0.9411764705882353,
+                "fn": 3,
+                "fp": 4,
+                "meanAbsoluteTimingErrorMs": 12.54160714285722,
+                "precision": 0.9333333333333333,
+                "recall": 0.9491525423728814,
+                "support": 59,
+                "tp": 56
+              },
+              "SNARE": {
+                "f1": 0.9552238805970149,
+                "fn": 1,
+                "fp": 2,
+                "meanAbsoluteTimingErrorMs": 15.091593749999785,
+                "precision": 0.9411764705882353,
+                "recall": 0.9696969696969697,
+                "support": 33,
+                "tp": 32
+              }
+            },
+            "predictedEvents": 155,
+            "referenceEvents": 150,
+            "supportedMacroF1": 0.8052210317491149
+          }
+        },
+        "drumscribe": {
+          "100ms": {
+            "meanAbsoluteTimingErrorMs": 16.897080536912654,
+            "micro": {
+              "f1": 0.9834983498349835,
+              "fn": 1,
+              "fp": 4,
+              "precision": 0.9738562091503268,
+              "recall": 0.9933333333333333,
+              "tp": 149
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 1.0,
+                "fn": 0,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 10.00000000000012,
+                "precision": 1.0,
+                "recall": 1.0,
+                "support": 2,
+                "tp": 2
+              },
+              "HIHAT": {
+                "f1": 0.9739130434782609,
+                "fn": 0,
+                "fp": 3,
+                "meanAbsoluteTimingErrorMs": 11.166196428571228,
+                "precision": 0.9491525423728814,
+                "recall": 1.0,
+                "support": 56,
+                "tp": 56
+              },
+              "KICK": {
+                "f1": 0.9914529914529915,
+                "fn": 1,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 26.082568965517197,
+                "precision": 1.0,
+                "recall": 0.9830508474576272,
+                "support": 59,
+                "tp": 58
+              },
+              "SNARE": {
+                "f1": 0.9850746268656716,
+                "fn": 0,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 10.89603030303029,
+                "precision": 0.9705882352941176,
+                "recall": 1.0,
+                "support": 33,
+                "tp": 33
+              }
+            },
+            "predictedEvents": 153,
+            "referenceEvents": 150,
+            "supportedMacroF1": 0.987610165449231
+          },
+          "20ms": {
+            "meanAbsoluteTimingErrorMs": 11.437153153152956,
+            "micro": {
+              "f1": 0.7326732673267327,
+              "fn": 39,
+              "fp": 42,
+              "precision": 0.7254901960784313,
+              "recall": 0.74,
+              "tp": 111
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 1.0,
+                "fn": 0,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 10.00000000000012,
+                "precision": 1.0,
+                "recall": 1.0,
+                "support": 2,
+                "tp": 2
+              },
+              "HIHAT": {
+                "f1": 0.9391304347826087,
+                "fn": 2,
+                "fp": 5,
+                "meanAbsoluteTimingErrorMs": 10.755444444444198,
+                "precision": 0.9152542372881356,
+                "recall": 0.9642857142857143,
+                "support": 56,
+                "tp": 54
+              },
+              "KICK": {
+                "f1": 0.41025641025641024,
+                "fn": 35,
+                "fp": 34,
+                "meanAbsoluteTimingErrorMs": 14.583333333333023,
+                "precision": 0.41379310344827586,
+                "recall": 0.4067796610169492,
+                "support": 59,
+                "tp": 24
+              },
+              "SNARE": {
+                "f1": 0.9253731343283582,
+                "fn": 2,
+                "fp": 3,
+                "meanAbsoluteTimingErrorMs": 10.281612903225762,
+                "precision": 0.9117647058823529,
+                "recall": 0.9393939393939394,
+                "support": 33,
+                "tp": 31
+              }
+            },
+            "predictedEvents": 153,
+            "referenceEvents": 150,
+            "supportedMacroF1": 0.8186899948418442
+          },
+          "50ms": {
+            "meanAbsoluteTimingErrorMs": 16.223646258503308,
+            "micro": {
+              "f1": 0.9702970297029703,
+              "fn": 3,
+              "fp": 6,
+              "precision": 0.9607843137254902,
+              "recall": 0.98,
+              "tp": 147
+            },
+            "perClass": {
+              "CYMBAL": {
+                "f1": 1.0,
+                "fn": 0,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 10.00000000000012,
+                "precision": 1.0,
+                "recall": 1.0,
+                "support": 2,
+                "tp": 2
+              },
+              "HIHAT": {
+                "f1": 0.9739130434782609,
+                "fn": 0,
+                "fp": 3,
+                "meanAbsoluteTimingErrorMs": 11.166196428571228,
+                "precision": 0.9491525423728814,
+                "recall": 1.0,
+                "support": 56,
+                "tp": 56
+              },
+              "KICK": {
+                "f1": 0.9572649572649573,
+                "fn": 3,
+                "fp": 2,
+                "meanAbsoluteTimingErrorMs": 24.642857142857096,
+                "precision": 0.9655172413793104,
+                "recall": 0.9491525423728814,
+                "support": 59,
+                "tp": 56
+              },
+              "SNARE": {
+                "f1": 0.9850746268656716,
+                "fn": 0,
+                "fp": 1,
+                "meanAbsoluteTimingErrorMs": 10.89603030303029,
+                "precision": 0.9705882352941176,
+                "recall": 1.0,
+                "support": 33,
+                "tp": 33
+              }
+            },
+            "predictedEvents": 153,
+            "referenceEvents": 150,
+            "supportedMacroF1": 0.9790631569022225
+          }
+        }
+      },
+      "track": "MusicDelta_SpeedMetal"
+    },
+    {
+      "drum2notesEstimatedBpm": 103.0,
+      "drum2notesJobId": "dba56d9a-f4ce-4ffd-814b-7e673c84d7b1",
+      "drum2notesState": "ok",
+      "eventCounts": {
+        "drum2notes": 66,
+        "drumscribe": 66,
+        "reference": 82
+      },
+      "genre": "swing jazz",
+      "hashes": {
+        "drum2notesRaw": "d4e9b87ccfc2294220ae29b36c7da5d919eb576932db1b1bb9886b1a8ddd3ce3",
+        "drumStem": "03949b3774633ba5d114be0e02c8adb560645507915ecf67a92c5c8db396562a",
+        "drumscribePrediction": "db898ab7a87eb942aaedfdbc18941b56fcfb280b956e327824de279db6952764",
+        "fullMixExcerpt": "7d4b68f3a0f3ed5f9b89b001b18f5b211516ac4bd2f5e4269eebbfb134154380",
+        "referenceAnnotation": "3a5a1d32d30a41ae885d09b1d489f8c4e64c10bc513f30bbf0c1df593575c293"
+      },
+      "scores": {
+        "drum2notes": {
+          "100ms": {
+            "meanAbsoluteTimingErrorMs": 16.63863846509487,
+            "micro": {
+              "f1": 0.7567567567567568,
+              "fn": 26,
+              "fp": 10,
+              "precision": 0.8484848484848485,
+              "recall": 0.6829268292682927,
+              "tp": 56
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 0.918918918918919,
+                "fn": 0,
+                "fp": 3,
+                "meanAbsoluteTimingErrorMs": 17.207310108509407,
+                "precision": 0.85,
+                "recall": 1.0,
+                "support": 17,
+                "tp": 17
+              },
+              "KICK": {
+                "f1": 0.9473684210526315,
+                "fn": 0,
+                "fp": 2,
+                "meanAbsoluteTimingErrorMs": 14.724919093851392,
+                "precision": 0.9,
+                "recall": 1.0,
+                "support": 18,
+                "tp": 18
+              },
+              "SNARE": {
+                "f1": 0.5753424657534246,
+                "fn": 26,
+                "fp": 5,
+                "meanAbsoluteTimingErrorMs": 17.818616119587038,
+                "precision": 0.8076923076923077,
+                "recall": 0.44680851063829785,
+                "support": 47,
+                "tp": 21
+              }
+            },
+            "predictedEvents": 66,
+            "referenceEvents": 82,
+            "supportedMacroF1": 0.813876601908325
+          },
+          "20ms": {
+            "meanAbsoluteTimingErrorMs": 10.509259259259453,
+            "micro": {
+              "f1": 0.4864864864864865,
+              "fn": 46,
+              "fp": 30,
+              "precision": 0.5454545454545454,
+              "recall": 0.43902439024390244,
+              "tp": 36
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 0.5945945945945946,
+                "fn": 6,
+                "fp": 9,
+                "meanAbsoluteTimingErrorMs": 11.81818181818189,
+                "precision": 0.55,
+                "recall": 0.6470588235294118,
+                "support": 17,
+                "tp": 11
+              },
+              "KICK": {
+                "f1": 0.6842105263157895,
+                "fn": 5,
+                "fp": 7,
+                "meanAbsoluteTimingErrorMs": 9.230769230769665,
+                "precision": 0.65,
+                "recall": 0.7222222222222222,
+                "support": 18,
+                "tp": 13
+              },
+              "SNARE": {
+                "f1": 0.3287671232876712,
+                "fn": 35,
+                "fp": 14,
+                "meanAbsoluteTimingErrorMs": 10.694444444444487,
+                "precision": 0.46153846153846156,
+                "recall": 0.2553191489361702,
+                "support": 47,
+                "tp": 12
+              }
+            },
+            "predictedEvents": 66,
+            "referenceEvents": 82,
+            "supportedMacroF1": 0.5358574147326851
+          },
+          "50ms": {
+            "meanAbsoluteTimingErrorMs": 15.940276551927198,
+            "micro": {
+              "f1": 0.7432432432432432,
+              "fn": 27,
+              "fp": 11,
+              "precision": 0.8333333333333334,
+              "recall": 0.6707317073170732,
+              "tp": 55
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 0.918918918918919,
+                "fn": 0,
+                "fp": 3,
+                "meanAbsoluteTimingErrorMs": 17.207310108509407,
+                "precision": 0.85,
+                "recall": 1.0,
+                "support": 17,
+                "tp": 17
+              },
+              "KICK": {
+                "f1": 0.8947368421052632,
+                "fn": 1,
+                "fp": 3,
+                "meanAbsoluteTimingErrorMs": 12.35294117647107,
+                "precision": 0.85,
+                "recall": 0.9444444444444444,
+                "support": 18,
+                "tp": 17
+              },
+              "SNARE": {
+                "f1": 0.5753424657534246,
+                "fn": 26,
+                "fp": 5,
+                "meanAbsoluteTimingErrorMs": 17.818616119587038,
+                "precision": 0.8076923076923077,
+                "recall": 0.44680851063829785,
+                "support": 47,
+                "tp": 21
+              }
+            },
+            "predictedEvents": 66,
+            "referenceEvents": 82,
+            "supportedMacroF1": 0.7963327422592023
+          }
+        },
+        "drumscribe": {
+          "100ms": {
+            "meanAbsoluteTimingErrorMs": 15.000000000000032,
+            "micro": {
+              "f1": 0.7837837837837838,
+              "fn": 24,
+              "fp": 8,
+              "precision": 0.8787878787878788,
+              "recall": 0.7073170731707317,
+              "tp": 58
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 0.8717948717948718,
+                "fn": 0,
+                "fp": 5,
+                "meanAbsoluteTimingErrorMs": 14.70588235294102,
+                "precision": 0.7727272727272727,
+                "recall": 1.0,
+                "support": 17,
+                "tp": 17
+              },
+              "KICK": {
+                "f1": 1.0,
+                "fn": 0,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 15.000000000000322,
+                "precision": 1.0,
+                "recall": 1.0,
+                "support": 18,
+                "tp": 18
+              },
+              "SNARE": {
+                "f1": 0.6301369863013698,
+                "fn": 24,
+                "fp": 3,
+                "meanAbsoluteTimingErrorMs": 15.217391304347771,
+                "precision": 0.8846153846153846,
+                "recall": 0.48936170212765956,
+                "support": 47,
+                "tp": 23
+              }
+            },
+            "predictedEvents": 66,
+            "referenceEvents": 82,
+            "supportedMacroF1": 0.8339772860320805
+          },
+          "20ms": {
+            "meanAbsoluteTimingErrorMs": 14.4444444444444,
+            "micro": {
+              "f1": 0.7297297297297297,
+              "fn": 28,
+              "fp": 12,
+              "precision": 0.8181818181818182,
+              "recall": 0.6585365853658537,
+              "tp": 54
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 0.8717948717948718,
+                "fn": 0,
+                "fp": 5,
+                "meanAbsoluteTimingErrorMs": 14.70588235294102,
+                "precision": 0.7727272727272727,
+                "recall": 1.0,
+                "support": 17,
+                "tp": 17
+              },
+              "KICK": {
+                "f1": 0.7777777777777778,
+                "fn": 4,
+                "fp": 4,
+                "meanAbsoluteTimingErrorMs": 12.857142857142964,
+                "precision": 0.7777777777777778,
+                "recall": 0.7777777777777778,
+                "support": 18,
+                "tp": 14
+              },
+              "SNARE": {
+                "f1": 0.6301369863013698,
+                "fn": 24,
+                "fp": 3,
+                "meanAbsoluteTimingErrorMs": 15.217391304347771,
+                "precision": 0.8846153846153846,
+                "recall": 0.48936170212765956,
+                "support": 47,
+                "tp": 23
+              }
+            },
+            "predictedEvents": 66,
+            "referenceEvents": 82,
+            "supportedMacroF1": 0.7599032119580066
+          },
+          "50ms": {
+            "meanAbsoluteTimingErrorMs": 15.000000000000032,
+            "micro": {
+              "f1": 0.7837837837837838,
+              "fn": 24,
+              "fp": 8,
+              "precision": 0.8787878787878788,
+              "recall": 0.7073170731707317,
+              "tp": 58
+            },
+            "perClass": {
+              "HIHAT": {
+                "f1": 0.8717948717948718,
+                "fn": 0,
+                "fp": 5,
+                "meanAbsoluteTimingErrorMs": 14.70588235294102,
+                "precision": 0.7727272727272727,
+                "recall": 1.0,
+                "support": 17,
+                "tp": 17
+              },
+              "KICK": {
+                "f1": 1.0,
+                "fn": 0,
+                "fp": 0,
+                "meanAbsoluteTimingErrorMs": 15.000000000000322,
+                "precision": 1.0,
+                "recall": 1.0,
+                "support": 18,
+                "tp": 18
+              },
+              "SNARE": {
+                "f1": 0.6301369863013698,
+                "fn": 24,
+                "fp": 3,
+                "meanAbsoluteTimingErrorMs": 15.217391304347771,
+                "precision": 0.8846153846153846,
+                "recall": 0.48936170212765956,
+                "support": 47,
+                "tp": 23
+              }
+            },
+            "predictedEvents": 66,
+            "referenceEvents": 82,
+            "supportedMacroF1": 0.8339772860320805
+          }
+        }
+      },
+      "track": "MusicDelta_SwingJazz"
+    }
+  ]
+}

@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     hybrid_command: str | None = None
     hybrid_model_version: str = "drumscribe-hybrid-v1"
     recall_fusion_command: str | None = None
-    recall_fusion_model_version: str = "drumscribe-recall-fusion-v2"
+    recall_fusion_model_version: str = "drumscribe-recall-fusion-v3"
 
     audioshake_api_url: str = "https://api.audioshake.ai"
     audioshake_api_key: SecretStr | None = None
@@ -184,7 +184,7 @@ class Settings(BaseSettings):
                 raise ValueError("production recall-fusion command is missing")
             if (
                 transcription_provider == "drumscribe_recall_fusion"
-                and self.recall_fusion_model_version != "drumscribe-recall-fusion-v2"
+                and self.recall_fusion_model_version != "drumscribe-recall-fusion-v3"
             ):
                 raise ValueError("production recall-fusion model version is not approved")
             if (

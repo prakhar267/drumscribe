@@ -56,7 +56,7 @@ def test_opened_iteration_is_marked_as_non_independent(monkeypatch, tmp_path):
     prediction_root = tmp_path / "drumscribe-raw"
     prediction_root.mkdir()
     (prediction_root / "001.json").write_text(
-        '{"modelVersion":"drumscribe-recall-fusion-v2"}', encoding="utf-8"
+        '{"modelVersion":"drumscribe-recall-fusion-v3"}', encoding="utf-8"
     )
 
     report = module["score_results"](
