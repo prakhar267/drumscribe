@@ -45,9 +45,13 @@ from run_competitive_drum_benchmark import (
     predict_stacked_probabilities,
 )
 
-DEFAULT_PROVIDER = "drumscribe-recall-fusion-v4"
+DEFAULT_PROVIDER = "drumscribe-recall-fusion-v5"
 SUPPORTED_PROVIDERS = frozenset(
-    ("drumscribe-recall-fusion-v3", "drumscribe-recall-fusion-v4")
+    (
+        "drumscribe-recall-fusion-v3",
+        "drumscribe-recall-fusion-v4",
+        "drumscribe-recall-fusion-v5",
+    )
 )
 FAMILIES = ("KICK", "SNARE", "TOM", "HIHAT", "CYMBAL")
 ADTOF_CLASS_INDEX = {family: index for index, family in enumerate(FAMILIES)}
@@ -109,12 +113,15 @@ def validate_config(config: dict[str, Any], repository: Path) -> None:
     if config.get("productionApproved") is not True:
         raise RuntimeError("recall-fusion config is not production approved")
     gate = config.get("fullMix", {}).get("lowConfidenceConsensusGate")
-    if config.get("modelVersion") == "drumscribe-recall-fusion-v4":
+    if config.get("modelVersion") in {
+        "drumscribe-recall-fusion-v4",
+        "drumscribe-recall-fusion-v5",
+    }:
         if not isinstance(gate, dict) or gate.get("enabled") is not True:
-            raise RuntimeError("v4 recall-fusion config requires its consensus gate")
+            raise RuntimeError("recall-fusion config requires its consensus gate")
         family_rules = gate.get("familyRules")
         if not isinstance(family_rules, dict):
-            raise RuntimeError("v4 consensus gate requires family rules")
+            raise RuntimeError("consensus gate requires family rules")
         families = set(family_rules)
         if not families or not families <= set(FAMILIES):
             raise RuntimeError("consensus gate contains unsupported families")
@@ -742,7 +749,7 @@ def main() -> int:
     parser.add_argument(
         "--config",
         type=Path,
-        default=Path("ml/configs/drumscribe-recall-fusion-v4.json"),
+        default=Path("ml/configs/drumscribe-recall-fusion-v5.json"),
     )
     parser.add_argument("--device", choices=("cpu", "cuda", "mps"), default="cpu")
     parser.add_argument(

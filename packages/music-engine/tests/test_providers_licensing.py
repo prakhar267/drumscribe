@@ -231,13 +231,13 @@ def test_owner_approved_adtof_and_demucs_are_production_safe():
 
 def test_owner_approved_recall_fusion_is_production_safe():
     provider = DrumScribeRecallFusionTranscriptionProvider(
-        ("/safe/runner",), model_version="drumscribe-recall-fusion-v4"
+        ("/safe/runner",), model_version="drumscribe-recall-fusion-v5"
     )
     rollback = DrumScribeRecallFusionTranscriptionProvider(
-        ("/safe/runner",), model_version="drumscribe-recall-fusion-v3"
+        ("/safe/runner",), model_version="drumscribe-recall-fusion-v4"
     )
     assert provider.license.status.value == "commercial_allowed"
-    assert provider.provider_id == "drumscribe-recall-fusion-v4"
+    assert provider.provider_id == "drumscribe-recall-fusion-v5"
     require_production_safe(provider, production=True)
     require_production_safe(rollback, production=True)
 

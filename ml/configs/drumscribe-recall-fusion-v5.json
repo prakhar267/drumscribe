@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "modelVersion": "drumscribe-recall-fusion-v5",
+  "productionApproved": true,
+  "commercialRightsReference": "OWNER-ATTESTATION-2026-09-05",
+  "components": {
+    "adtofWeights": {
+      "path": ".research-models/adtof-pytorch/data/adtof_frame_rnn_pytorch_weights.pth",
+      "sha256": "1bc986e596ec47ba0b44916f87cd4a39f0b2bec23596df3fb5d0e87749217320"
+    },
+    "stackedEnsemble": {
+      "path": "ml/configs/groove-stacked-articulation-v18.json",
+      "sha256": "72348715dfee13de8caabb3a6943c5b6ffb561f5b35627faf9e3352edc341e23"
+    }
+  },
+  "drumOnly": {
+    "profiles": {
+      "default": "electronic_detailed",
+      "acoustic_precision": {
+        "description": "High-precision ADTOF route for isolated acoustic drum-kit recordings.",
+        "latencyCompensationSeconds": 0.015,
+        "peakRules": {
+          "KICK": {"threshold": 0.30, "preAverageSeconds": 0.30, "preMaximumSeconds": 0.03, "combineSeconds": 0.05},
+          "SNARE": {"threshold": 0.08, "preAverageSeconds": 0.30, "preMaximumSeconds": 0.03, "combineSeconds": 0.05, "minimumActivation": 0.16, "minimumFamilyMargin": -0.10},
+          "TOM": {"threshold": 0.36, "preAverageSeconds": 0.20, "preMaximumSeconds": 0.01, "combineSeconds": 0.03},
+          "HIHAT": {"threshold": 0.18, "preAverageSeconds": 0.20, "preMaximumSeconds": 0.03, "combineSeconds": 0.07},
+          "CYMBAL": {"threshold": 0.32, "preAverageSeconds": 0.15, "preMaximumSeconds": 0.01, "combineSeconds": 0.03}
+        }
+      }
+    },
+    "adtofPeakRules": {
+      "KICK": {"threshold": 0.04, "preAverageSeconds": 0.03, "preMaximumSeconds": 0.01, "combineSeconds": 0.01},
+      "SNARE": {"threshold": 0.06, "preAverageSeconds": 0.08, "preMaximumSeconds": 0.03, "combineSeconds": 0.02},
+      "TOM": {"threshold": 0.36, "preAverageSeconds": 0.20, "preMaximumSeconds": 0.01, "combineSeconds": 0.01},
+      "HIHAT": {"threshold": 0.04, "preAverageSeconds": 0.15, "preMaximumSeconds": 0.01, "combineSeconds": 0.03},
+      "CYMBAL": {"threshold": 0.32, "preAverageSeconds": 0.15, "preMaximumSeconds": 0.01, "combineSeconds": 0.01}
+    },
+    "unionFamilies": ["HIHAT", "CYMBAL"],
+    "unionToleranceSeconds": 0.05,
+    "consensusRecovery": {
+      "SNARE": {"adtofThreshold": 0.05, "ensembleThreshold": 0.80, "matchSeconds": 0.05},
+      "TOM": {"adtofThreshold": 0.20, "ensembleThreshold": 0.90, "matchSeconds": 0.05, "periodic": true, "periodToleranceSeconds": 0.035, "maximumPeriodSeconds": 1.0},
+      "HIHAT": {"adtofThreshold": 0.02, "ensembleThreshold": 0.30, "matchSeconds": 0.05, "periodic": true, "periodToleranceSeconds": 0.035, "maximumPeriodSeconds": 0.30},
+      "CYMBAL": {"adtofThreshold": 0.20, "ensembleThreshold": 0.90, "matchSeconds": 0.015}
+    }
+  },
+  "fullMix": {
+    "routes": ["direct", "htdemucs_ft_stem", "first_party_articulation"],
+    "peakRules": {
+      "KICK": {"stemWeight": 1.00, "threshold": 0.13, "preAverageSeconds": 0.03},
+      "SNARE": {"stemWeight": 0.90, "threshold": 0.10, "preAverageSeconds": 0.10},
+      "TOM": {"stemWeight": 0.80, "threshold": 0.09, "preAverageSeconds": 0.03},
+      "HIHAT": {"stemWeight": 0.50, "threshold": 0.04, "preAverageSeconds": 0.20},
+      "CYMBAL": {"stemWeight": 0.50, "threshold": 0.19, "preAverageSeconds": 0.03}
+    },
+    "stemBaselinePeakRules": {
+      "KICK": {"threshold": 0.22, "preAverageSeconds": 0.10, "preMaximumSeconds": 0.02, "combineSeconds": 0.02},
+      "SNARE": {"threshold": 0.24, "preAverageSeconds": 0.10, "preMaximumSeconds": 0.02, "combineSeconds": 0.02},
+      "TOM": {"threshold": 0.32, "preAverageSeconds": 0.10, "preMaximumSeconds": 0.02, "combineSeconds": 0.02},
+      "HIHAT": {"threshold": 0.26, "preAverageSeconds": 0.20, "preMaximumSeconds": 0.02, "combineSeconds": 0.02},
+      "CYMBAL": {"threshold": 0.30, "preAverageSeconds": 0.10, "preMaximumSeconds": 0.02, "combineSeconds": 0.02}
+    },
+    "guardedRouting": {
+      "directStemFamilies": ["CYMBAL"],
+      "weakStemRmsRatio": 0.45,
+      "kickFusionMaximumCountRatio": 1.10,
+      "snareFusionMinimumCountRatio": 0.90,
+      "hihatFusionMinimumBaselineHits": 10,
+      "hihatFusionMinimumAddedHits": 10,
+      "hihatFusionMinimumCountRatio": 1.15,
+      "tomFusionMaximumStemRmsRatio": 0.40,
+      "tomFusionNoBaselineMinimumHits": 3,
+      "tomFusionNoBaselineMinimumStemRmsRatio": 0.35,
+      "crossStickDominanceRatio": 3.0,
+      "articulationMatchSeconds": 0.05,
+      "hihatRescueMaximumBaselineHits": 0,
+      "hihatRescueMinimumArticulationHits": 20
+    },
+    "lowConfidenceConsensusGate": {
+      "enabled": true,
+      "familyRules": {
+        "SNARE": {"minimumConfidence": 0.34, "matchSeconds": 0.10},
+        "TOM": {"minimumConfidence": 0.34, "matchSeconds": 0.07},
+        "HIHAT": {"minimumConfidence": 0.26, "matchSeconds": 0.02},
+        "CYMBAL": {"minimumConfidence": 0.28, "matchSeconds": 0.10}
+      }
+    },
+    "tambourineRecovery": {
+      "minimumFrequencyHz": 10000,
+      "peakDelta": 0.10,
+      "minimumPeakCount": 8,
+      "minimumMedianPeriodSeconds": 0.50,
+      "maximumMedianPeriodSeconds": 1.50,
+      "maximumIntervalCoefficientOfVariation": 0.05,
+      "latencyCompensationSeconds": -0.02,
+      "suppressBaselineHihatWhenActive": true
+    }
+  },
+  "validation": {
+    "selectionData": "opened RWC development50 used for algorithmic decoder calibration; no new trained checkpoint",
+    "verification": "separate RWC39 plus MDB11 verification; verification labels were not used to choose the rule",
+    "selectionLabelsUsedForVerification": false,
+    "inherits": "drumscribe-recall-fusion-v4 confidence-and-consensus gate",
+    "changes": [
+      "stronger separated-stem weight and shorter peak context for weak-stem kick fusion",
+      "lower snare fusion threshold with increased separated-stem weight",
+      "higher hi-hat baseline threshold with a longer adaptive peak context"
+    ],
+    "rejectedCandidates": [
+      "aggressive tom suppression because verification tom F1 regressed",
+      "development-trained hit classifier because it failed to transfer",
+      "articulation-only recovery because it reduced overall accuracy",
+      "articulation timestamp replacement because its gain was negligible"
+    ]
+  }
+}

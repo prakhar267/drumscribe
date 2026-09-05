@@ -58,14 +58,14 @@ DEFAULT_RWC_ROOTS = (
 DEFAULT_MDB_DATASET = Path("data/research-corpus/MDBDrums/MDB Drums")
 DEFAULT_MDB_SOURCE = Path("output/mdb-real-test11-inputs")
 DEFAULT_MDB_STEM_EVIDENCE = Path("output/mdb-recall-fusion-v3-live-test11-2026-09-06")
-DEFAULT_OUTPUT = Path("output/real-song-100-v4-vs-drum2notes-2026-09-06")
+DEFAULT_OUTPUT = Path("output/real-song-100-v5-vs-drum2notes-2026-09-06")
 DEFAULT_COMPACT_OUTPUT = Path(
-    "docs/benchmarks/data/REAL_SONG_100_V4_VS_DRUM2NOTES.json"
+    "docs/benchmarks/data/REAL_SONG_100_V5_VS_DRUM2NOTES.json"
 )
 DEFAULT_ADTOF_PYTHON = Path(".research-models/adtof-env/bin/python")
 DEFAULT_RUNNER = Path("scripts/model_runners/drumscribe_recall_fusion_runner.py")
-DEFAULT_CONFIG = Path("ml/configs/drumscribe-recall-fusion-v4.json")
-MODEL_VERSION = "drumscribe-recall-fusion-v4"
+DEFAULT_CONFIG = Path("ml/configs/drumscribe-recall-fusion-v5.json")
+MODEL_VERSION = "drumscribe-recall-fusion-v5"
 WINDOW_SECONDS = 20.0
 TOLERANCES_MS = (20, 50, 100)
 FAMILY5 = frozenset(("KICK", "SNARE", "HIHAT", "TOM", "CYMBAL"))
@@ -740,7 +740,7 @@ def build_report(
                 **split_scores(development_indices),
             },
             "verification50": {
-                "role": "not used to choose the v4 consensus-gate rules",
+                "role": f"not used to choose the {model_version} decoder rules",
                 "sequenceRange": [51, 100],
                 **split_scores(verification_indices),
             },

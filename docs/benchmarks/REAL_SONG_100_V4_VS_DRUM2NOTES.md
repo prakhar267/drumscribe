@@ -123,6 +123,10 @@ and raw responses are under
 PYTHONPATH='scripts/model_runners:scripts:packages/music-engine/src:ml/src' \
   .research-models/adtof-env/bin/python \
   scripts/run_real_song_100_live_benchmark.py \
+  --model-version drumscribe-recall-fusion-v4 \
+  --config ml/configs/drumscribe-recall-fusion-v4.json \
+  --output output/real-song-100-v4-vs-drum2notes-2026-09-06 \
+  --compact-output docs/benchmarks/data/REAL_SONG_100_V4_VS_DRUM2NOTES.json \
   --workers 3 --device cpu \
   --reuse-drum2notes-from \
   output/real-song-100-v3-vs-drum2notes-2026-09-06
