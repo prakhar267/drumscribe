@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     hybrid_command: str | None = None
     hybrid_model_version: str = "drumscribe-hybrid-v1"
     recall_fusion_command: str | None = None
-    recall_fusion_model_version: str = "drumscribe-recall-fusion-v5"
+    recall_fusion_model_version: str = "drumscribe-recall-fusion-v6"
 
     audioshake_api_url: str = "https://api.audioshake.ai"
     audioshake_api_key: SecretStr | None = None
@@ -188,6 +188,7 @@ class Settings(BaseSettings):
                     "drumscribe-recall-fusion-v3",
                     "drumscribe-recall-fusion-v4",
                     "drumscribe-recall-fusion-v5",
+                    "drumscribe-recall-fusion-v6",
                 }
             ):
                 raise ValueError("production recall-fusion model version is not approved")

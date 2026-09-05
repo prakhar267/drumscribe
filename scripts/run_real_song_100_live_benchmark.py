@@ -58,14 +58,14 @@ DEFAULT_RWC_ROOTS = (
 DEFAULT_MDB_DATASET = Path("data/research-corpus/MDBDrums/MDB Drums")
 DEFAULT_MDB_SOURCE = Path("output/mdb-real-test11-inputs")
 DEFAULT_MDB_STEM_EVIDENCE = Path("output/mdb-recall-fusion-v3-live-test11-2026-09-06")
-DEFAULT_OUTPUT = Path("output/real-song-100-v5-vs-drum2notes-2026-09-06")
+DEFAULT_OUTPUT = Path("output/real-song-100-v6-vs-drum2notes-2026-09-06")
 DEFAULT_COMPACT_OUTPUT = Path(
-    "docs/benchmarks/data/REAL_SONG_100_V5_VS_DRUM2NOTES.json"
+    "docs/benchmarks/data/REAL_SONG_100_V6_VS_DRUM2NOTES.json"
 )
 DEFAULT_ADTOF_PYTHON = Path(".research-models/adtof-env/bin/python")
 DEFAULT_RUNNER = Path("scripts/model_runners/drumscribe_recall_fusion_runner.py")
-DEFAULT_CONFIG = Path("ml/configs/drumscribe-recall-fusion-v5.json")
-MODEL_VERSION = "drumscribe-recall-fusion-v5"
+DEFAULT_CONFIG = Path("ml/configs/drumscribe-recall-fusion-v6.json")
+MODEL_VERSION = "drumscribe-recall-fusion-v6"
 WINDOW_SECONDS = 20.0
 TOLERANCES_MS = (20, 50, 100)
 FAMILY5 = frozenset(("KICK", "SNARE", "HIHAT", "TOM", "CYMBAL"))
@@ -691,7 +691,7 @@ def build_report(
         "systems": {
             "drumscribe": {
                 "provider": model_version,
-                "pipeline": "htdemucs_ft + guarded direct/stem ADTOF fusion + first-party articulation recovery",
+                "pipeline": "htdemucs_ft + guarded direct/stem ADTOF fusion + first-party articulation recovery + adaptive tom decoder",
                 "commercialRightsReference": APPROVAL_REFERENCE,
                 "productionProviderGatePassed": True,
             },

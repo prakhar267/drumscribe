@@ -45,12 +45,13 @@ from run_competitive_drum_benchmark import (
     predict_stacked_probabilities,
 )
 
-DEFAULT_PROVIDER = "drumscribe-recall-fusion-v5"
+DEFAULT_PROVIDER = "drumscribe-recall-fusion-v6"
 SUPPORTED_PROVIDERS = frozenset(
     (
         "drumscribe-recall-fusion-v3",
         "drumscribe-recall-fusion-v4",
         "drumscribe-recall-fusion-v5",
+        "drumscribe-recall-fusion-v6",
     )
 )
 FAMILIES = ("KICK", "SNARE", "TOM", "HIHAT", "CYMBAL")
@@ -116,6 +117,7 @@ def validate_config(config: dict[str, Any], repository: Path) -> None:
     if config.get("modelVersion") in {
         "drumscribe-recall-fusion-v4",
         "drumscribe-recall-fusion-v5",
+        "drumscribe-recall-fusion-v6",
     }:
         if not isinstance(gate, dict) or gate.get("enabled") is not True:
             raise RuntimeError("recall-fusion config requires its consensus gate")
@@ -132,6 +134,33 @@ def validate_config(config: dict[str, Any], repository: Path) -> None:
                 )
             if not 0 < float(family_rule.get("matchSeconds", 0)) <= 0.2:
                 raise RuntimeError("consensus gate match window is invalid")
+    if config.get("modelVersion") == "drumscribe-recall-fusion-v6":
+        adaptive = config.get("fullMix", {}).get("adaptiveTomDecoder")
+        if not isinstance(adaptive, dict) or adaptive.get("enabled") is not True:
+            raise RuntimeError("recall-fusion v6 requires its adaptive tom decoder")
+        boundaries = adaptive.get("stemRmsRatioBoundaries")
+        if (
+            not isinstance(boundaries, list)
+            or len(boundaries) != 2
+            or not 0 <= float(boundaries[0]) < float(boundaries[1]) <= 4
+        ):
+            raise RuntimeError("adaptive tom decoder boundaries are invalid")
+        if int(adaptive.get("minimumBaselineHits", 0)) < 1:
+            raise RuntimeError("adaptive tom decoder requires a baseline hit guard")
+        bucket_rules = adaptive.get("bucketRules")
+        if not isinstance(bucket_rules, dict) or set(bucket_rules) != {
+            "low",
+            "middle",
+            "high",
+        }:
+            raise RuntimeError("adaptive tom decoder requires three bucket rules")
+        for bucket_rule in bucket_rules.values():
+            if not 0 <= float(bucket_rule.get("stemWeight", -1)) <= 1:
+                raise RuntimeError("adaptive tom decoder stem weight is invalid")
+            if not 0 < float(bucket_rule.get("threshold", 0)) <= 1:
+                raise RuntimeError("adaptive tom decoder threshold is invalid")
+            if not 0 < float(bucket_rule.get("preAverageSeconds", 0)) <= 1:
+                raise RuntimeError("adaptive tom decoder peak context is invalid")
     for component in config["components"].values():
         path = resolve(repository, str(component["path"]))
         if sha256(path) != str(component["sha256"]):
@@ -474,6 +503,46 @@ def stem_baseline_hits(stem: np.ndarray, rules: dict[str, Any]) -> list[Hit]:
     return sorted(hits, key=lambda hit: (hit.onset, hit.instrument))
 
 
+def adaptive_tom_hits(
+    direct: np.ndarray,
+    stem: np.ndarray,
+    rms_ratio: float,
+    rules: dict[str, Any],
+) -> tuple[list[Hit], str]:
+    """Decode toms with a stem-strength-specific, development-selected rule."""
+    adaptive = rules["adaptiveTomDecoder"]
+    low_boundary, high_boundary = (
+        float(value) for value in adaptive["stemRmsRatioBoundaries"]
+    )
+    if rms_ratio <= low_boundary:
+        bucket = "low"
+    elif rms_ratio <= high_boundary:
+        bucket = "middle"
+    else:
+        bucket = "high"
+    rule = adaptive["bucketRules"][bucket]
+    frame_count = min(len(direct), len(stem))
+    class_index = ADTOF_CLASS_INDEX["TOM"]
+    stem_weight = float(rule["stemWeight"])
+    activation = (
+        stem_weight * stem[:frame_count, class_index]
+        + (1 - stem_weight) * direct[:frame_count, class_index]
+    )
+    peak_rule = {
+        "threshold": rule["threshold"],
+        "preAverageSeconds": rule["preAverageSeconds"],
+        "preMaximumSeconds": 0.02,
+        "combineSeconds": 0.02,
+    }
+    return (
+        [
+            Hit(GENERIC_INSTRUMENT["TOM"], onset, confidence)
+            for onset, confidence in process_activation(activation, peak_rule)
+        ],
+        bucket,
+    )
+
+
 def audio_rms_ratio(mixture: Path, stem: Path) -> float:
     """Return a bounded, scale-independent separation-strength proxy."""
     import librosa
@@ -658,6 +727,25 @@ def guarded_full_mix_fusion(
         rules.get("lowConfidenceConsensusGate"),
     )
 
+    adaptive_tom_metadata: dict[str, Any] = {
+        "adaptiveTomDecoder": False,
+        "adaptiveTomBucket": None,
+    }
+    adaptive_tom = rules.get("adaptiveTomDecoder")
+    if adaptive_tom and adaptive_tom.get("enabled"):
+        baseline_tom_count = sum(hit.family == "TOM" for hit in hits)
+        if baseline_tom_count >= int(adaptive_tom["minimumBaselineHits"]):
+            tom_hits, bucket = adaptive_tom_hits(direct, stem, rms_ratio, rules)
+            hits = [hit for hit in hits if hit.family != "TOM"]
+            hits.extend(tom_hits)
+            hits.sort(key=lambda hit: (hit.onset, hit.instrument))
+            adaptive_tom_metadata = {
+                "adaptiveTomDecoder": True,
+                "adaptiveTomBucket": bucket,
+                "adaptiveTomBaselineHits": baseline_tom_count,
+                "adaptiveTomSelectedHits": len(tom_hits),
+            }
+
     tambourines = regular_tambourine_hits(stem_path, rules["tambourineRecovery"])
     if tambourines and rules["tambourineRecovery"].get(
         "suppressBaselineHihatWhenActive", False
@@ -675,6 +763,7 @@ def guarded_full_mix_fusion(
         "relabeledCrossStickCount": relabeled_cross_sticks,
         "hihatRescue": hihat_rescue,
         "tambourineRecovered": len(tambourines),
+        **adaptive_tom_metadata,
         **consensus_metadata,
     }
 
@@ -749,7 +838,7 @@ def main() -> int:
     parser.add_argument(
         "--config",
         type=Path,
-        default=Path("ml/configs/drumscribe-recall-fusion-v5.json"),
+        default=Path("ml/configs/drumscribe-recall-fusion-v6.json"),
     )
     parser.add_argument("--device", choices=("cpu", "cuda", "mps"), default="cpu")
     parser.add_argument(
