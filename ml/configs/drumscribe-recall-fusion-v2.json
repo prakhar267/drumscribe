@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "modelVersion": "drumscribe-recall-fusion-v2",
+  "productionApproved": true,
+  "commercialRightsReference": "OWNER-ATTESTATION-2026-09-05",
+  "components": {
+    "adtofWeights": {
+      "path": ".research-models/adtof-pytorch/data/adtof_frame_rnn_pytorch_weights.pth",
+      "sha256": "1bc986e596ec47ba0b44916f87cd4a39f0b2bec23596df3fb5d0e87749217320"
+    },
+    "stackedEnsemble": {
+      "path": "ml/configs/groove-stacked-articulation-v18.json",
+      "sha256": "72348715dfee13de8caabb3a6943c5b6ffb561f5b35627faf9e3352edc341e23"
+    }
+  },
+  "drumOnly": {
+    "profiles": {
+      "default": "electronic_detailed",
+      "acoustic_precision": {
+        "description": "High-precision ADTOF route for isolated acoustic drum-kit recordings.",
+        "latencyCompensationSeconds": 0.015,
+        "peakRules": {
+          "KICK": {"threshold": 0.30, "preAverageSeconds": 0.30, "preMaximumSeconds": 0.03, "combineSeconds": 0.05},
+          "SNARE": {"threshold": 0.08, "preAverageSeconds": 0.30, "preMaximumSeconds": 0.03, "combineSeconds": 0.05, "minimumActivation": 0.16, "minimumFamilyMargin": -0.10},
+          "TOM": {"threshold": 0.36, "preAverageSeconds": 0.20, "preMaximumSeconds": 0.01, "combineSeconds": 0.03},
+          "HIHAT": {"threshold": 0.18, "preAverageSeconds": 0.20, "preMaximumSeconds": 0.03, "combineSeconds": 0.07},
+          "CYMBAL": {"threshold": 0.32, "preAverageSeconds": 0.15, "preMaximumSeconds": 0.01, "combineSeconds": 0.03}
+        }
+      }
+    },
+    "adtofPeakRules": {
+      "KICK": {"threshold": 0.04, "preAverageSeconds": 0.03, "preMaximumSeconds": 0.01, "combineSeconds": 0.01},
+      "SNARE": {"threshold": 0.06, "preAverageSeconds": 0.08, "preMaximumSeconds": 0.03, "combineSeconds": 0.02},
+      "TOM": {"threshold": 0.36, "preAverageSeconds": 0.20, "preMaximumSeconds": 0.01, "combineSeconds": 0.01},
+      "HIHAT": {"threshold": 0.04, "preAverageSeconds": 0.15, "preMaximumSeconds": 0.01, "combineSeconds": 0.03},
+      "CYMBAL": {"threshold": 0.32, "preAverageSeconds": 0.15, "preMaximumSeconds": 0.01, "combineSeconds": 0.01}
+    },
+    "unionFamilies": ["HIHAT", "CYMBAL"],
+    "unionToleranceSeconds": 0.05,
+    "consensusRecovery": {
+      "SNARE": {"adtofThreshold": 0.05, "ensembleThreshold": 0.80, "matchSeconds": 0.05},
+      "TOM": {"adtofThreshold": 0.20, "ensembleThreshold": 0.90, "matchSeconds": 0.05, "periodic": true, "periodToleranceSeconds": 0.035, "maximumPeriodSeconds": 1.0},
+      "HIHAT": {"adtofThreshold": 0.02, "ensembleThreshold": 0.30, "matchSeconds": 0.05, "periodic": true, "periodToleranceSeconds": 0.035, "maximumPeriodSeconds": 0.30},
+      "CYMBAL": {"adtofThreshold": 0.20, "ensembleThreshold": 0.90, "matchSeconds": 0.015}
+    }
+  },
+  "fullMix": {
+    "routes": ["direct", "htdemucs_ft_stem"],
+    "peakRules": {
+      "KICK": {"stemWeight": 0.90, "threshold": 0.09, "preAverageSeconds": 0.08},
+      "SNARE": {"stemWeight": 0.80, "threshold": 0.51, "preAverageSeconds": 0.15},
+      "TOM": {"stemWeight": 0.80, "threshold": 0.09, "preAverageSeconds": 0.03},
+      "HIHAT": {"stemWeight": 0.50, "threshold": 0.04, "preAverageSeconds": 0.20},
+      "CYMBAL": {"stemWeight": 0.50, "threshold": 0.19, "preAverageSeconds": 0.03}
+    }
+  },
+  "validation": {
+    "selectionData": "twenty GMD train-split development excerpts",
+    "sealedVerification": "drumscribe-recall-fusion-holdout-v1",
+    "selectionLabelsUsedForSealedVerification": false,
+    "rejectedRule": "unilateral periodic insertion; false positives reduced F1",
+
+    "acousticProfileCalibration": "IDMT RealDrum opened research evaluation; thresholds, family-margin guard, and 15 ms latency compensation require external confirmation"
+  }
+}

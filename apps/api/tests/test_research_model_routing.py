@@ -6,6 +6,7 @@ import pytest
 from drumscribe_music import (
     ADTOFResearchTranscriptionProvider,
     DrumScribeHybridTranscriptionProvider,
+    DrumScribeRecallFusionTranscriptionProvider,
     OaFDrumsTranscriptionProvider,
     YourMT3PlusTranscriptionProvider,
 )
@@ -21,6 +22,7 @@ def research_engine() -> SimpleNamespace:
         OaFDrumsTranscriptionProvider=OaFDrumsTranscriptionProvider,
         ADTOFResearchTranscriptionProvider=ADTOFResearchTranscriptionProvider,
         DrumScribeHybridTranscriptionProvider=DrumScribeHybridTranscriptionProvider,
+        DrumScribeRecallFusionTranscriptionProvider=DrumScribeRecallFusionTranscriptionProvider,
     )
 
 
@@ -34,6 +36,12 @@ def research_engine() -> SimpleNamespace:
             "drumscribe_hybrid",
             "hybrid_command",
             DrumScribeHybridTranscriptionProvider,
+            "drum_stem",
+        ),
+        (
+            "drumscribe_recall_fusion",
+            "recall_fusion_command",
+            DrumScribeRecallFusionTranscriptionProvider,
             "drum_stem",
         ),
     ],
@@ -90,6 +98,32 @@ def test_owner_approved_self_hosted_pipeline_can_be_selected_in_production() -> 
     assert settings.source_separation_provider == "demucs"
     assert settings.music_transcription_provider == "adtof"
     assert settings.beat_tracking_provider == "research"
+
+
+def test_owner_approved_recall_fusion_can_be_selected_in_production() -> None:
+    settings = Settings(
+        environment=Environment.PRODUCTION,
+        database_url="postgresql+asyncpg://db.test/drumscribe",
+        storage_backend="s3",
+        queue_backend="celery",
+        pipeline_provider="music_engine",
+        source_separation_provider="demucs",
+        music_transcription_provider="drumscribe_recall_fusion",
+        beat_tracking_provider="research",
+        commercial_provider_license_confirmed=True,
+        commercial_provider_approval_reference="OWNER-ATTESTATION-2026-09-05",
+        recall_fusion_command="/approved/recall-fusion",
+        recall_fusion_model_version="drumscribe-recall-fusion-v2",
+        cookie_secure=True,
+        dev_expose_magic_link=False,
+        magic_link_delivery="webhook",
+        magic_link_webhook_url="https://mail.test/link",
+        session_secret="a" * 40,
+        s3_access_key_id="access",
+        s3_secret_access_key="secret",
+        allowed_hosts=["api.drumscribe.test"],
+    )
+    assert settings.music_transcription_provider == "drumscribe_recall_fusion"
 
 
 def test_production_rejects_an_unapproved_adtof_version() -> None:

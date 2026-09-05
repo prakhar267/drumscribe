@@ -200,6 +200,11 @@ class MusicEngineAdapter:
                 self.settings.hybrid_command,
                 self.settings.hybrid_model_version,
             ),
+            "drumscribe_recall_fusion": (
+                "DrumScribeRecallFusionTranscriptionProvider",
+                self.settings.recall_fusion_command,
+                self.settings.recall_fusion_model_version,
+            ),
         }
         if selected in external:
             class_name, command, version = external[selected]
@@ -463,7 +468,13 @@ class MusicEngineAdapter:
             "providerMetadata": result.metadata.as_dict(),
         }
 
-    async def transcribe(self, audio_path: Path, duration: float) -> DrumTranscriptionResult:
+    async def transcribe(
+        self,
+        audio_path: Path,
+        duration: float,
+        *,
+        mixture_path: Path | None = None,
+    ) -> DrumTranscriptionResult:
         if self.settings.pipeline_provider == "development":
             return DrumTranscriptionResult(
                 hits=tuple(development_hits(duration)),
@@ -491,7 +502,12 @@ class MusicEngineAdapter:
                 "The configured music engine is unavailable.",
             ) from exc
         started = time.monotonic()
-        result = provider.transcribe(audio_path)
+        if mixture_path is not None and hasattr(provider, "transcribe_multiview"):
+            result = provider.transcribe_multiview(mixture_path, audio_path)
+            used_multiview = True
+        else:
+            result = provider.transcribe(audio_path)
+            used_multiview = False
         if inspect.isawaitable(result):
             result = await result
         hits: list[RawDrumHit] = []
@@ -520,6 +536,7 @@ class MusicEngineAdapter:
                 processing_ms=round((time.monotonic() - started) * 1000),
                 raw_metadata={
                     "inputKind": str(getattr(provider, "input_kind", "drum_stem")),
+                    "directStemFusion": used_multiview,
                 },
                 contract_reference=(
                     self.settings.commercial_provider_approval_reference
@@ -993,9 +1010,25 @@ class PipelineService:
             )
             transcription_input = await self._asset(db, project.id, input_asset_kind)
             async with self.storage.materialize(transcription_input.storage_key) as path:
-                transcription_result = await self.music.transcribe(
-                    path, project.duration_seconds or 8.0
-                )
+                if (
+                    self.settings.music_transcription_provider.casefold()
+                    == "drumscribe_recall_fusion"
+                ):
+                    mixture_asset = await self._asset(
+                        db, project.id, AssetKind.NORMALIZED
+                    )
+                    async with self.storage.materialize(
+                        mixture_asset.storage_key
+                    ) as mixture_path:
+                        transcription_result = await self.music.transcribe(
+                            path,
+                            project.duration_seconds or 8.0,
+                            mixture_path=mixture_path,
+                        )
+                else:
+                    transcription_result = await self.music.transcribe(
+                        path, project.duration_seconds or 8.0
+                    )
             hits = transcription_result.hits
             provider_metadata = transcription_result.metadata
             raw_hit_rows = [

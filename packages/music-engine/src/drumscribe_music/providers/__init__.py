@@ -3,6 +3,7 @@ from .demucs import DemucsAdapter
 from .external import (
     ADTOFResearchTranscriptionProvider,
     DrumScribeHybridTranscriptionProvider,
+    DrumScribeRecallFusionTranscriptionProvider,
     ExternalModelError,
     ExternalModelTranscriptionProvider,
     OaFDrumsTranscriptionProvider,
@@ -24,6 +25,7 @@ __all__ = [
     "CommercialProviderConfig",
     "DemucsAdapter",
     "ADTOFResearchTranscriptionProvider",
+    "DrumScribeRecallFusionTranscriptionProvider",
     "DrumScribeHybridTranscriptionProvider",
     "ExternalModelError",
     "ExternalModelTranscriptionProvider",

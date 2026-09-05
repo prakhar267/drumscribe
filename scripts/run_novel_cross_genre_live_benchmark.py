@@ -43,7 +43,10 @@ for source_root in (
 
 from drumscribe_music.licensing import require_production_safe
 from drumscribe_music.providers.demucs import DemucsAdapter
-from drumscribe_music.providers.external import ADTOFResearchTranscriptionProvider
+from drumscribe_music.providers.external import (
+    ADTOFResearchTranscriptionProvider,
+    DrumScribeRecallFusionTranscriptionProvider,
+)
 from run_100_track_genre_benchmark import (
     CATEGORY_ORDER,
     category_for_style,
@@ -685,20 +688,43 @@ def run_inference(
         raise RuntimeError(f"fresh DrumScribe output is not empty: {prediction_root}")
 
     adtof_python = resolve_executable(repository, args.adtof_python)
-    adtof_runner = resolve(repository, args.adtof_runner)
-    adtof_executable = resolve_executable(repository, args.adtof_executable)
-    transcription = ADTOFResearchTranscriptionProvider(
-        (
+    recall_fusion_runner = getattr(args, "recall_fusion_runner", None)
+    if recall_fusion_runner is not None:
+        recall_fusion_command = [
             str(adtof_python),
-            str(adtof_runner),
-            "--executable",
-            str(adtof_executable),
+            str(resolve(repository, recall_fusion_runner)),
+            "--repository",
+            str(repository),
             "--device",
             args.device,
-        ),
-        model_version="adtof-pytorch-85c192e78f71",
-        timeout_seconds=3_600,
-    )
+        ]
+        drum_only_profile = getattr(args, "drum_only_profile", None)
+        if drum_only_profile is not None:
+            recall_fusion_command.extend(
+                ("--drum-only-profile", str(drum_only_profile))
+            )
+        transcription = DrumScribeRecallFusionTranscriptionProvider(
+            tuple(recall_fusion_command),
+            model_version="drumscribe-recall-fusion-v2",
+            timeout_seconds=3_600,
+        )
+        decoder = "drumscribe-recall-fusion-v2"
+    else:
+        adtof_runner = resolve(repository, args.adtof_runner)
+        adtof_executable = resolve_executable(repository, args.adtof_executable)
+        transcription = ADTOFResearchTranscriptionProvider(
+            (
+                str(adtof_python),
+                str(adtof_runner),
+                "--executable",
+                str(adtof_executable),
+                "--device",
+                args.device,
+            ),
+            model_version="adtof-pytorch-85c192e78f71",
+            timeout_seconds=3_600,
+        )
+        decoder = "rhythm-consistency-v1"
     separation = DemucsAdapter(
         model="htdemucs_ft",
         python_executable=str(resolve_executable(repository, args.demucs_python)),
@@ -728,14 +754,17 @@ def run_inference(
                     stem = Path(directory) / "drums.wav"
                     separation.separate_drums(audio, stem)
                     stem_hash = sha256(stem)
-                    hits = transcription.transcribe(stem)
+                    if hasattr(transcription, "transcribe_multiview"):
+                        hits = transcription.transcribe_multiview(audio, stem)
+                    else:
+                        hits = transcription.transcribe(stem)
             else:
                 hits = transcription.transcribe(audio)
             payload = {
                 "schemaVersion": 1,
                 "provider": transcription.provider_id,
                 "modelVersion": transcription.version,
-                "decoder": "rhythm-consistency-v1",
+                "decoder": decoder,
                 "commercialRightsReference": APPROVAL_REFERENCE,
                 "source": {
                     "audioSha256": item["audioSha256"],

@@ -59,9 +59,21 @@ class ExternalModelTranscriptionProvider:
         source = Path(audio_path).resolve()
         if not source.is_file():
             raise FileNotFoundError(source)
+        return self._invoke(source)
+
+    def _invoke(
+        self, source: Path, *, extra_arguments: Sequence[str] = ()
+    ) -> list[RawDrumHit]:
         with tempfile.TemporaryDirectory(prefix=f"drumscribe-{self.provider_id}-") as directory:
             output = Path(directory) / "hits.json"
-            argv = (*self.command, "--input", os.fspath(source), "--output", os.fspath(output))
+            argv = (
+                *self.command,
+                "--input",
+                os.fspath(source),
+                *extra_arguments,
+                "--output",
+                os.fspath(output),
+            )
             try:
                 completed = subprocess.run(
                     argv,
@@ -208,6 +220,66 @@ class ADTOFResearchTranscriptionProvider(ExternalModelTranscriptionProvider):
                     "production use requires a separate approval."
                 ),
             )
+
+
+class DrumScribeRecallFusionTranscriptionProvider(ExternalModelTranscriptionProvider):
+    """Production fusion of the approved ADTOF and first-party checkpoints."""
+
+    provider_id = "drumscribe-recall-fusion-v2"
+    approved_model_version = provider_id
+    license = ProviderLicense(
+        provider_id=provider_id,
+        status=LicenseStatus.COMMERCIAL_ALLOWED,
+        code_license=(
+            "proprietary DrumScribe fusion; ADTOF commercial grant and upstream "
+            "attributions retained"
+        ),
+        weights_license=(
+            "first-party checkpoints plus ADTOF commercial inference rights under "
+            "OWNER-ATTESTATION-2026-09-05"
+        ),
+        training_data_license="Groove Dataset and E-GMD CC BY 4.0",
+        attribution_required=True,
+        distribution_restrictions=(
+            "Do not redistribute the ADTOF grant or checkpoint outside its approved scope."
+        ),
+        decision=(
+            "Self-hosted commercial inference approved by the company owner under "
+            "OWNER-ATTESTATION-2026-09-05."
+        ),
+    )
+
+    def __init__(
+        self,
+        command: Sequence[str],
+        *,
+        model_version: str,
+        timeout_seconds: float = 1_800,
+    ) -> None:
+        super().__init__(command, model_version=model_version, timeout_seconds=timeout_seconds)
+        if self.version != self.approved_model_version:
+            self.license = replace(
+                type(self).license,
+                status=LicenseStatus.UNRESOLVED,
+                decision=(
+                    f"Model {self.version!r} is outside OWNER-ATTESTATION-2026-09-05; "
+                    "production use requires a separate approval."
+                ),
+            )
+
+    def transcribe_multiview(
+        self, mixture_path: Path, drum_stem_path: Path
+    ) -> list[RawDrumHit]:
+        mixture = Path(mixture_path).resolve()
+        stem = Path(drum_stem_path).resolve()
+        if not mixture.is_file():
+            raise FileNotFoundError(mixture)
+        if not stem.is_file():
+            raise FileNotFoundError(stem)
+        return self._invoke(
+            stem,
+            extra_arguments=("--mixture-input", os.fspath(mixture)),
+        )
 
 
 class DrumScribeHybridTranscriptionProvider(ExternalModelTranscriptionProvider):

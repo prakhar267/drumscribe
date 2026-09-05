@@ -38,6 +38,8 @@ class Settings(BaseSettings):
     adtof_model_version: str = "local-research"
     hybrid_command: str | None = None
     hybrid_model_version: str = "drumscribe-hybrid-v1"
+    recall_fusion_command: str | None = None
+    recall_fusion_model_version: str = "drumscribe-recall-fusion-v2"
 
     audioshake_api_url: str = "https://api.audioshake.ai"
     audioshake_api_key: SecretStr | None = None
@@ -146,7 +148,7 @@ class Settings(BaseSettings):
             separation_provider = self.source_separation_provider.casefold()
             beat_provider = self.beat_tracking_provider.casefold()
             owner_approved_provider_selected = (
-                transcription_provider == "adtof"
+                transcription_provider in {"adtof", "drumscribe_recall_fusion"}
                 or separation_provider == "demucs"
                 or beat_provider in {"research", "research_accurate"}
             )
@@ -158,7 +160,11 @@ class Settings(BaseSettings):
                 raise ValueError(
                     "self-hosted production providers require the pinned owner approval reference"
                 )
-            if transcription_provider not in {"klangio_drums", "adtof"}:
+            if transcription_provider not in {
+                "klangio_drums",
+                "adtof",
+                "drumscribe_recall_fusion",
+            }:
                 raise ValueError("production requires an approved drum-transcription provider")
             if separation_provider not in {"audioshake", "music_ai", "demucs"}:
                 raise ValueError("production requires an approved source-separation provider")
@@ -171,6 +177,16 @@ class Settings(BaseSettings):
                 and self.adtof_model_version != "adtof-pytorch-85c192e78f71"
             ):
                 raise ValueError("production ADTOF model version is not approved")
+            if (
+                transcription_provider == "drumscribe_recall_fusion"
+                and not self.recall_fusion_command
+            ):
+                raise ValueError("production recall-fusion command is missing")
+            if (
+                transcription_provider == "drumscribe_recall_fusion"
+                and self.recall_fusion_model_version != "drumscribe-recall-fusion-v2"
+            ):
+                raise ValueError("production recall-fusion model version is not approved")
             if (
                 "klangio" in {transcription_provider, beat_provider}
                 or transcription_provider == "klangio_drums"

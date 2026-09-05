@@ -1,0 +1,361 @@
+{
+  "benchmarkId": "idmt-realdrum-sealed-live-v1",
+  "createdAt": "2026-09-05T16:34:05.793750+00:00",
+  "items": [
+    {
+      "annotationPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_00#KD.svl",
+      "annotationPaths": {
+        "HH": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_00#HH.svl",
+        "KD": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_00#KD.svl",
+        "SD": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_00#SD.svl"
+      },
+      "annotationSha256": "2c1b70a08b222b32e5cdb7edb72d560c465e6c2586f4d5122885970458706bce",
+      "annotationSha256s": {
+        "HH": "dfc15f02c64c95e54ed7904914c2329f6e27cb86e57eaf7dcc275a53971c693f",
+        "KD": "2c1b70a08b222b32e5cdb7edb72d560c465e6c2586f4d5122885970458706bce",
+        "SD": "4437ea5d7279dbc3b6c9cd055610d04cb10d58d58da4899e8d84d03e7780b8cb"
+      },
+      "audioPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/audio/RealDrum01_00#MIX.wav",
+      "audioSha256": "e9d84b4ba7b4d477415458269bd4af4ff16887d1ed6bb1c81926202486dae250",
+      "category": "idmt_realdrum",
+      "dataset": "idmt_smt_drums_v2",
+      "inputKind": "real_acoustic_drum_performance",
+      "scoredSeconds": 17.682403628117914,
+      "sequence": 1,
+      "sourceAudioPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/audio/RealDrum01_00#MIX.wav",
+      "sourceSplit": "published_realdrum_collection",
+      "style": "acoustic_drum_loop",
+      "trackId": "RealDrum01_00"
+    },
+    {
+      "annotationPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_01#KD.svl",
+      "annotationPaths": {
+        "HH": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_01#HH.svl",
+        "KD": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_01#KD.svl",
+        "SD": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_01#SD.svl"
+      },
+      "annotationSha256": "b2cd77054c4e4dc415e978459cbf1bafe882152d791979c7c3654608adfd7eb2",
+      "annotationSha256s": {
+        "HH": "fb4e17219a95775eeb4d73f501fe7b516683e7046be602be7687757c349e4f04",
+        "KD": "b2cd77054c4e4dc415e978459cbf1bafe882152d791979c7c3654608adfd7eb2",
+        "SD": "e29375a1fb5c3542fe3ff9a894a3b22f07258760a5009d5af11a06c290550f4e"
+      },
+      "audioPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/audio/RealDrum01_01#MIX.wav",
+      "audioSha256": "c678a96d0db44a2aae06c9285842fbab9babdd3ffe237ddb32ca65ce02cbe056",
+      "category": "idmt_realdrum",
+      "dataset": "idmt_smt_drums_v2",
+      "inputKind": "real_acoustic_drum_performance",
+      "scoredSeconds": 17.682403628117914,
+      "sequence": 2,
+      "sourceAudioPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/audio/RealDrum01_01#MIX.wav",
+      "sourceSplit": "published_realdrum_collection",
+      "style": "acoustic_drum_loop",
+      "trackId": "RealDrum01_01"
+    },
+    {
+      "annotationPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_02#KD.svl",
+      "annotationPaths": {
+        "HH": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_02#HH.svl",
+        "KD": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_02#KD.svl",
+        "SD": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_02#SD.svl"
+      },
+      "annotationSha256": "120a27f139c4052783e9dd7b60c9e0ec638600e9465348a6f3b98b112d6886dd",
+      "annotationSha256s": {
+        "HH": "51ab1defae4442b3eaddd17c10b94b23da93cb429ed95343a6ea806d64bc074c",
+        "KD": "120a27f139c4052783e9dd7b60c9e0ec638600e9465348a6f3b98b112d6886dd",
+        "SD": "97e76a879b68a3cec80359cc1d0605db0fe7a3e51f17e5e5504a8f8542b16645"
+      },
+      "audioPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/audio/RealDrum01_02#MIX.wav",
+      "audioSha256": "c1023660b6d223832852524b652e7c8225953e6da0c8fd301e568833658d5d2a",
+      "category": "idmt_realdrum",
+      "dataset": "idmt_smt_drums_v2",
+      "inputKind": "real_acoustic_drum_performance",
+      "scoredSeconds": 17.55421768707483,
+      "sequence": 3,
+      "sourceAudioPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/audio/RealDrum01_02#MIX.wav",
+      "sourceSplit": "published_realdrum_collection",
+      "style": "acoustic_drum_loop",
+      "trackId": "RealDrum01_02"
+    },
+    {
+      "annotationPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_03#KD.svl",
+      "annotationPaths": {
+        "HH": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_03#HH.svl",
+        "KD": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_03#KD.svl",
+        "SD": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_03#SD.svl"
+      },
+      "annotationSha256": "2ab6b51ea087382ff1dca84af2d31e79d26ac21b434110c04891c12fabfebd7c",
+      "annotationSha256s": {
+        "HH": "5bc32a2e6745730f898444ae7c0ba9d0587ecdc81e849d6758be9fcc9c67773f",
+        "KD": "2ab6b51ea087382ff1dca84af2d31e79d26ac21b434110c04891c12fabfebd7c",
+        "SD": "853655d746b7d4a0cf0b22b34c434871a4c1a8df7bbb4eb917ecf1b7902fe502"
+      },
+      "audioPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/audio/RealDrum01_03#MIX.wav",
+      "audioSha256": "6781e080250dd7b9ae9ca35ef909942e0a0f83abd5930d89b386dae1c0bd6f88",
+      "category": "idmt_realdrum",
+      "dataset": "idmt_smt_drums_v2",
+      "inputKind": "real_acoustic_drum_performance",
+      "scoredSeconds": 17.55421768707483,
+      "sequence": 4,
+      "sourceAudioPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/audio/RealDrum01_03#MIX.wav",
+      "sourceSplit": "published_realdrum_collection",
+      "style": "acoustic_drum_loop",
+      "trackId": "RealDrum01_03"
+    },
+    {
+      "annotationPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_04#KD.svl",
+      "annotationPaths": {
+        "HH": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_04#HH.svl",
+        "KD": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_04#KD.svl",
+        "SD": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_04#SD.svl"
+      },
+      "annotationSha256": "186cc091f5d67e66d02a9a8674557529cb1eacd9751dfb078f0604e08b683a7d",
+      "annotationSha256s": {
+        "HH": "057dbeb95671ea0a987c240ccac7ffc07731c6535c1f2dd21ff8ccd6e3df18d0",
+        "KD": "186cc091f5d67e66d02a9a8674557529cb1eacd9751dfb078f0604e08b683a7d",
+        "SD": "bfd97f4ffed98725443850b3b3458a4c3f5a94f91338ba187ff66e6717410e89"
+      },
+      "audioPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/audio/RealDrum01_04#MIX.wav",
+      "audioSha256": "396d3c68889edf15d37b1e3ed58e8032c6f80abfe0edd3512c8c1c76f01191e3",
+      "category": "idmt_realdrum",
+      "dataset": "idmt_smt_drums_v2",
+      "inputKind": "real_acoustic_drum_performance",
+      "scoredSeconds": 16.305804988662132,
+      "sequence": 5,
+      "sourceAudioPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/audio/RealDrum01_04#MIX.wav",
+      "sourceSplit": "published_realdrum_collection",
+      "style": "acoustic_drum_loop",
+      "trackId": "RealDrum01_04"
+    },
+    {
+      "annotationPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_05#KD.svl",
+      "annotationPaths": {
+        "HH": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_05#HH.svl",
+        "KD": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_05#KD.svl",
+        "SD": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_05#SD.svl"
+      },
+      "annotationSha256": "387a5efe383d0fbaab6bfbfebc8650767bc6e15224c68bc23c2317292594324a",
+      "annotationSha256s": {
+        "HH": "eb5d90a7ebcd568dae61601e3d489eccaf678eb190267619dd58c76294f905c2",
+        "KD": "387a5efe383d0fbaab6bfbfebc8650767bc6e15224c68bc23c2317292594324a",
+        "SD": "8ac7e6d8a14b1e77f9a71d242e1ace07b02dd524bbdaab09939fadc3cf3375bf"
+      },
+      "audioPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/audio/RealDrum01_05#MIX.wav",
+      "audioSha256": "3bd99a1794ea8dcfe1c92fbf1714d265d331cdda3eadcc3b1a73a42edbb18783",
+      "category": "idmt_realdrum",
+      "dataset": "idmt_smt_drums_v2",
+      "inputKind": "real_acoustic_drum_performance",
+      "scoredSeconds": 16.857142857142858,
+      "sequence": 6,
+      "sourceAudioPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/audio/RealDrum01_05#MIX.wav",
+      "sourceSplit": "published_realdrum_collection",
+      "style": "acoustic_drum_loop",
+      "trackId": "RealDrum01_05"
+    },
+    {
+      "annotationPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_06#KD.svl",
+      "annotationPaths": {
+        "HH": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_06#HH.svl",
+        "KD": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_06#KD.svl",
+        "SD": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_06#SD.svl"
+      },
+      "annotationSha256": "f278702595d914d42a5ad34695a0a43217bc485f52a7ddf9c87eb464b744237d",
+      "annotationSha256s": {
+        "HH": "111b61bb128e3e7a76797f22c41f8153c9875a77e75052d5bddfc4dc5fc07430",
+        "KD": "f278702595d914d42a5ad34695a0a43217bc485f52a7ddf9c87eb464b744237d",
+        "SD": "9747a6e84062040b0eff22182d939998cb0852eb6336434303cebaf8959baf23"
+      },
+      "audioPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/audio/RealDrum01_06#MIX.wav",
+      "audioSha256": "3f9e7c757229645afe9cf089cf300b3b36f5b71f7aba77651cd3207f4f6433b4",
+      "category": "idmt_realdrum",
+      "dataset": "idmt_smt_drums_v2",
+      "inputKind": "real_acoustic_drum_performance",
+      "scoredSeconds": 17.991065759637188,
+      "sequence": 7,
+      "sourceAudioPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/audio/RealDrum01_06#MIX.wav",
+      "sourceSplit": "published_realdrum_collection",
+      "style": "acoustic_drum_loop",
+      "trackId": "RealDrum01_06"
+    },
+    {
+      "annotationPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_07#KD.svl",
+      "annotationPaths": {
+        "HH": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_07#HH.svl",
+        "KD": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_07#KD.svl",
+        "SD": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_07#SD.svl"
+      },
+      "annotationSha256": "36cc33df3c31014fdbd2a836809012da276716118d1129168f964614180c487c",
+      "annotationSha256s": {
+        "HH": "1505910fb56c33f4858b25dfc9b71699f61597d72790e74e7594f0ed8fad5e32",
+        "KD": "36cc33df3c31014fdbd2a836809012da276716118d1129168f964614180c487c",
+        "SD": "dca50aaef36e397a5b4f25952d4ece5f3abb71a1dd8438bcb30caf9f2281a2cb"
+      },
+      "audioPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/audio/RealDrum01_07#MIX.wav",
+      "audioSha256": "d3abbcd0de4ef08a16724c7fc9cb13912b029f1a7e973aa56d88e7dd7e60019b",
+      "category": "idmt_realdrum",
+      "dataset": "idmt_smt_drums_v2",
+      "inputKind": "real_acoustic_drum_performance",
+      "scoredSeconds": 18.5,
+      "sequence": 8,
+      "sourceAudioPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/audio/RealDrum01_07#MIX.wav",
+      "sourceSplit": "published_realdrum_collection",
+      "style": "acoustic_drum_loop",
+      "trackId": "RealDrum01_07"
+    },
+    {
+      "annotationPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_08#KD.svl",
+      "annotationPaths": {
+        "HH": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_08#HH.svl",
+        "KD": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_08#KD.svl",
+        "SD": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_08#SD.svl"
+      },
+      "annotationSha256": "1b7423685fe87415151b6c7f864df8a4f481dc080db38e4b424acc3ef6d161a0",
+      "annotationSha256s": {
+        "HH": "b809a277438901004c16fe71e05ac7fd32113a127db03d743bbdb68f6e154de7",
+        "KD": "1b7423685fe87415151b6c7f864df8a4f481dc080db38e4b424acc3ef6d161a0",
+        "SD": "337df6d80590d81cebbde5be832be7d6d418851ed39d521ba38970aa531639c8"
+      },
+      "audioPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/audio/RealDrum01_08#MIX.wav",
+      "audioSha256": "7b2a66fbb37cafc68982fcf7a1143886ec69c87110771f70eea2dc491a6e7096",
+      "category": "idmt_realdrum",
+      "dataset": "idmt_smt_drums_v2",
+      "inputKind": "real_acoustic_drum_performance",
+      "scoredSeconds": 18.74331065759637,
+      "sequence": 9,
+      "sourceAudioPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/audio/RealDrum01_08#MIX.wav",
+      "sourceSplit": "published_realdrum_collection",
+      "style": "acoustic_drum_loop",
+      "trackId": "RealDrum01_08"
+    },
+    {
+      "annotationPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_09#KD.svl",
+      "annotationPaths": {
+        "HH": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_09#HH.svl",
+        "KD": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_09#KD.svl",
+        "SD": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_09#SD.svl"
+      },
+      "annotationSha256": "d2b2ed45b3fdfdb9ed3473933c6e05af2338bb78fa9029f0e1e77b5d87668a0f",
+      "annotationSha256s": {
+        "HH": "f4ce51bf65fd98519f64dad6e01e6b3d7a8c7ead2c42f47cf8c0b4eea50086eb",
+        "KD": "d2b2ed45b3fdfdb9ed3473933c6e05af2338bb78fa9029f0e1e77b5d87668a0f",
+        "SD": "c52c706474ea9e97c64bfac7665da48cc77bcaf58982fffa80c13518835cf61e"
+      },
+      "audioPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/audio/RealDrum01_09#MIX.wav",
+      "audioSha256": "84d00c635e3d627387a7ac57d75990a7f7d07b75bea0b0fe4356300f693614a1",
+      "category": "idmt_realdrum",
+      "dataset": "idmt_smt_drums_v2",
+      "inputKind": "real_acoustic_drum_performance",
+      "scoredSeconds": 16.566961451247167,
+      "sequence": 10,
+      "sourceAudioPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/audio/RealDrum01_09#MIX.wav",
+      "sourceSplit": "published_realdrum_collection",
+      "style": "acoustic_drum_loop",
+      "trackId": "RealDrum01_09"
+    },
+    {
+      "annotationPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_10#KD.svl",
+      "annotationPaths": {
+        "HH": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_10#HH.svl",
+        "KD": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_10#KD.svl",
+        "SD": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_10#SD.svl"
+      },
+      "annotationSha256": "695999e77ac21e1e3b814755caf8ebce7829db60049f291c5bd4b1a41d9cb50a",
+      "annotationSha256s": {
+        "HH": "e3aad6b80654762bf1aa138015fa76fde4a6df1aeddca58c3e9907c5962ba020",
+        "KD": "695999e77ac21e1e3b814755caf8ebce7829db60049f291c5bd4b1a41d9cb50a",
+        "SD": "fd09c70b03a35684ed6fb5e82d80d45c08e12b6b628c37592d8a6baef70b6a70"
+      },
+      "audioPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/audio/RealDrum01_10#MIX.wav",
+      "audioSha256": "6a66669415a3fc61de2f9694bf21f26f3013cf0a6e55b4586726625e6bc84423",
+      "category": "idmt_realdrum",
+      "dataset": "idmt_smt_drums_v2",
+      "inputKind": "real_acoustic_drum_performance",
+      "scoredSeconds": 21.25,
+      "sequence": 11,
+      "sourceAudioPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/audio/RealDrum01_10#MIX.wav",
+      "sourceSplit": "published_realdrum_collection",
+      "style": "acoustic_drum_loop",
+      "trackId": "RealDrum01_10"
+    },
+    {
+      "annotationPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_11#KD.svl",
+      "annotationPaths": {
+        "HH": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_11#HH.svl",
+        "KD": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_11#KD.svl",
+        "SD": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_11#SD.svl"
+      },
+      "annotationSha256": "0c254c4e9b252beccb4c2ec651ca5ed3bd1811e3d1a9e7d7c380ae4e7c2d9f60",
+      "annotationSha256s": {
+        "HH": "b5e62759312f3dbdf4456a40861ccbf358b391959c97c3152fd8168fc39a2e68",
+        "KD": "0c254c4e9b252beccb4c2ec651ca5ed3bd1811e3d1a9e7d7c380ae4e7c2d9f60",
+        "SD": "da90344189c7bc02a321e28b8f668bd025704062692ce25b81d2593c29f88aa2"
+      },
+      "audioPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/audio/RealDrum01_11#MIX.wav",
+      "audioSha256": "83854b9f1ae555ac0b8895d51c38c8f98a099eb9cec3ea88de6a7df3551406f5",
+      "category": "idmt_realdrum",
+      "dataset": "idmt_smt_drums_v2",
+      "inputKind": "real_acoustic_drum_performance",
+      "scoredSeconds": 19.566938775510206,
+      "sequence": 12,
+      "sourceAudioPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/audio/RealDrum01_11#MIX.wav",
+      "sourceSplit": "published_realdrum_collection",
+      "style": "acoustic_drum_loop",
+      "trackId": "RealDrum01_11"
+    },
+    {
+      "annotationPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_12#KD.svl",
+      "annotationPaths": {
+        "HH": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_12#HH.svl",
+        "KD": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_12#KD.svl",
+        "SD": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_12#SD.svl"
+      },
+      "annotationSha256": "be6519f7904727cb0ed77cdc22b424aabc57a1eda45c4952bb404b4edf4243ae",
+      "annotationSha256s": {
+        "HH": "9868e294bd42b30e3cc641969831e1e795823b045b46cc8427d7ede202fadf6d",
+        "KD": "be6519f7904727cb0ed77cdc22b424aabc57a1eda45c4952bb404b4edf4243ae",
+        "SD": "f6740d91f5aad96bdedea5355274e295dd18f0bf8332276d8828540824c790bd"
+      },
+      "audioPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/audio/RealDrum01_12#MIX.wav",
+      "audioSha256": "900d2b9eead3a5f96ef85f2c31e3aec2f0a3a35efac27f7e83a023d4edf4d94a",
+      "category": "idmt_realdrum",
+      "dataset": "idmt_smt_drums_v2",
+      "inputKind": "real_acoustic_drum_performance",
+      "scoredSeconds": 20.96873015873016,
+      "sequence": 13,
+      "sourceAudioPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/audio/RealDrum01_12#MIX.wav",
+      "sourceSplit": "published_realdrum_collection",
+      "style": "acoustic_drum_loop",
+      "trackId": "RealDrum01_12"
+    },
+    {
+      "annotationPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_13#KD.svl",
+      "annotationPaths": {
+        "HH": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_13#HH.svl",
+        "KD": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_13#KD.svl",
+        "SD": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/annotation_svl/RealDrum01_13#SD.svl"
+      },
+      "annotationSha256": "c8daaf2449d5080547fd854ee5ddb2d0e62560101d034cc0d337b5bc532396bf",
+      "annotationSha256s": {
+        "HH": "5df9abf59e2c81c2b3a586ea5e60b0d850662b92ba46a5b10a825f4656775687",
+        "KD": "c8daaf2449d5080547fd854ee5ddb2d0e62560101d034cc0d337b5bc532396bf",
+        "SD": "86c2080a589ca264b4a76eeffac920d95e76150c903b99b5cea7976d66b5340e"
+      },
+      "audioPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/audio/RealDrum01_13#MIX.wav",
+      "audioSha256": "2d9902c67f5fa1f3bc4cb3392f818c7788c24fbfe1a8e0c48015e7be08335dc8",
+      "category": "idmt_realdrum",
+      "dataset": "idmt_smt_drums_v2",
+      "inputKind": "real_acoustic_drum_performance",
+      "scoredSeconds": 7.226122448979591,
+      "sequence": 14,
+      "sourceAudioPath": "/Users/prakhar/Desktop/Ai music/data/research-corpus/idmt-smt-drums-v2/extracted/audio/RealDrum01_13#MIX.wav",
+      "sourceSplit": "published_realdrum_collection",
+      "style": "acoustic_drum_loop",
+      "trackId": "RealDrum01_13"
+    }
+  ],
+  "schemaVersion": 1,
+  "selectionFrozenBeforeInference": true,
+  "selectionRule": "all 14 IDMT RealDrum polyphonic MIX files in filename order",
+  "selectionUsesReferenceLabels": false,
+  "sourceArchiveMd5": "d2664b4c2aaa34b90ba2f57b389c5663"
+}

@@ -150,6 +150,34 @@ F1 at 50 ms versus Drum2Notes at 75.91%, winning every aggregate category and
 lead on that development suite, but it also keeps the universal 90% claim
 blocked. See `docs/benchmarks/NOVEL_CROSS_GENRE_LIVE_V1.md`.
 
+The recall-fusion v1 pass then combined the first-party articulation stack with
+ADTOF detector consensus, periodic candidate recovery, and class-specific
+direct/Demucs-stem fusion. Decoder decisions used the earlier development set;
+a separately frozen 20-recording GMD test-split manifest was evaluated only
+after the configuration was fixed. DrumScribe reached 90.63% five-family micro
+F1 at 50 ms versus 78.66% for 20 successful live Drum2Notes jobs. The
+progressive-rock recording reached 93.41%, toms 93.29% and cymbals 95.63%.
+However, a post-run provenance audit found 17 source-performance overlaps with
+older first-party experiments, so the set is not completely unseen. Snare also
+remained 89.25%, hi-hat 88.20%, detailed-articulation micro F1 89.25%, and the
+four-item opened STAR full-mixture regression reached only 85.07%. This does
+not pass the per-class, full-mixture, novelty or scale requirements of the 99%
+gate. See `docs/benchmarks/RECALL_FUSION_V1.md`.
+
+A subsequent first-run external-corpus audit used all 14 acoustic `RealDrum`
+loops in IDMT-SMT-Drums V2. Selection and hashes were frozen before inference,
+the labels were not parsed until both products had finished, and all 14 live
+Drum2Notes jobs succeeded. The audit exposed a severe v1 precision failure:
+DrumScribe reached 72.70% three-family micro F1 at 50 ms versus Drum2Notes at
+92.94%. A new isolated-acoustic precision profile in recall fusion v2 then
+reached 97.21% on that same corpus, with 98.49% kick, 95.51% snare and 97.32%
+hi-hat F1. Because the failed first run opened the corpus and informed the v2
+profile, 97.21% is development evidence, not an independent validation. IDMT is
+CC BY-NC-ND 4.0 evaluation material and is not used for commercial training or
+distribution. The general and 99% gates remain blocked pending an external
+acoustic confirmation, stronger snare, exact articulation and full-song results.
+See `docs/benchmarks/RECALL_FUSION_V1.md`.
+
 A balanced follow-up processed 100 real human GMD drum performances (25 each
 for rock/punk, pop/soul, funk/hip-hop and jazz/world). DrumScribe v16 reached
 91.70% detailed event micro F1 at 50 ms, versus 54.45% for the open-source

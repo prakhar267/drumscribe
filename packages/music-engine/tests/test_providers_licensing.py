@@ -10,6 +10,7 @@ from drumscribe_music import (
     CommercialProviderConfig,
     DemucsAdapter,
     DrumScribeHybridTranscriptionProvider,
+    DrumScribeRecallFusionTranscriptionProvider,
     ExternalModelError,
     MockBeatTrackingProvider,
     MockDrumTranscriptionProvider,
@@ -228,11 +229,55 @@ def test_owner_approved_adtof_and_demucs_are_production_safe():
         require_production_safe(provider, production=True)
 
 
+def test_owner_approved_recall_fusion_is_production_safe():
+    provider = DrumScribeRecallFusionTranscriptionProvider(
+        ("/safe/runner",), model_version="drumscribe-recall-fusion-v2"
+    )
+    assert provider.license.status.value == "commercial_allowed"
+    require_production_safe(provider, production=True)
+
+
+def test_recall_fusion_passes_mixture_and_stem_as_separate_argv(monkeypatch, tmp_path):
+    mixture = tmp_path / "mix; untouched.wav"
+    stem = tmp_path / "stem.wav"
+    mixture.write_bytes(b"mix")
+    stem.write_bytes(b"stem")
+    observed = {}
+
+    def fake_run(argv, **kwargs):
+        observed["argv"] = argv
+        observed["kwargs"] = kwargs
+        output = Path(argv[argv.index("--output") + 1])
+        output.write_text(
+            '{"schemaVersion":1,"provider":"drumscribe-recall-fusion-v2","hits":[]}',
+            encoding="utf-8",
+        )
+        return subprocess.CompletedProcess(argv, 0, stdout=b"", stderr=b"")
+
+    monkeypatch.setattr("drumscribe_music.providers.external.subprocess.run", fake_run)
+    provider = DrumScribeRecallFusionTranscriptionProvider(
+        ("/safe/python", "/safe/runner.py"),
+        model_version="drumscribe-recall-fusion-v2",
+    )
+
+    assert provider.transcribe_multiview(mixture, stem) == []
+    assert observed["argv"][observed["argv"].index("--input") + 1] == str(
+        stem.resolve()
+    )
+    assert observed["argv"][observed["argv"].index("--mixture-input") + 1] == str(
+        mixture.resolve()
+    )
+    assert observed["kwargs"]["shell"] is False
+
+
 def test_owner_approval_is_pinned_to_exact_model_artifacts():
     providers = (
         ADTOFResearchTranscriptionProvider(("/safe/runner",), model_version="different-adtof"),
         DemucsAdapter(model="htdemucs", python_executable="/safe/python"),
         ResearchBeatThisTrackingProvider(checkpoint="different", device="cpu"),
+        DrumScribeRecallFusionTranscriptionProvider(
+            ("/safe/runner",), model_version="different-fusion"
+        ),
     )
     for provider in providers:
         assert provider.license.status.value == "unresolved"
