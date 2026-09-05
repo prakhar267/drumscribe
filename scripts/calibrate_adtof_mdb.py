@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """Calibrate ADTOF decoding on MDB Drums without touching the test labels.
 
-This is a research-only experiment.  MDB Drums and the upstream ADTOF model
-are non-commercially licensed.  Decoder parameters are selected solely from
-the official MIREX training split and are then frozen for both splits.
+MDB is used as research-only evaluation data. Decoder parameters are selected
+solely from the official MIREX training split and frozen for both splits.
 """
 
 from __future__ import annotations
@@ -66,11 +65,15 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _reference_times(path: Path, label: str) -> list[float]:
+def _reference_times(
+    path: Path, label: str, *, max_seconds: float | None = None
+) -> list[float]:
     return sorted(
         float(parts[0])
         for line in path.read_text(encoding="utf-8").splitlines()
-        if len(parts := line.split()) >= 2 and parts[1] == label
+        if len(parts := line.split()) >= 2
+        and parts[1] == label
+        and (max_seconds is None or float(parts[0]) < max_seconds)
     )
 
 
@@ -258,6 +261,12 @@ def main() -> int:
     parser.add_argument("--midi-output", type=Path, required=True)
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
     parser.add_argument("--tolerance-ms", type=int, default=50)
+    parser.add_argument(
+        "--max-seconds",
+        type=float,
+        default=None,
+        help="Score only references before this time for excerpt calibration.",
+    )
     args = parser.parse_args()
 
     dataset = args.dataset.resolve(strict=True)
@@ -290,7 +299,9 @@ def main() -> int:
     annotation_root = dataset / "annotations" / "class"
     references = {
         (track, class_index): _reference_times(
-            annotation_root / f"{track}_class.txt", MIDI_TO_MDB[int(midi_note)]
+            annotation_root / f"{track}_class.txt",
+            MIDI_TO_MDB[int(midi_note)],
+            max_seconds=args.max_seconds,
         )
         for track in TRAIN_TRACKS
         for class_index, midi_note in enumerate(LABELS_5)
@@ -345,6 +356,7 @@ def main() -> int:
             "datasetLicense": "CC BY-NC-SA 4.0",
             "testLabelsUsedForSelection": False,
             "objectiveToleranceMs": args.tolerance_ms,
+            "maxSeconds": args.max_seconds,
             "audioRoot": str(audio_root),
             "audioSuffix": args.audio_suffix,
             "weightsSha256": _sha256(weights),

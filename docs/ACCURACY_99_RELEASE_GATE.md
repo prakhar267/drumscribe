@@ -133,6 +133,15 @@ Drum2Notes at 80.25% F1 at 50 ms and won 8 of 11 tracks. This wider result is
 the appropriate competitor-planning baseline and keeps the broad 90% claim
 blocked. See `docs/benchmarks/MDB_OWNER_APPROVED_LIVE_TEST11.md`.
 
+The post-benchmark rhythm-consistency decoder then addressed the observed
+gospel false-tom sequence and slow-swing kick/hi-hat collisions. A fresh
+same-audio rerun reached 96.15% versus Drum2Notes at 95.00% on gospel and
+78.38% versus 74.32% on swing jazz. A comparable 11-track regression pass
+improved from 86.59% to 87.57% without changing the other nine tracks. This is
+development evidence because the target labels informed diagnosis; the broad
+90% claim remains blocked. See
+`docs/benchmarks/MDB_RHYTHM_DECODER_TARGET2.md`.
+
 A balanced follow-up processed 100 real human GMD drum performances (25 each
 for rock/punk, pop/soul, funk/hip-hop and jazz/world). DrumScribe v16 reached
 91.70% detailed event micro F1 at 50 ms, versus 54.45% for the open-source

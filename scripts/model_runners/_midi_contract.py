@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import json
 import os
+from collections.abc import Sequence
 from pathlib import Path
+from typing import Any
 
 GM_DRUM_CLASSES = {
     35: "KICK",
@@ -73,13 +75,25 @@ def midi_hits(path: Path, *, confidence: float = 0.5) -> list[dict[str, object]]
     return hits
 
 
-def write_contract(output: Path, *, provider: str, midi_path: Path) -> None:
+def write_hits_contract(
+    output: Path,
+    *,
+    provider: str,
+    hits: Sequence[dict[str, object]],
+    metadata: dict[str, Any] | None = None,
+) -> None:
     payload = {
         "schemaVersion": 1,
         "provider": provider,
-        "hits": midi_hits(midi_path),
+        "hits": list(hits),
     }
+    if metadata:
+        payload["metadata"] = metadata
     output.parent.mkdir(parents=True, exist_ok=True)
     temporary = output.with_suffix(output.suffix + ".tmp")
     temporary.write_text(json.dumps(payload, separators=(",", ":")), encoding="utf-8")
     temporary.replace(output)
+
+
+def write_contract(output: Path, *, provider: str, midi_path: Path) -> None:
+    write_hits_contract(output, provider=provider, hits=midi_hits(midi_path))

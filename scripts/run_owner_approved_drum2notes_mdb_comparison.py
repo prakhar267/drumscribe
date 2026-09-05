@@ -71,6 +71,10 @@ TEST_GENRES = {
     "MusicDelta_SpeedMetal": "speed metal",
     "MusicDelta_SwingJazz": "swing jazz",
 }
+TARGET_TRACKS = {
+    "MusicDelta_Gospel": TEST_GENRES["MusicDelta_Gospel"],
+    "MusicDelta_SwingJazz": TEST_GENRES["MusicDelta_SwingJazz"],
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -86,7 +90,9 @@ def parse_args() -> argparse.Namespace:
         "--adtof-executable", type=Path, default=DEFAULT_ADTOF_EXECUTABLE
     )
     parser.add_argument("--device", default="cpu")
-    parser.add_argument("--suite", choices=("probe4", "test11"), default="probe4")
+    parser.add_argument(
+        "--suite", choices=("probe4", "target2", "test11"), default="probe4"
+    )
     parser.add_argument("--workers", type=int, default=2)
     parser.add_argument("--poll-seconds", type=float, default=4.0)
     parser.add_argument("--timeout-seconds", type=float, default=600.0)
@@ -123,11 +129,11 @@ def main() -> int:
     args = parse_args()
     if not 1 <= args.workers <= 4:
         raise ValueError("--workers must be between 1 and 4")
-    tracks = (
-        PROBE_TRACKS
-        if args.suite == "probe4"
-        else {track: TEST_GENRES[track] for track in TEST_TRACKS}
-    )
+    tracks = {
+        "probe4": PROBE_TRACKS,
+        "target2": TARGET_TRACKS,
+        "test11": {track: TEST_GENRES[track] for track in TEST_TRACKS},
+    }[args.suite]
 
     repository = args.repository.resolve(strict=True)
     dataset = resolve(repository, args.dataset)
@@ -330,6 +336,7 @@ def main() -> int:
         "systems": {
             "drumscribe": {
                 "pipeline": "htdemucs_ft -> ADTOF-pytorch",
+                "decoder": "rhythm-consistency-v1",
                 "commercialRightsReference": APPROVAL_REFERENCE,
                 "productionProviderGatePassed": True,
             },

@@ -53,6 +53,12 @@ DrumScribe wins 8 of 11 tracks. Drum2Notes wins gospel, punk and swing jazz.
 Toms, MDB's `OTHER` category, country, Beatles-style mixes and swing jazz are
 the clearest remaining weaknesses.
 
+Post-benchmark update: the rhythm-consistency decoder subsequently improved
+gospel from 87.21% to 96.15% and swing jazz from 71.60% to 78.38% on a fresh
+same-audio live rerun, exceeding Drum2Notes on both. See
+`MDB_RHYTHM_DECODER_TARGET2.md`. Because those labels informed diagnosis, the
+post-fix numbers are development evidence rather than a sealed holdout.
+
 ## Decision and evidence boundary
 
 The wider test does not reproduce the four-track probe's 90.69% score.

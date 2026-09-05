@@ -96,6 +96,11 @@ submitted 11 new Drum2Notes jobs. DrumScribe reached **86.55%** versus
 Drum2Notes at **80.25%** six-family micro F1 at 50 ms, winning 8 of 11 tracks.
 See `MDB_OWNER_APPROVED_LIVE_TEST11.md`.
 
+The subsequent rhythm-consistency decoder removed a regular false-tom intro
+and slow-swing kick/hi-hat duplicates. Fresh live target tests reached 96.15%
+versus 95.00% on gospel and 78.38% versus 74.32% on swing jazz. See
+`MDB_RHYTHM_DECODER_TARGET2.md` for the regression and evidence boundary.
+
 The existing completed comparison remains the 12-track rights-cleared synthetic
 suite: DrumScribe 97.35% versus Drum2Notes 65.54% at 20 ms. That result does not
 answer real-song generalization.

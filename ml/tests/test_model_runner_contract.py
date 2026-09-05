@@ -98,3 +98,64 @@ def test_hybrid_model_card_is_pinned_to_passing_holdout() -> None:
     assert result["comparisonTarget"]["met"] is True
     assert result["benchmark"]["postTestTuning"] is False
     assert card["productionApproved"] is False
+
+
+def _hit(instrument: str, onset: float) -> dict[str, object]:
+    return {
+        "instrument": instrument,
+        "onsetSeconds": onset,
+        "velocity": 100,
+        "confidence": 0.5,
+    }
+
+
+def test_adtof_decoder_suppresses_a_regular_tom_only_intro() -> None:
+    runner = _runner_module("adtof_runner.py", "adtof_runner_intro_test")
+    hits = [_hit("MID_TOM", 0.4 + index * 0.55) for index in range(16)]
+    hits.extend(
+        [
+            _hit("KICK", 9.4),
+            _hit("SNARE", 9.7),
+            _hit("CLOSED_HIHAT", 9.4),
+        ]
+    )
+
+    filtered, adjustments = runner.filter_rhythm_inconsistencies(hits)
+
+    assert "suppress-regular-tom-only-intro" in adjustments
+    assert all(hit["instrument"] != "MID_TOM" for hit in filtered)
+    assert len(filtered) == 3
+
+
+def test_adtof_decoder_suppresses_slow_swing_kick_hihat_collisions() -> None:
+    runner = _runner_module("adtof_runner.py", "adtof_runner_swing_test")
+    kicks = [1.25 + index * 1.09 for index in range(9)]
+    hits = [_hit("KICK", onset) for onset in kicks]
+    hits.extend(_hit("SNARE", onset + 0.54) for onset in kicks)
+    hits.extend(_hit("CLOSED_HIHAT", onset) for onset in kicks)
+    hits.extend(_hit("CLOSED_HIHAT", onset + 0.54) for onset in kicks)
+
+    filtered, adjustments = runner.filter_rhythm_inconsistencies(hits)
+
+    assert "suppress-slow-swing-kick-hihat-collisions" in adjustments
+    remaining_hihats = [
+        hit for hit in filtered if hit["instrument"] == "CLOSED_HIHAT"
+    ]
+    assert len(remaining_hihats) == len(kicks)
+    assert all(
+        not runner._near_any(float(hit["onsetSeconds"]), kicks, 0.04)
+        for hit in remaining_hihats
+    )
+
+
+def test_adtof_decoder_leaves_an_ordinary_rock_pattern_unchanged() -> None:
+    runner = _runner_module("adtof_runner.py", "adtof_runner_rock_test")
+    kicks = [index * 0.25 for index in range(16)]
+    hits = [_hit("KICK", onset) for onset in kicks]
+    hits.extend(_hit("CLOSED_HIHAT", onset) for onset in kicks)
+    hits.extend(_hit("SNARE", onset + 0.125) for onset in kicks)
+
+    filtered, adjustments = runner.filter_rhythm_inconsistencies(hits)
+
+    assert adjustments == ()
+    assert filtered == hits
