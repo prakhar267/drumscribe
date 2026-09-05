@@ -49,6 +49,10 @@ full-mixture rerun remains 82.99% at 50 ms, and the four excerpts are from an
 opened, non-sealed research split. MDB is CC BY-NC-SA 4.0 and was used only for
 internal research evaluation.
 
+A subsequent same-audio live comparison expanded this probe to all 11 MDB test
+tracks. DrumScribe scored 86.55% versus Drum2Notes at 80.25%. See
+`MDB_OWNER_APPROVED_LIVE_TEST11.md`.
+
 The complete result is in
 `output/mdb-owner-approved-live-rerun-2026-09-05/benchmark-result.json`, with
 SHA-256

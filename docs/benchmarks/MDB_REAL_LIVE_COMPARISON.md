@@ -1,5 +1,10 @@
 # Real full-mixture Drum2Notes comparison
 
+Latest update, 2026-09-05: the same-audio live comparison was expanded to all
+11 MDB test tracks. DrumScribe scored **86.55%** versus Drum2Notes at **80.25%**
+F1 at 50 ms, with all 11 competitor jobs successful. See
+`MDB_OWNER_APPROVED_LIVE_TEST11.md`.
+
 Update, 2026-09-05: a second run regenerated DrumScribe predictions and
 submitted four new Drum2Notes jobs on the same byte-identical excerpts.
 DrumScribe's now owner-approved `htdemucs_ft` -> ADTOF path scored **90.69%**

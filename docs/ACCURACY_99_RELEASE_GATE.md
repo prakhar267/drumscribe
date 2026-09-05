@@ -127,6 +127,12 @@ four-excerpt probe; it does not supersede the wider 11-track 82.99% result or
 authorize a broad 90% marketing claim. See
 `docs/benchmarks/MDB_OWNER_APPROVED_LIVE_RERUN.md`.
 
+The broader same-audio live benchmark then expanded to all 11 MDB test tracks,
+219.84 seconds and 1,338 reference events. DrumScribe scored 86.55% versus
+Drum2Notes at 80.25% F1 at 50 ms and won 8 of 11 tracks. This wider result is
+the appropriate competitor-planning baseline and keeps the broad 90% claim
+blocked. See `docs/benchmarks/MDB_OWNER_APPROVED_LIVE_TEST11.md`.
+
 A balanced follow-up processed 100 real human GMD drum performances (25 each
 for rock/punk, pop/soul, funk/hip-hop and jazz/world). DrumScribe v16 reached
 91.70% detailed event micro F1 at 50 ms, versus 54.45% for the open-source

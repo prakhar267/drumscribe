@@ -80,6 +80,21 @@
         "drumscribeLeadPercentagePoints": 10.985527721929392,
         "resultSha256": "b7cd530ee33c327c8793dc6ac2241dbe4aeebc5b15e803a4e1c780285b1ea029"
       },
+      "ownerApprovedLiveCompetitorTest11": {
+        "trackCount": 11,
+        "totalScoredAudioSeconds": 219.843946,
+        "referenceEvents": 1338,
+        "sameAudioBytesForBothSystems": true,
+        "freshDrumscribePredictions": true,
+        "newDrum2notesJobs": 11,
+        "successfulDrum2notesJobs": 11,
+        "drumscribeF1At50ms": 0.8655493482309125,
+        "drum2notesF1At50ms": 0.8025382605449795,
+        "drumscribeLeadPercentagePoints": 6.301108768593304,
+        "drumscribeTrackWins": 8,
+        "drum2notesTrackWins": 3,
+        "resultSha256": "7f1ae0db760ade232907e6a22bd783756cb769374417fa8de14f81f94a3e6b35"
+      },
       "directFullMixAdtof": {
         "f1At20ms": 0.7230691056910569,
         "f1At50ms": 0.7807418699186992

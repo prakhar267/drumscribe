@@ -91,6 +91,11 @@ no service failure or track was excluded. Both systems started from byte-identic
 full-mixture excerpts. See `MDB_REAL_LIVE_COMPARISON.md` for the per-genre
 results and commercial boundary.
 
+The follow-up same-audio comparison expanded to all 11 MDB test tracks and
+submitted 11 new Drum2Notes jobs. DrumScribe reached **86.55%** versus
+Drum2Notes at **80.25%** six-family micro F1 at 50 ms, winning 8 of 11 tracks.
+See `MDB_OWNER_APPROVED_LIVE_TEST11.md`.
+
 The existing completed comparison remains the 12-track rights-cleared synthetic
 suite: DrumScribe 97.35% versus Drum2Notes 65.54% at 20 ms. That result does not
 answer real-song generalization.

@@ -8,6 +8,7 @@ import json
 import sys
 import tempfile
 import time
+import wave
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import UTC, datetime
@@ -29,8 +30,8 @@ from drumscribe_music.providers.demucs import DemucsAdapter
 from drumscribe_music.providers.external import ADTOFResearchTranscriptionProvider
 from run_competitive_drum_benchmark import sha256
 from run_drum2notes_100_track_benchmark import write_json
+from run_drum2notes_mdb_real_benchmark import TRACKS as PROBE_TRACKS
 from run_drum2notes_mdb_real_benchmark import (
-    TRACKS,
     WINDOW_SECONDS,
     drum2notes_events,
     limited,
@@ -39,6 +40,7 @@ from run_drum2notes_mdb_real_benchmark import (
 )
 from run_mdb_real_benchmark import (
     MDB_INSTRUMENT_TO_FAMILY,
+    TEST_TRACKS,
     _combine_event_lists,
     _reference_events,
     score,
@@ -56,6 +58,20 @@ DEFAULT_ADTOF_EXECUTABLE = Path(".research-models/adtof-env/bin/adtof")
 
 Event = tuple[float, str]
 
+TEST_GENRES = {
+    "MusicDelta_Beatles": "rock/pop",
+    "MusicDelta_Country1": "country",
+    "MusicDelta_FreeJazz": "free jazz",
+    "MusicDelta_Gospel": "gospel",
+    "MusicDelta_Grunge": "grunge",
+    "MusicDelta_Hendrix": "rock",
+    "MusicDelta_LatinJazz": "Latin jazz",
+    "MusicDelta_ModalJazz": "modal jazz",
+    "MusicDelta_Punk": "punk",
+    "MusicDelta_SpeedMetal": "speed metal",
+    "MusicDelta_SwingJazz": "swing jazz",
+}
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -70,6 +86,7 @@ def parse_args() -> argparse.Namespace:
         "--adtof-executable", type=Path, default=DEFAULT_ADTOF_EXECUTABLE
     )
     parser.add_argument("--device", default="cpu")
+    parser.add_argument("--suite", choices=("probe4", "test11"), default="probe4")
     parser.add_argument("--workers", type=int, default=2)
     parser.add_argument("--poll-seconds", type=float, default=4.0)
     parser.add_argument("--timeout-seconds", type=float, default=600.0)
@@ -97,10 +114,20 @@ def aggregate(
     }
 
 
+def wav_duration_seconds(path: Path) -> float:
+    with wave.open(str(path), "rb") as stream:
+        return stream.getnframes() / stream.getframerate()
+
+
 def main() -> int:
     args = parse_args()
     if not 1 <= args.workers <= 4:
         raise ValueError("--workers must be between 1 and 4")
+    tracks = (
+        PROBE_TRACKS
+        if args.suite == "probe4"
+        else {track: TEST_GENRES[track] for track in TEST_TRACKS}
+    )
 
     repository = args.repository.resolve(strict=True)
     dataset = resolve(repository, args.dataset)
@@ -110,6 +137,12 @@ def main() -> int:
     prediction_root = output_root / "drumscribe-raw"
     raw_root.mkdir(parents=True, exist_ok=True)
     prediction_root.mkdir(parents=True, exist_ok=True)
+    total_audio_seconds = sum(
+        wav_duration_seconds(
+            source_root / "competitor-upload-20s" / f"{track}_20s.wav"
+        )
+        for track in tracks
+    )
 
     # A non-empty output could silently reuse a public-demo job, which would not
     # be a fresh rerun. Refuse it instead of weakening the evidence boundary.
@@ -149,10 +182,10 @@ def main() -> int:
                 args.poll_seconds,
                 args.timeout_seconds,
             ): track
-            for track in TRACKS
+            for track in tracks
         }
 
-        for index, track in enumerate(TRACKS, 1):
+        for index, track in enumerate(tracks, 1):
             clip = source_root / "competitor-upload-20s" / f"{track}_20s.wav"
             with tempfile.TemporaryDirectory(
                 prefix="drumscribe-live-comparison-"
@@ -188,7 +221,7 @@ def main() -> int:
                     {
                         "system": "drumscribe",
                         "completed": index,
-                        "total": len(TRACKS),
+                        "total": len(tracks),
                         "track": track,
                         "hits": len(hits),
                     }
@@ -203,7 +236,7 @@ def main() -> int:
                     {
                         "system": "drum2notes",
                         "completed": completed,
-                        "total": len(TRACKS),
+                        "total": len(tracks),
                         "track": competitor_futures[future],
                         "state": result.get("state"),
                     }
@@ -217,7 +250,7 @@ def main() -> int:
     rows: list[dict[str, Any]] = []
     states: Counter[str] = Counter()
 
-    for track, genre in TRACKS.items():
+    for track, genre in tracks.items():
         annotation = dataset / "annotations" / "class" / f"{track}_class.txt"
         clip = source_root / "competitor-upload-20s" / f"{track}_20s.wav"
         prediction_path = prediction_root / f"{track}.json"
@@ -270,11 +303,12 @@ def main() -> int:
         "schemaVersion": 1,
         "createdAt": datetime.now(UTC).isoformat(),
         "benchmark": {
-            "name": "MDB same-audio owner-approved live rerun",
+            "name": f"MDB same-audio owner-approved live rerun ({args.suite})",
             "status": "research_probe_not_sealed",
-            "trackCount": len(TRACKS),
+            "suite": args.suite,
+            "trackCount": len(tracks),
             "windowSecondsPerTrack": WINDOW_SECONDS,
-            "totalScoredAudioSeconds": len(TRACKS) * WINDOW_SECONDS,
+            "totalScoredAudioSeconds": round(total_audio_seconds, 6),
             "inputType": "real human performances in full-band mixtures",
             "referenceSource": "MDB Drums manually reviewed class annotations",
             "datasetLicense": "CC BY-NC-SA 4.0",
@@ -287,7 +321,7 @@ def main() -> int:
                 "An accepted item with no usable result is retained as zero predictions."
             ),
             "limitations": [
-                "Only four predeclared 20-second excerpts are scored.",
+                f"Only {len(tracks)} predeclared excerpts of up to 20 seconds are scored.",
                 "The MDB MIREX test split was opened previously, so this is not a sealed audit.",
                 "MDB is research-only evidence and is not production training material.",
                 "Drum2Notes is measured through its live public demo and MusicJSON result.",
