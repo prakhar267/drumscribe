@@ -142,6 +142,14 @@ development evidence because the target labels informed diagnosis; the broad
 90% claim remains blocked. See
 `docs/benchmarks/MDB_RHYTHM_DECODER_TARGET2.md`.
 
+A subsequent frozen 24-input same-audio comparison used 20 newly selected
+real human Groove performances across four broad genre families plus all four
+STAR Drums preview full mixtures. DrumScribe scored 84.34% five-family micro
+F1 at 50 ms versus Drum2Notes at 75.91%, winning every aggregate category and
+18 of 24 inputs. All 24 competitor jobs completed. This confirms a comparative
+lead on that development suite, but it also keeps the universal 90% claim
+blocked. See `docs/benchmarks/NOVEL_CROSS_GENRE_LIVE_V1.md`.
+
 A balanced follow-up processed 100 real human GMD drum performances (25 each
 for rock/punk, pop/soul, funk/hip-hop and jazz/world). DrumScribe v16 reached
 91.70% detailed event micro F1 at 50 ms, versus 54.45% for the open-source

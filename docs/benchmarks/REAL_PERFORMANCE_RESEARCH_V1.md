@@ -101,6 +101,15 @@ and slow-swing kick/hi-hat duplicates. Fresh live target tests reached 96.15%
 versus 95.00% on gospel and 78.38% versus 74.32% on swing jazz. See
 `MDB_RHYTHM_DECODER_TARGET2.md` for the regression and evidence boundary.
 
+The next frozen comparison used 24 new inputs: 20 real human performances
+balanced over heavy rock/punk, pop/soul, funk/hip-hop and jazz/world, plus all
+four full musical mixtures from the STAR Drums preview. DrumScribe scored
+84.34% versus Drum2Notes at 75.91% five-family micro F1 at 50 ms. All 24 live
+competitor jobs completed, and DrumScribe led every aggregate category. See
+`NOVEL_CROSS_GENRE_LIVE_V1.md`. The Groove items are isolated performances and
+STAR uses re-synthesized reference drums, so this is not a 24-commercial-song
+audit.
+
 The existing completed comparison remains the 12-track rights-cleared synthetic
 suite: DrumScribe 97.35% versus Drum2Notes 65.54% at 20 ms. That result does not
 answer real-song generalization.

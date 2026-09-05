@@ -118,6 +118,24 @@
         "targetLabelsInformedDiagnosis": true,
         "resultSha256": "361376172219a5a073e7fe8e4c002b02b627249c9de601069c686ba880332d8c"
       },
+      "novelCrossGenreLive24": {
+        "trackCount": 24,
+        "grooveRealPerformanceCount": 20,
+        "starFullMixCount": 4,
+        "sameAudioBytesForBothSystems": true,
+        "selectionFrozenBeforeInference": true,
+        "selectionUsedReferenceLabels": false,
+        "successfulDrum2notesJobs": 24,
+        "drumscribeF1At50ms": 0.8434212532398232,
+        "drum2notesF1At50ms": 0.759139461411163,
+        "drumscribeCategoryWins": 5,
+        "categoryCount": 5,
+        "drumscribeTrackWins": 18,
+        "drum2notesTrackWins": 6,
+        "selectionManifestSha256": "3272f4c36490e1955631c196419853e9a6744c85684048df9e2b25f32b8df87c",
+        "resultSha256": "c5d01972df4a02f23160e08fc08c1d214d5b5f88993cddb15f9d30fd7e68aaf4",
+        "independentSealedAudit": false
+      },
       "directFullMixAdtof": {
         "f1At20ms": 0.7230691056910569,
         "f1At50ms": 0.7807418699186992
