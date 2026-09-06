@@ -132,14 +132,14 @@ jobs:
         run: |
           uv export --quiet --project apps/api --all-extras --no-dev --no-emit-local --no-hashes \
             | sed '/^adtof-pytorch @ git+/d' > /tmp/api-requirements.txt
-          uvx pip-audit --requirement /tmp/api-requirements.txt
+          uvx pip-audit --no-deps --disable-pip --requirement /tmp/api-requirements.txt
       - name: Audit music-engine dependencies
         run: |
-          uv export --quiet --project packages/music-engine --extra pdf --no-dev --no-emit-local --no-hashes --output-file /tmp/music-requirements.txt
+          uv export --quiet --project packages/music-engine --extra pdf --no-dev --no-emit-local --output-file /tmp/music-requirements.txt
           uvx pip-audit --requirement /tmp/music-requirements.txt
       - name: Audit ML runtime dependencies
         run: |
-          uv export --quiet --project ml --no-dev --no-emit-local --no-hashes --output-file /tmp/ml-requirements.txt
+          uv export --quiet --project ml --no-dev --no-emit-local --output-file /tmp/ml-requirements.txt
           uvx pip-audit --requirement /tmp/ml-requirements.txt
 
   dependency-review:
