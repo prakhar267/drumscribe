@@ -51,9 +51,10 @@ export interface AdminJobDiagnostics {
   correctionBurden: Record<string, number | null>;
 }
 
-class ApiError extends Error {
-  constructor(message: string, readonly status: number) {
+export class ApiError extends Error {
+  constructor(message: string, readonly status: number, readonly code?: string) {
     super(message);
+    this.name = "ApiError";
   }
 }
 
@@ -105,19 +106,26 @@ interface WireJob {
   errorMessage?: string | null;
 }
 
-interface WireAccount {
+export interface Account {
   id: string;
   email: string | null;
   kind: "ANONYMOUS" | "REGISTERED";
   role: "USER" | "ADMIN";
   entitlement: string;
   allowModelImprovement: boolean;
+  freeTranscriptionsRemaining: number;
+  paidCredits: number;
+  canStartFullTranscription: boolean;
   createdAt: string;
 }
 
-async function parseError(response: Response) {
-  const problem = await response.json().catch(() => null) as { detail?: string; message?: string; title?: string } | null;
-  return problem?.detail ?? problem?.message ?? problem?.title ?? `Request failed (${response.status})`;
+async function responseError(response: Response) {
+  const problem = await response.json().catch(() => null) as { code?: string; detail?: string; message?: string; title?: string } | null;
+  return new ApiError(
+    problem?.detail ?? problem?.message ?? problem?.title ?? `Request failed (${response.status})`,
+    response.status,
+    problem?.code,
+  );
 }
 
 async function bootstrapAnonymousSession() {
@@ -126,7 +134,7 @@ async function bootstrapAnonymousSession() {
     credentials: "include",
     headers: { "Content-Type": "application/json" },
   });
-  if (!response.ok) throw new ApiError(await parseError(response), response.status);
+  if (!response.ok) throw await responseError(response);
 }
 
 async function request<T>(path: string, init?: RequestInit, retryAuth = true): Promise<T> {
@@ -139,7 +147,7 @@ async function request<T>(path: string, init?: RequestInit, retryAuth = true): P
     await bootstrapAnonymousSession();
     return request<T>(path, init, false);
   }
-  if (!response.ok) throw new ApiError(await parseError(response), response.status);
+  if (!response.ok) throw await responseError(response);
   if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
 }
@@ -410,7 +418,7 @@ export const api = {
         }),
       });
       const upload = await fetch(signed.uploadUrl, { method: signed.method, headers: signed.requiredHeaders, body: input.file });
-      if (!upload.ok) throw new ApiError(await parseError(upload), upload.status);
+      if (!upload.ok) throw await responseError(upload);
       await request(`/uploads/${signed.assetId}/complete`, { method: "POST", body: JSON.stringify({ etag: upload.headers.get("etag") }) });
       const idempotencyKey = `process-${project.id}-${signed.assetId}`.slice(0, 128);
       const job = await request<WireJob>(`/projects/${project.id}/process`, {
@@ -470,7 +478,7 @@ export const api = {
     try {
       const signed = await request<{ url: string }>(`/projects/${encodeURIComponent(projectId)}/waveform/url`);
       const response = await fetch(signed.url);
-      if (!response.ok) throw new ApiError(await parseError(response), response.status);
+      if (!response.ok) throw await responseError(response);
       const envelope = await response.json() as { peaks?: [number, number][] };
       if (!envelope.peaks?.length) return null;
       const bucketSize = Math.max(1, Math.ceil(envelope.peaks.length / 320));
@@ -548,13 +556,33 @@ export const api = {
     }
   },
 
-  async getAccount(): Promise<WireAccount> {
+  async getAccount(): Promise<Account> {
     try {
-      return await request<WireAccount>("/account/me");
+      return await request<Account>("/account/me");
     } catch (error) {
       if (!DEMO_MODE || !isDemoUnavailable(error)) throw error;
-      return { id: "demo-user", email: null, kind: "ANONYMOUS", role: "USER", entitlement: "FREE_BETA", allowModelImprovement: false, createdAt: new Date().toISOString() };
+      return {
+        id: "demo-user",
+        email: null,
+        kind: "ANONYMOUS",
+        role: "USER",
+        entitlement: "FREE_BETA",
+        allowModelImprovement: false,
+        freeTranscriptionsRemaining: 0,
+        paidCredits: 0,
+        canStartFullTranscription: false,
+        createdAt: new Date().toISOString(),
+      };
     }
+  },
+
+  async createCreditCheckout() {
+    const idempotencyKey = globalThis.crypto?.randomUUID?.() ?? `checkout-${Date.now()}`;
+    return request<{ checkoutUrl: string }>("/billing/checkout", {
+      method: "POST",
+      headers: { "Idempotency-Key": idempotencyKey },
+      body: JSON.stringify({}),
+    });
   },
 
   async logout() {

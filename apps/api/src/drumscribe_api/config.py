@@ -88,6 +88,15 @@ class Settings(BaseSettings):
     resend_api_key: SecretStr | None = None
     resend_from_email: str | None = None
 
+    billing_provider: Literal["disabled", "dodo"] = "disabled"
+    dodo_payments_environment: Literal["test_mode", "live_mode"] = "test_mode"
+    dodo_payments_api_key: SecretStr | None = None
+    dodo_payments_webhook_key: SecretStr | None = None
+    dodo_credit_pack_product_id: str | None = None
+    billing_return_url: str | None = None
+    billing_cancel_url: str | None = None
+    credit_pack_size: int = Field(default=10, gt=0, le=1000)
+
     max_upload_bytes: int = 150 * 1024 * 1024
     max_audio_duration_seconds: float = 12 * 60
     anonymous_max_audio_duration_seconds: float = 90
@@ -123,6 +132,24 @@ class Settings(BaseSettings):
             or self.anonymous_max_audio_duration_seconds <= 0
         ):
             raise ValueError("upload limits must be positive")
+        if self.billing_provider == "dodo" and (
+            not self.dodo_payments_api_key
+            or not self.dodo_payments_webhook_key
+            or not self.dodo_credit_pack_product_id
+            or not self.billing_return_url
+            or not self.billing_cancel_url
+        ):
+            raise ValueError(
+                "Dodo billing requires API key, webhook key, product ID, return URL, and cancel URL"
+            )
+        for name, url in {
+            "billing return URL": self.billing_return_url,
+            "billing cancel URL": self.billing_cancel_url,
+        }.items():
+            if url and not url.startswith("https://"):
+                local_test_url = url.startswith("http://testserver")
+                if self.environment is not Environment.DEVELOPMENT and not local_test_url:
+                    raise ValueError(f"{name} must use HTTPS")
         if self.environment is Environment.PRODUCTION:
             if any(origin == "*" for origin in self.web_origins):
                 raise ValueError("production CORS origins must be explicit")

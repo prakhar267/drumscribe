@@ -1,11 +1,12 @@
 from fastapi import APIRouter
 
-from .routes import admin, auth, events, exports, jobs, media, projects, system, uploads
+from .routes import admin, auth, billing, events, exports, jobs, media, projects, system, uploads
 
 api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(system.router)
 api_router.include_router(auth.router)
 api_router.include_router(auth.account_router)
+api_router.include_router(billing.router)
 api_router.include_router(projects.router)
 api_router.include_router(uploads.router)
 api_router.include_router(jobs.router)

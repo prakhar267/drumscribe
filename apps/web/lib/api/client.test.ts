@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { api } from "@/lib/api/client";
+import { ApiError, api } from "@/lib/api/client";
 import { createDemoEvents } from "@/lib/demo-data";
 
 const json = (value: unknown, status = 200) => new Response(JSON.stringify(value), { status, headers: { "Content-Type": "application/json" } });
@@ -68,6 +68,26 @@ describe("versioned API client", () => {
     await expect(api.createAndProcessUpload({ file, rightsConfirmed: true })).resolves.toEqual({
       projectId: "demo-groove",
       jobId: "demo-job",
+    });
+  });
+
+  it("preserves the credit-required problem code for the upgrade flow", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(json({
+      code: "TRANSCRIPTION_CREDIT_REQUIRED",
+      detail: "Your free song has been used.",
+    }, 402));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const error = await api.createCreditCheckout().catch((reason: unknown) => reason);
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error).toMatchObject({
+      status: 402,
+      code: "TRANSCRIPTION_CREDIT_REQUIRED",
+      message: "Your free song has been used.",
+    });
+    expect(fetchMock.mock.calls[0][1]).toMatchObject({
+      method: "POST",
+      headers: expect.objectContaining({ "Idempotency-Key": expect.any(String) }),
     });
   });
 

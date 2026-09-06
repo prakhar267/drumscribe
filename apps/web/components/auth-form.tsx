@@ -26,7 +26,7 @@ export function AuthForm() {
     <div className="auth-form">
       <p className="eyebrow">Save your work</p>
       <h1>Pick up where you left off.</h1>
-      <p>Sign in with a magic link. No password to remember, and your anonymous project comes with you.</p>
+      <p>Sign in with a magic link to claim one complete song free. No password to remember, and your anonymous project comes with you.</p>
       <form onSubmit={(event) => { event.preventDefault(); if (!email) return; setSending(true); setError(null); setDevToken(null); void api.requestMagicLink(email).then((result) => { setDevToken(result.devToken ?? null); setSent(true); }).catch((reason: unknown) => setError(reason instanceof Error ? reason.message : "We couldn’t send that link.")).finally(() => setSending(false)); }}>
         <div className="field"><label htmlFor="email">Email address</label><input className="text-input" id="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" autoComplete="email" required /></div>
         {error && <p className="form-error" role="alert">{error}</p>}

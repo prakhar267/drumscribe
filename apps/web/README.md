@@ -24,6 +24,11 @@ The local pnpm workspace allowlists build scripts only for the exact reviewed `s
 
 Copy `.env.example` to `.env.local` to override upload limits or connect the API. `NEXT_PUBLIC_DEMO_MODE=true` enables local fallbacks only when the API cannot be reached. The admin screen is server-protected and stays locked until `ADMIN_UI_KEY` is configured.
 
+The pricing page advertises one complete song free and a one-time 10-credit pack for $15. Keep
+`NEXT_PUBLIC_BILLING_ENABLED=false` until the API's Dodo test checkout and signed webhook have
+passed. When enabled, the browser requests a server-created checkout URL; the success page waits
+for the authoritative webhook-updated balance and never trusts redirect query parameters.
+
 ## Frontend boundaries
 
 - `lib/domain.ts` is the canonical event/tempo/project model.

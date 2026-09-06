@@ -9,6 +9,7 @@ export function SiteFooter() {
         <p>© 2026 DrumScribe. Built for the practice room.</p>
       </div>
       <nav className="footer-links" aria-label="Legal">
+        <Link href="/pricing">Pricing</Link>
         <Link href="/legal/privacy">Privacy</Link>
         <Link href="/legal/terms">Terms</Link>
         <Link href="/legal/copyright">Upload policy</Link>

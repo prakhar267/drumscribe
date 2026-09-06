@@ -80,7 +80,8 @@ The implementation checklist is in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.
 - Customer audio is never used for model training without explicit opt-in consent; the default is false.
 - No streaming-service downloader or public chart catalogue is included.
 - Legal pages are launch-ready placeholders only and require review by qualified counsel before public release.
-- No payment integration is present. Every account receives the internal `FREE_BETA` entitlement.
+- Freemium access gives every verified account one complete transcription, then charges one credit per new song. Anonymous users retain the short preview path.
+- A server-side Dodo Payments checkout and signed, idempotent webhook ledger are implemented for the one-time 10-credit pack. Checkout stays disabled until test-mode credentials and the product ID are configured; no payment redirect grants credits by itself.
 
 See [SECURITY.md](SECURITY.md), [MODEL_LICENSING.md](MODEL_LICENSING.md),
 [ML_EVALUATION.md](ML_EVALUATION.md), [DEPLOYMENT.md](DEPLOYMENT.md),

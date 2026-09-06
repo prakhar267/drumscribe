@@ -57,6 +57,32 @@ The worker imports `drumscribe_api.tasks`. The deterministic development pipelin
 without external ML credentials, while production is expected to install and configure the
 commercially approved `drumscribe_music` provider package.
 
+## Freemium billing
+
+Each verified account receives one complete transcription. A new processing job atomically
+reserves the free use first and then paid credits; failed or cancelled jobs return the reservation.
+Anonymous processing remains a short preview and does not consume the later registered free song.
+
+Dodo Payments is the merchant-of-record adapter for the one-time 10-credit pack. Keep
+`DRUMSCRIBE_BILLING_PROVIDER=disabled` until the following server-only values have been configured
+and the signed webhook has passed in Dodo test mode:
+
+```bash
+DRUMSCRIBE_BILLING_PROVIDER=dodo
+DRUMSCRIBE_DODO_PAYMENTS_ENVIRONMENT=test_mode
+DRUMSCRIBE_DODO_PAYMENTS_API_KEY=replace-me
+DRUMSCRIBE_DODO_PAYMENTS_WEBHOOK_KEY=replace-me
+DRUMSCRIBE_DODO_CREDIT_PACK_PRODUCT_ID=replace-me
+DRUMSCRIBE_BILLING_RETURN_URL=https://app.example.com/billing/success
+DRUMSCRIBE_BILLING_CANCEL_URL=https://app.example.com/pricing
+DRUMSCRIBE_CREDIT_PACK_SIZE=10
+```
+
+Point the provider webhook at `POST /api/v1/billing/webhooks/dodo` and subscribe to
+`payment.succeeded`. Credits are granted only after signature verification, purchase/user/session
+matching, and exact product validation. Replayed events and checkout attempts cannot grant the pack
+twice. Set `NEXT_PUBLIC_BILLING_ENABLED=true` only in the web build that targets this configured API.
+
 ## Security invariants
 
 - Ownership-scoped queries return 404, preventing identifier enumeration.

@@ -14,6 +14,7 @@ export function SiteHeader() {
         <nav className={open ? "site-nav is-open" : "site-nav"} aria-label="Main navigation">
           <Link href="/projects" onClick={() => setOpen(false)}>Projects</Link>
           <Link href="/#how-it-works" onClick={() => setOpen(false)}>How it works</Link>
+          <Link href="/pricing" onClick={() => setOpen(false)}>Pricing</Link>
           <Link href="/auth" onClick={() => setOpen(false)}>Sign in</Link>
           <Link className="button button-small button-primary" href="/upload" onClick={() => setOpen(false)}>Transcribe a song</Link>
         </nav>

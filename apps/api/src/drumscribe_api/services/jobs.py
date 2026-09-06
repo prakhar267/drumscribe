@@ -18,6 +18,7 @@ from ..errors import APIError, not_found
 from ..models import ProcessingJob, Project
 from ..schemas import JobResponse
 from ..security import utcnow
+from .billing import refund_processing_credit
 
 STAGE_ORDER = [
     JobStage.RECEIVED,
@@ -100,6 +101,8 @@ async def transition_job(
     job.error_code = error_code
     job.error_detail = error_detail
     job.updated_at = now
+    if next_stage in {JobStage.FAILED, JobStage.CANCELLED}:
+        await refund_processing_credit(db, job)
     await db.flush()
 
 

@@ -23,6 +23,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from .enums import (
     AssetKind,
     AssetStatus,
+    CreditPurchaseStatus,
     Entitlement,
     EventSource,
     ExportFormat,
@@ -32,6 +33,7 @@ from .enums import (
     JobStage,
     ProjectStatus,
     RevisionKind,
+    TranscriptionCreditSource,
     UserKind,
     UserRole,
 )
@@ -65,6 +67,9 @@ class SoftDeleteMixin:
 
 class User(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
     __tablename__ = "users"
+    __table_args__ = (
+        CheckConstraint("paid_credit_balance >= 0", name="user_paid_credit_balance"),
+    )
 
     email: Mapped[str | None] = mapped_column(String(320), unique=True, nullable=True)
     kind: Mapped[UserKind] = mapped_column(enum_column(UserKind), default=UserKind.ANONYMOUS)
@@ -73,9 +78,28 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
         enum_column(Entitlement), default=Entitlement.FREE_BETA
     )
     allow_model_improvement: Mapped[bool] = mapped_column(Boolean, default=False)
+    free_transcription_used_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    paid_credit_balance: Mapped[int] = mapped_column(Integer, default=0)
 
     sessions: Mapped[list["Session"]] = relationship(back_populates="user")
     projects: Mapped[list["Project"]] = relationship(back_populates="owner")
+    credit_purchases: Mapped[list["CreditPurchase"]] = relationship(back_populates="user")
+
+    @property
+    def free_transcriptions_remaining(self) -> int:
+        return int(
+            self.kind == UserKind.REGISTERED and self.free_transcription_used_at is None
+        )
+
+    @property
+    def paid_credits(self) -> int:
+        return self.paid_credit_balance
+
+    @property
+    def can_start_full_transcription(self) -> bool:
+        return self.free_transcriptions_remaining > 0 or self.paid_credit_balance > 0
 
 
 class Session(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -195,9 +219,47 @@ class ProcessingJob(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     error_code: Mapped[JobErrorCode | None] = mapped_column(enum_column(JobErrorCode))
     error_detail: Mapped[str | None] = mapped_column(Text)
     retry_count: Mapped[int] = mapped_column(Integer, default=0)
+    credit_source: Mapped[TranscriptionCreditSource | None] = mapped_column(
+        enum_column(TranscriptionCreditSource), nullable=True
+    )
+    credit_refunded_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     project: Mapped[Project] = relationship(back_populates="jobs")
     model_runs: Mapped[list["ModelRun"]] = relationship(back_populates="job")
+
+
+class CreditPurchase(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    __tablename__ = "credit_purchases"
+    __table_args__ = (
+        UniqueConstraint("user_id", "idempotency_key", name="uq_purchase_user_idempotency"),
+        CheckConstraint("credit_count > 0", name="purchase_credit_count"),
+    )
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    provider: Mapped[str] = mapped_column(String(32), default="dodo")
+    idempotency_key: Mapped[str] = mapped_column(String(128))
+    checkout_session_id: Mapped[str | None] = mapped_column(
+        String(255), unique=True, nullable=True
+    )
+    checkout_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    provider_payment_id: Mapped[str | None] = mapped_column(
+        String(255), unique=True, nullable=True
+    )
+    last_webhook_id: Mapped[str | None] = mapped_column(
+        String(255), unique=True, nullable=True
+    )
+    status: Mapped[CreditPurchaseStatus] = mapped_column(
+        enum_column(CreditPurchaseStatus), default=CreditPurchaseStatus.PENDING, index=True
+    )
+    credit_count: Mapped[int] = mapped_column(Integer, default=10)
+    paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    refunded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    user: Mapped[User] = relationship(back_populates="credit_purchases")
 
 
 class ModelRun(UUIDPrimaryKeyMixin, TimestampMixin, Base):

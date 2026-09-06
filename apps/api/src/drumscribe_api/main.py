@@ -23,6 +23,7 @@ from .errors import (
 from .middleware import PlatformMiddleware
 from .models import Base
 from .queue import create_queue
+from .services.dodo_billing import DodoBillingService
 from .services.exports import ExportService
 from .services.pipeline import PipelineService
 from .services.rate_limits import create_rate_limiter
@@ -74,6 +75,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         pipeline = PipelineService(app_settings, database, storage)
         pipeline.music.validate_configuration()
         exports = ExportService(app_settings, database, storage)
+        billing = DodoBillingService(app_settings)
         queue = create_queue(app_settings, pipeline.run, exports.run)
         readiness = ReadinessService(app_settings, database, queue, storage, pipeline)
         app.state.settings = app_settings
@@ -81,6 +83,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         app.state.storage = storage
         app.state.pipeline = pipeline
         app.state.export_service = exports
+        app.state.billing = billing
         app.state.queue = queue
         app.state.readiness = readiness
         app.state.rate_limiter = rate_limiter

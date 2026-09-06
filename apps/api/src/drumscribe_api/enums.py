@@ -21,6 +21,18 @@ class Entitlement(StrEnum):
     FREE_BETA = "FREE_BETA"
 
 
+class TranscriptionCreditSource(StrEnum):
+    ANONYMOUS_PREVIEW = "ANONYMOUS_PREVIEW"
+    FREE = "FREE"
+    PAID = "PAID"
+
+
+class CreditPurchaseStatus(StrEnum):
+    PENDING = "PENDING"
+    PAID = "PAID"
+    REFUNDED = "REFUNDED"
+
+
 class ProjectStatus(StrEnum):
     DRAFT = "DRAFT"
     UPLOADING = "UPLOADING"

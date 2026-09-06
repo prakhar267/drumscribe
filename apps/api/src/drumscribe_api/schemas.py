@@ -67,7 +67,18 @@ class UserResponse(APIModel):
     role: UserRole
     entitlement: Entitlement
     allow_model_improvement: bool
+    free_transcriptions_remaining: int = Field(ge=0, le=1)
+    paid_credits: int = Field(ge=0)
+    can_start_full_transcription: bool
     created_at: datetime
+
+
+class CheckoutSessionResponse(APIModel):
+    checkout_url: str
+
+
+class BillingWebhookResponse(APIModel):
+    received: Literal[True] = True
 
 
 class SessionResponse(APIModel):

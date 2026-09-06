@@ -9,6 +9,7 @@ from ...errors import APIError
 from ...models import AudioAsset, ProcessingJob, Project
 from ...schemas import JobResponse, ProcessingStartRequest
 from ...services.audit import record_audit, record_product_event
+from ...services.billing import lock_user, reserve_processing_credit
 from ...services.jobs import (
     create_or_get_job,
     get_owned_job,
@@ -60,6 +61,8 @@ async def start_processing(
     asset.expires_at = None
     job, created = await create_or_get_job(db, project, _idempotency_key(idempotency_key))
     if created:
+        user = await lock_user(db, principal.user.id)
+        await reserve_processing_credit(db, user, job)
         concurrent = int(
             await db.scalar(
                 select(func.count(ProcessingJob.id))
@@ -147,6 +150,8 @@ async def retry_job(
     principal: CurrentPrincipal,
 ) -> JobResponse:
     job = await get_owned_job(db, job_id, principal.user.id)
+    user = await lock_user(db, principal.user.id)
+    await reserve_processing_credit(db, user, job)
     await prepare_retry(db, job)
     project = await db.get(Project, job.project_id)
     if project:
