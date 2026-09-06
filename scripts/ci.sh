@@ -35,10 +35,11 @@ docker compose config --quiet
 
 if [[ "${DRUMSCRIBE_SKIP_DEPENDENCY_AUDIT:-0}" != "1" ]]; then
   pnpm audit --audit-level high
-  uv export --quiet --project apps/api --all-extras --no-dev --no-emit-local --output-file "$migration_dir/api.txt"
+  uv export --quiet --project apps/api --all-extras --no-dev --no-emit-local --no-hashes \
+    | sed '/^adtof-pytorch @ git+/d' > "$migration_dir/api.txt"
   uvx pip-audit --requirement "$migration_dir/api.txt"
-  uv export --quiet --project packages/music-engine --extra pdf --no-dev --no-emit-local --output-file "$migration_dir/music.txt"
+  uv export --quiet --project packages/music-engine --extra pdf --no-dev --no-emit-local --no-hashes --output-file "$migration_dir/music.txt"
   uvx pip-audit --requirement "$migration_dir/music.txt"
-  uv export --quiet --project ml --no-dev --no-emit-local --output-file "$migration_dir/ml.txt"
+  uv export --quiet --project ml --no-dev --no-emit-local --no-hashes --output-file "$migration_dir/ml.txt"
   uvx pip-audit --requirement "$migration_dir/ml.txt"
 fi

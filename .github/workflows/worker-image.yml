@@ -1,0 +1,41 @@
+name: Production worker image
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/worker-image.yml"
+      - "apps/api/pyproject.toml"
+      - "apps/api/uv.lock"
+      - "apps/api/src/**"
+      - "infra/docker/worker.Dockerfile"
+      - "infra/docker/worker-entrypoint.sh"
+      - "ml/**"
+      - "packages/music-engine/**"
+      - "scripts/model_runners/**"
+      - "scripts/prepare_production_model_cache.py"
+      - "MODEL_LICENSING.md"
+      - "THIRD_PARTY_NOTICES.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-worker-image-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the production CPU worker and pinned public model cache
+        run: docker build --progress=plain --tag drumscribe-worker:ci --file infra/docker/worker.Dockerfile .
+      - name: Verify runtime imports
+        run: >-
+          docker run --rm --entrypoint python drumscribe-worker:ci -c
+          "import torch, torchaudio; from adtof_pytorch import create_frame_rnn_model;
+          from demucs.pretrained import get_model;
+          print(torch.__version__, torchaudio.__version__, create_frame_rnn_model.__name__, get_model.__module__)"
