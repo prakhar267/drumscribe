@@ -121,9 +121,7 @@ async def dodo_webhook(
         raise APIError(400, "WEBHOOK_PAYLOAD_INVALID", "Purchase metadata is missing.") from None
     purchase = (
         await db.execute(
-            select(CreditPurchase)
-            .where(CreditPurchase.id == parsed_purchase_id)
-            .with_for_update()
+            select(CreditPurchase).where(CreditPurchase.id == parsed_purchase_id).with_for_update()
         )
     ).scalar_one_or_none()
     if purchase is None:

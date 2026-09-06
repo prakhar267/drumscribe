@@ -321,7 +321,7 @@ def production_settings(**overrides: Any) -> Settings:
         "allowed_hosts": ["api.drumscribe.test"],
     }
     values.update(overrides)
-    return Settings(**values)
+    return Settings(_env_file=None, **values)
 
 
 def test_production_configuration_fails_closed_for_fixture_and_missing_approval() -> None:

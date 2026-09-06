@@ -9,9 +9,7 @@ from ..security import utcnow
 
 async def lock_user(db: AsyncSession, user_id: object) -> User:
     """Serialize balance changes for a customer in production Postgres."""
-    user = (
-        await db.execute(select(User).where(User.id == user_id).with_for_update())
-    ).scalar_one()
+    user = (await db.execute(select(User).where(User.id == user_id).with_for_update())).scalar_one()
     return user
 
 
@@ -53,9 +51,7 @@ async def refund_processing_credit(db: AsyncSession, job: ProcessingJob) -> None
         or job.credit_refunded_at is not None
     ):
         return
-    owner_id = await db.scalar(
-        select(Project.owner_id).where(Project.id == job.project_id)
-    )
+    owner_id = await db.scalar(select(Project.owner_id).where(Project.id == job.project_id))
     if owner_id is None:
         return
     user = await lock_user(db, owner_id)

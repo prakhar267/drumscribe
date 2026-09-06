@@ -67,9 +67,7 @@ class SoftDeleteMixin:
 
 class User(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
     __tablename__ = "users"
-    __table_args__ = (
-        CheckConstraint("paid_credit_balance >= 0", name="user_paid_credit_balance"),
-    )
+    __table_args__ = (CheckConstraint("paid_credit_balance >= 0", name="user_paid_credit_balance"),)
 
     email: Mapped[str | None] = mapped_column(String(320), unique=True, nullable=True)
     kind: Mapped[UserKind] = mapped_column(enum_column(UserKind), default=UserKind.ANONYMOUS)
@@ -89,9 +87,7 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
 
     @property
     def free_transcriptions_remaining(self) -> int:
-        return int(
-            self.kind == UserKind.REGISTERED and self.free_transcription_used_at is None
-        )
+        return int(self.kind == UserKind.REGISTERED and self.free_transcription_used_at is None)
 
     @property
     def paid_credits(self) -> int:
@@ -242,16 +238,10 @@ class CreditPurchase(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
     provider: Mapped[str] = mapped_column(String(32), default="dodo")
     idempotency_key: Mapped[str] = mapped_column(String(128))
-    checkout_session_id: Mapped[str | None] = mapped_column(
-        String(255), unique=True, nullable=True
-    )
+    checkout_session_id: Mapped[str | None] = mapped_column(String(255), unique=True, nullable=True)
     checkout_url: Mapped[str | None] = mapped_column(Text, nullable=True)
-    provider_payment_id: Mapped[str | None] = mapped_column(
-        String(255), unique=True, nullable=True
-    )
-    last_webhook_id: Mapped[str | None] = mapped_column(
-        String(255), unique=True, nullable=True
-    )
+    provider_payment_id: Mapped[str | None] = mapped_column(String(255), unique=True, nullable=True)
+    last_webhook_id: Mapped[str | None] = mapped_column(String(255), unique=True, nullable=True)
     status: Mapped[CreditPurchaseStatus] = mapped_column(
         enum_column(CreditPurchaseStatus), default=CreditPurchaseStatus.PENDING, index=True
     )

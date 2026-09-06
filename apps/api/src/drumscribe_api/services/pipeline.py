@@ -1014,12 +1014,8 @@ class PipelineService:
                     self.settings.music_transcription_provider.casefold()
                     == "drumscribe_recall_fusion"
                 ):
-                    mixture_asset = await self._asset(
-                        db, project.id, AssetKind.NORMALIZED
-                    )
-                    async with self.storage.materialize(
-                        mixture_asset.storage_key
-                    ) as mixture_path:
+                    mixture_asset = await self._asset(db, project.id, AssetKind.NORMALIZED)
+                    async with self.storage.materialize(mixture_asset.storage_key) as mixture_path:
                         transcription_result = await self.music.transcribe(
                             path,
                             project.duration_seconds or 8.0,

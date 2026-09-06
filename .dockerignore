@@ -19,5 +19,6 @@
 **/*.sqlite3
 tmp
 data
+ml/models
 uploads
 exports

@@ -86,9 +86,9 @@ class DodoBillingService:
         if not self.enabled or self.settings.dodo_payments_webhook_key is None:
             raise APIError(503, "WEBHOOK_UNAVAILABLE", "Payment webhooks are not configured.")
         try:
-            verified = Webhook(
-                self.settings.dodo_payments_webhook_key.get_secret_value()
-            ).verify(raw_body, headers)
+            verified = Webhook(self.settings.dodo_payments_webhook_key.get_secret_value()).verify(
+                raw_body, headers
+            )
         except Exception as exc:
             raise APIError(401, "WEBHOOK_SIGNATURE_INVALID", "Invalid webhook signature.") from exc
         if not isinstance(verified, dict):

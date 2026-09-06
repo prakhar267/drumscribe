@@ -26,10 +26,25 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-research = ["drumscribe-music[audio,demucs,accurate-beats]"]
+research = [
+  "adtof-pytorch==0.1.0",
+  "drumscribe-ml[train]",
+  "drumscribe-music[audio,demucs,accurate-beats]",
+  "torch==2.11.0",
+  "torchaudio==2.11.0",
+]
 
 [tool.uv.sources]
+adtof-pytorch = { git = "https://github.com/xavriley/ADTOF-pytorch.git", rev = "85c192e78f716ea0b111cc8a5ee4a8f6a3a4f8a9" }
+drumscribe-ml = { path = "../../ml", editable = true }
 drumscribe-music = { path = "../../packages/music-engine", editable = true }
+torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+torchaudio = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
 
 [dependency-groups]
 dev = [

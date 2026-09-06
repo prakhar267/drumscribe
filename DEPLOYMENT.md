@@ -16,7 +16,7 @@ The provided Compose stack is for local development and acceptance testing. The 
 6. Set secure cookies, exact API CORS origins, trusted proxy ranges, and Redis-backed production rate limits. Set `DRUMSCRIBE_ALLOWED_HOSTS` to the public API hostname and retain a one-year-or-longer `DRUMSCRIBE_HSTS_MAX_AGE_SECONDS` after TLS is verified.
    Managed dependencies can cold-start; keep `DRUMSCRIBE_READINESS_TIMEOUT_SECONDS=10` unless target-region measurements justify a lower bounded value.
 7. Configure Resend or the magic-link delivery webhook and its secret; disable development token exposure. Resend requires a verified sending domain before emails can be sent to customers.
-8. Set `DRUMSCRIBE_PIPELINE_PROVIDER=music_engine` and select only provider adapters whose exact code, weights, data, contract, and commercial use are approved in `MODEL_LICENSING.md`. The repository intentionally ships no pre-approved commercial model.
+8. Set `DRUMSCRIBE_PIPELINE_PROVIDER=music_engine` and select only provider adapters whose exact code, weights, data, contract, and commercial use are approved in `MODEL_LICENSING.md`. The owner-approved self-hosted path must use the exact pinned revisions and hashes recorded in the approval evidence; changing a model or weight requires a new review.
 9. Run Celery workers and exactly one Celery Beat (or equivalent managed scheduler) so retention and deletion purges execute. Compose uses `worker --beat` only for a single-node local stack.
 10. Configure Sentry-compatible exception/tracing capture with filename and audio-metadata redaction.
 11. Run web, API, music-engine, migration, authorization, signed-URL, bucket-CORS, and full-stack browser tests against the release images.
@@ -24,9 +24,40 @@ The provided Compose stack is for local development and acceptance testing. The 
 
 The concrete free-service mapping and its verified pre-launch status are tracked in [`docs/PRODUCTION_SERVICES.md`](docs/PRODUCTION_SERVICES.md). Do not copy DSNs, passwords, API keys, or database URLs into that file or any committed configuration.
 
+## Northflank pre-launch layout
+
+Build every workload from the public `prakhar267/drumscribe` repository and the `main` branch. Keep secrets in one Northflank secret group and attach it only to the workloads that need it.
+
+| Workload | Image | Exposure | Start command / override | Health and cardinality |
+| --- | --- | --- | --- | --- |
+| `drumscribe-api` | `infra/docker/api.Dockerfile` | Public HTTP, port `8000` | Image default | Readiness: `/api/v1/health/ready`; liveness: `/api/v1/health/live`; start with one sandbox replica. |
+| `drumscribe-worker` | `infra/docker/worker.Dockerfile` | No public port | Image default, Celery concurrency `1` | Start with one replica. Each replica processes one memory-heavy transcription at a time. |
+| `drumscribe-migrate` | API image | Manual job only | `alembic -c /app/apps/api/alembic.ini upgrade head` | Run once before each compatible release. Override only this job's database URL with the direct Neon URL. |
+| `drumscribe-retention` | API image | Scheduled job only | `python -m drumscribe_api.ops purge-expired-data` | Run hourly. Keep exactly one scheduler; the operation itself is idempotent. |
+
+The API and worker use Neon's pooled URL. The migration job uses the direct URL. All workloads share the production environment, Redis, private-storage, provider-approval, and Sentry configuration, but the API image does not receive the private model-bundle variables. The worker additionally receives:
+
+```text
+DRUMSCRIBE_MODEL_BUNDLE_KEY=runtime-models/drumscribe-recall-fusion-v6-f2b01777aae9be87.tar.gz
+DRUMSCRIBE_MODEL_BUNDLE_SHA256=f2b01777aae9be874af24dcef06345e13cf15fe516280e1ce07381b7e837d675
+```
+
+Its entrypoint downloads that private Neon object, verifies the archive and every approved checkpoint hash, installs it atomically, and only then starts Celery. Public Beat This and Demucs artifacts are revision- and hash-pinned in the image and run with the Hugging Face client offline at runtime.
+
+Until a custom domain exists, use the Cloudflare Worker origin as `DRUMSCRIBE_WEB_ORIGINS` and as the billing return/cancel origin. Set `DRUMSCRIBE_ALLOWED_HOSTS` to only the generated Northflank API hostname. The Cloudflare build uses `NEXT_PUBLIC_API_URL=/api/v1`, `NEXT_PUBLIC_DEMO_MODE=false`, and `API_ORIGIN=https://<northflank-api-host>` so the browser sees a same-origin API and the secure session cookie works reliably.
+
 ## Scaling
 
 Scale API processes independently from workers. Queue routing can later separate CPU normalization, GPU separation/transcription, and export work without changing the REST contract. Keep stage outputs deterministic and checkpointed so a retry starts at the last successful stage. Use per-user and global concurrency controls before increasing worker count.
+
+For the pre-launch sandbox, start with one API replica and one worker replica. Before paid traffic or an advertised SLA, move to an SLA-capable tier and use these guardrails:
+
+- API: minimum `2`, maximum `6` replicas; scale near sustained 65% CPU or high request latency. The API is stateless, and rate-limit/session state is in Redis.
+- Worker: concurrency remains `1`; scale replicas from queue age/depth, beginning at one and capping at the number of simultaneous jobs the Redis, database, and budget can support. Do not increase Celery concurrency inside a replica because Demucs and transcription models are memory-heavy.
+- Scheduler: exactly `1` hourly retention job. Never autoscale or duplicate it.
+- Neon: retain the current pooled application endpoint and `0.25–2 CU` autoscaling range for beta, then raise the ceiling only after connection, CPU, and latency measurements justify it. Migrations always use the direct endpoint.
+- Backpressure: keep the product's per-user concurrent-job limits enabled, watch oldest queued-job age and failure rate, and reject excess work cleanly rather than exhausting workers.
+- Model rollout: publish a new immutable private bundle key, deploy a canary worker against it, and then replace workers gradually. Never overwrite a bundle already referenced by a release.
 
 ## Rollback
 

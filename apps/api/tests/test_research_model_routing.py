@@ -50,6 +50,7 @@ def test_research_model_selection_uses_argv_without_a_shell(
     monkeypatch, provider_name, setting, provider_type, input_kind
 ):
     settings = Settings(
+        _env_file=None,
         pipeline_provider="music_engine",
         music_transcription_provider=provider_name,
         **{setting: '/safe/python "/runner with spaces.py"'},
@@ -64,6 +65,7 @@ def test_research_model_selection_uses_argv_without_a_shell(
 
 def test_research_model_selection_requires_an_explicit_command() -> None:
     settings = Settings(
+        _env_file=None,
         pipeline_provider="music_engine",
         music_transcription_provider="yourmt3_plus",
         yourmt3_command=None,
@@ -74,6 +76,7 @@ def test_research_model_selection_requires_an_explicit_command() -> None:
 
 def test_owner_approved_self_hosted_pipeline_can_be_selected_in_production() -> None:
     settings = Settings(
+        _env_file=None,
         environment=Environment.PRODUCTION,
         database_url="postgresql+asyncpg://db.test/drumscribe",
         storage_backend="s3",
@@ -102,6 +105,7 @@ def test_owner_approved_self_hosted_pipeline_can_be_selected_in_production() -> 
 
 def test_owner_approved_recall_fusion_can_be_selected_in_production() -> None:
     settings = Settings(
+        _env_file=None,
         environment=Environment.PRODUCTION,
         database_url="postgresql+asyncpg://db.test/drumscribe",
         storage_backend="s3",
@@ -129,6 +133,7 @@ def test_owner_approved_recall_fusion_can_be_selected_in_production() -> None:
 def test_production_rejects_an_unapproved_adtof_version() -> None:
     with pytest.raises(ValueError, match="ADTOF model version is not approved"):
         Settings(
+            _env_file=None,
             environment=Environment.PRODUCTION,
             database_url="postgresql+asyncpg://db.test/drumscribe",
             storage_backend="s3",
@@ -155,6 +160,7 @@ def test_production_rejects_an_unapproved_adtof_version() -> None:
 def test_self_hosted_production_rejects_an_unrelated_approval_reference() -> None:
     with pytest.raises(ValueError, match="pinned owner approval reference"):
         Settings(
+            _env_file=None,
             environment=Environment.PRODUCTION,
             database_url="postgresql+asyncpg://db.test/drumscribe",
             storage_backend="s3",

@@ -46,15 +46,10 @@ def test_test_split_selection_is_balanced_deterministic_and_style_diverse(tmp_pa
     first = select(prepared)
     second = select(prepared)
 
-    assert [record["trackId"] for record in first] == [
-        record["trackId"] for record in second
-    ]
+    assert [record["trackId"] for record in first] == [record["trackId"] for record in second]
     assert len(first) == 20
     assert all(record["split"] == "test" for record in first)
-    assert all(
-        sum(record["category"] == group for record in first) == 5
-        for group in styles
-    )
+    assert all(sum(record["category"] == group for record in first) == 5 for group in styles)
 
 
 def test_report_identifies_internal_locked_verification(monkeypatch, tmp_path):

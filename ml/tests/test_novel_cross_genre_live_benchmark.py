@@ -5,9 +5,7 @@ from runpy import run_path
 
 def _module():
     repository = Path(__file__).resolve().parents[2]
-    return run_path(
-        repository / "scripts" / "run_novel_cross_genre_live_benchmark.py"
-    )
+    return run_path(repository / "scripts" / "run_novel_cross_genre_live_benchmark.py")
 
 
 def test_extended_styles_are_assigned_to_declared_genre_groups():
@@ -75,15 +73,10 @@ def test_groove_selection_is_balanced_deterministic_and_hash_excluding(tmp_path)
     first = select(prepared, {"heavy_rock_punk-0"})
     second = select(prepared, {"heavy_rock_punk-0"})
 
-    assert [record["trackId"] for record in first] == [
-        record["trackId"] for record in second
-    ]
+    assert [record["trackId"] for record in first] == [record["trackId"] for record in second]
     assert len(first) == 20
     assert {record["category"] for record in first} == set(styles)
-    assert all(
-        sum(record["category"] == group for record in first) == 5
-        for group in styles
-    )
+    assert all(sum(record["category"] == group for record in first) == 5 for group in styles)
     assert all(record["audioSha256"] != "heavy_rock_punk-0" for record in first)
 
 
