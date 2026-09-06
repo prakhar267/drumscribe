@@ -30,7 +30,7 @@ research = [
   "adtof-pytorch==0.1.0",
   "drumscribe-ml[train]",
   "drumscribe-music[audio,demucs,accurate-beats]",
-  "torch==2.11.0",
+  "torch==2.13.0",
   "torchaudio==2.11.0",
 ]
 
