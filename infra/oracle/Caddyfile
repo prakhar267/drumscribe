@@ -1,0 +1,9 @@
+{
+	email Prakhargupta267@gmail.com
+}
+
+{$DRUMSCRIBE_API_HOST} {
+	encode zstd gzip
+	header -Server
+	reverse_proxy api:8000
+}

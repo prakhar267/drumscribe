@@ -1,0 +1,82 @@
+name: drumscribe-production
+
+services:
+  api:
+    image: drumscribe-api:${DRUMSCRIBE_RELEASE_TAG:-main}
+    build:
+      context: ../..
+      dockerfile: infra/docker/api.Dockerfile
+    env_file:
+      - ${DRUMSCRIBE_ENV_FILE:-/etc/drumscribe/drumscribe.env}
+    command:
+      - sh
+      - -ec
+      - alembic upgrade head && exec uvicorn drumscribe_api.main:app --host 0.0.0.0 --port 8000
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/api/v1/health/ready"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 30s
+    restart: unless-stopped
+
+  worker:
+    image: drumscribe-worker:${DRUMSCRIBE_RELEASE_TAG:-main}
+    build:
+      context: ../..
+      dockerfile: infra/docker/worker.Dockerfile
+    env_file:
+      - ${DRUMSCRIBE_ENV_FILE:-/etc/drumscribe/drumscribe.env}
+    command:
+      - celery
+      - -A
+      - drumscribe_api.tasks:celery_app
+      - worker
+      - --loglevel=INFO
+      - --concurrency=1
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  beat:
+    image: drumscribe-api:${DRUMSCRIBE_RELEASE_TAG:-main}
+    env_file:
+      - ${DRUMSCRIBE_ENV_FILE:-/etc/drumscribe/drumscribe.env}
+    command:
+      - celery
+      - -A
+      - drumscribe_api.tasks:celery_app
+      - beat
+      - --loglevel=INFO
+      - --schedule=/var/lib/celery/celerybeat-schedule
+    depends_on:
+      api:
+        condition: service_healthy
+    volumes:
+      - celery-beat-data:/var/lib/celery
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2.10.2-alpine
+    environment:
+      DRUMSCRIBE_API_HOST: ${DRUMSCRIBE_API_HOST:?Set DRUMSCRIBE_API_HOST in the deployment environment}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  celery-beat-data:
+  caddy-data:
+  caddy-config:
