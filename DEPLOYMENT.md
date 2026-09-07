@@ -52,6 +52,8 @@ Scale API processes independently from workers. Queue routing can later separate
 
 For the pre-launch sandbox, start with one API replica and one worker replica. Before paid traffic or an advertised SLA, move to an SLA-capable tier and use these guardrails:
 
+Northflank's free project is not sufficient for the production worker: its largest available free service is 0.2 shared vCPU with 512 MB RAM and autoscaling is disabled. The four pinned Demucs model files total about 320.5 MiB, while the Python/Torch runtime measured about 203.2 MiB RSS before model weights, inference activations, audio buffers, or the first-party fusion checkpoints are loaded. The worker therefore requires at least 1 dedicated vCPU with 2 GB RAM; use 4 GB for launch headroom. Do not deploy the worker on the 512 MB plan or silently enable a paid plan.
+
 - API: minimum `2`, maximum `6` replicas; scale near sustained 65% CPU or high request latency. The API is stateless, and rate-limit/session state is in Redis.
 - Worker: concurrency remains `1`; scale replicas from queue age/depth, beginning at one and capping at the number of simultaneous jobs the Redis, database, and budget can support. Do not increase Celery concurrency inside a replica because Demucs and transcription models are memory-heavy.
 - Scheduler: exactly `1` hourly retention job. Never autoscale or duplicate it.
