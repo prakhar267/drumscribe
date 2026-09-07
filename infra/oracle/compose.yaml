@@ -15,7 +15,11 @@ services:
     expose:
       - "8000"
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:8000/api/v1/health/ready"]
+      test:
+        - CMD-SHELL
+        - >-
+          curl -fsS --header "Host: $${DRUMSCRIBE_API_HOST}"
+          http://127.0.0.1:8000/api/v1/health/ready
       interval: 15s
       timeout: 10s
       retries: 20
