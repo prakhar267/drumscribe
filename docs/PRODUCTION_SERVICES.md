@@ -13,8 +13,8 @@ This is the non-secret source of truth for DrumScribe's pre-launch service topol
 | Merchant of record and credits | Dodo Payments | `DRUMSCRIBE_BILLING_*`, `DRUMSCRIBE_DODO_*`, `NEXT_PUBLIC_BILLING_ENABLED` | One free complete song, paid-credit reservation/refund, server-created checkout, signed idempotent webhook fulfillment, pricing, and success UX are implemented and tested. Checkout remains disabled until a Dodo test product, API key, and webhook signing key are supplied and the account owner completes onboarding. |
 | API error monitoring | Sentry `python-fastapi` | `DRUMSCRIBE_SENTRY_DSN`, `DRUMSCRIBE_SENTRY_TRACES_SAMPLE_RATE` | SDK wiring and a live ingestion event are verified. |
 | Web error monitoring | Sentry `drumscribe-web` | `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_DSN`, sample-rate variables | Next.js client, server, edge, global-error, and build integration are complete; lint, type checking, tests, and production build pass. Source-map upload needs a CI auth token at deployment time. |
-| Public web | Cloudflare Workers, `drumscribe-web` | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_DEMO_MODE`, `API_ORIGIN` | Vinext production build and live Workers deployment are verified at `https://drumscribe-web.prakhargupta267.workers.dev`. It remains in explicit pre-launch demo mode until the public API URL exists. |
-| Public API, worker, and scheduler | Northflank | Container environment variables and TLS hostname | The free US-Central `drumscribe` project exists, the GitHub App is limited to `prakhar267/drumscribe`, and the encrypted `production-runtime` secret group is populated. Workload creation is paused before billing: the free service ceiling is 0.2 shared vCPU and 512 MB RAM with no autoscaling, which cannot run the pinned Demucs ensemble. Use at least 1 dedicated vCPU and 2 GB RAM for the worker (4 GB recommended for launch headroom). No paid resource has been enabled. |
+| Public web | Cloudflare Workers, `drumscribe-web` | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_DEMO_MODE`, `API_ORIGIN` | Production mode is live at `https://drumscribe-web.prakhargupta267.workers.dev`; its same-origin `/api/v1/*` route is verified against the Oracle API. |
+| Public API, worker, and scheduler | Oracle Cloud Always Free Ampere A1, Mumbai | Root-only environment file, Docker Compose, Caddy TLS | `drumscribe-production` is live on 1 OCPU/6 GB with a 46.6 GB boot volume. API readiness, Celery worker, Celery Beat, model-bundle verification, Redis TLS, firewalling, and public HTTPS are verified. No load balancer, NAT gateway, reserved IP, paid plan, or card action was used. |
 | Logs and uptime | GitHub Actions scheduled probe plus Sentry | `PUBLIC_WEB_URL`, `PUBLIC_API_HEALTH_URL`, and the Sentry variables above | The public web is checked every 15 minutes by `.github/workflows/uptime.yml`; failed runs use the repository owner's GitHub Actions notification settings. The API readiness check activates when its public URL is added as a repository variable. Better Stack remains optional. |
 | Source and CI | Public GitHub repository `prakhar267/drumscribe` | Repository secrets and workflows | Hosted Actions are enabled on the public repository. Secret scanning, push protection, vulnerability alerts, and Dependabot security updates are enabled; the local parity suite remains required before push. |
 
@@ -26,7 +26,7 @@ DrumScribe uses Neon PostgreSQL and Neon Object Storage. Other Neon primitives s
 - Private audio and generated exports use the existing S3-compatible boundary backed by the private `drumscribe-private` bucket.
 - Neon requires path-style S3 addressing and does not currently expose `CopyObject`; the adapter streams recoverable moves through a temporary local file.
 - `DRUMSCRIBE_S3_SERVER_SIDE_ENCRYPTION=auto` omits unsupported AWS SSE request headers for Neon while retaining provider-managed at-rest encryption.
-- API and background work run in separate application and worker containers, planned for Northflank during pre-launch.
+- API and background work run in separate application and worker containers on Oracle Always Free for the initial beta.
 - The runtime database URL must use Neon's pooled connection string. Alembic migrations must use the direct, unpooled connection string.
 - Neon's canonical libpq URL is normalized centrally for SQLAlchemy `asyncpg`: TLS remains required while unsupported libpq-only query parameters are removed before connecting.
 - The project-scoped Neon MCP configuration is for development and testing, not a production runtime dependency.
@@ -38,16 +38,14 @@ DrumScribe uses Neon PostgreSQL and Neon Object Storage. Other Neon primitives s
 - `.env` is Git-ignored, mode `0600`, and currently contains only local pre-launch values.
 - Local managed-service credentials are also stored in macOS Keychain under DrumScribe-specific service names.
 - No committed example contains a real DSN, token, password, or connection string.
-- Production secrets must be copied into Northflank/GitHub secret storage rather than committed or baked into images.
+- Production secrets live in the Oracle host's root-only `/etc/drumscribe/drumscribe.env` and must never be committed or baked into images.
 - The ML worker retrieves one immutable private bundle from Neon Object Storage at startup and verifies both the archive SHA-256 and the allowlisted checkpoint hashes before Celery starts. Public model caches are baked from exact pinned revisions and used offline at runtime.
 
 ## Launch gates that remain external
 
-1. Approve a paid Northflank worker plan with at least 1 dedicated vCPU and 2 GB RAM (4 GB recommended), then deploy the API and worker, run the migration job, and switch the Worker from demo mode to the generated public API hostname. GitHub authorization, the free project, and encrypted runtime secrets are complete.
-2. Verify a customer sending domain in Resend and publish its SPF/DKIM records.
-3. Add the deployed `/api/v1/health/ready` URL as the `PUBLIC_API_HEALTH_URL` repository variable. The scheduled probe and Sentry integrations are already configured; a separate Better Stack account is optional.
-4. Preserve the owner-attested commercial approval record for the exact pinned Demucs, Beat This, ADTOF, and first-party model artifacts. The fail-closed validator accepts only the recorded approval reference and approved versions; any model or weight change reopens this gate.
-5. Move off Northflank Sandbox to an SLA-capable paid/runtime tier before the production launch.
-6. Complete legal-entity/address decisions and qualified review of the customer-facing legal text.
-7. Run deployed restore/deletion/security tests and measured quality benchmarks after the public API is available. Local full-stack and rights-cleared recording journeys already pass against production Neon data and storage services.
-8. Complete Dodo business onboarding, create the $15 one-time 10-credit product, configure and verify the signed `payment.succeeded` webhook in test mode, then repeat in live mode and enable the web checkout flag.
+1. Buy or select the custom domain, verify it in Cloudflare and Resend, and publish Resend SPF/DKIM records.
+2. Preserve the owner-attested commercial approval record for the exact pinned Demucs, Beat This, ADTOF, and first-party model artifacts. The fail-closed validator accepts only the recorded approval reference and approved versions; any model or weight change reopens this gate.
+3. Complete legal-entity/address decisions and qualified review of the customer-facing legal text.
+4. Run a backup restore drill and repeat deletion/security tests on the deployed environment.
+5. Complete merchant-of-record onboarding, create the $15 one-time 10-credit product, configure and verify the signed webhook in test mode, then repeat in live mode and enable checkout. Payment stays disabled until the owner explicitly approves this work.
+6. Approve a capacity and availability plan before promising an SLA or scaling beyond the single free host.

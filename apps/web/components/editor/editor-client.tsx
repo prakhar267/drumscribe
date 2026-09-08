@@ -163,14 +163,20 @@ export function EditorClient({ projectId }: { projectId: string }) {
     latestEventsRef.current = events;
     if (!hydratedRef.current) return;
     const changes = diffDrumEvents(savedEventsRef.current, events);
-    if (!changes.upserts.length && !changes.deleteIds.length) return;
+    if (!changes.upserts.length && !changes.deleteIds.length) {
+      if (cleanAfter(savedEventsRef.current, savedTitleRef.current)) {
+        editStartedAtRef.current = null;
+        setSaveState("saved");
+      }
+      return;
+    }
     editStartedAtRef.current ??= performance.now();
     setSaveState("editing");
     const timer = window.setTimeout(() => {
       void persistEvents(events).catch(() => undefined);
     }, 650);
     return () => window.clearTimeout(timer);
-  }, [events, persistEvents]);
+  }, [cleanAfter, events, persistEvents]);
 
   useEffect(() => {
     latestTitleRef.current = project.title;
