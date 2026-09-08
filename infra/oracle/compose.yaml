@@ -55,12 +55,10 @@ services:
       - drumscribe_api.tasks:celery_app
       - beat
       - --loglevel=INFO
-      - --schedule=/var/lib/celery/celerybeat-schedule
+      - --schedule=/home/drumscribe/celerybeat-schedule
     depends_on:
       api:
         condition: service_healthy
-    volumes:
-      - celery-beat-data:/var/lib/celery
     restart: unless-stopped
 
   caddy:
@@ -81,6 +79,5 @@ services:
     restart: unless-stopped
 
 volumes:
-  celery-beat-data:
   caddy-data:
   caddy-config:
