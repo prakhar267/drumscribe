@@ -8,7 +8,7 @@ const TOUR_STEPS = [
   {
     eyebrow: "The AI first draft",
     title: "Audio becomes readable notation.",
-    body: "A prepared, rights-safe recording is loaded for this tour. DrumScribe has already separated the drums, found the pulse and placed every detected hit on the score.",
+    body: "A prepared, rights-safe recording is loaded for this tour. DrumToScore has already separated the drums, found the pulse and placed every detected hit on the score.",
     detail: "Waveform and notation share one playhead",
   },
   {
@@ -59,7 +59,7 @@ export function ProductTour({ projectId, step, uncertainCount, onClose, onStepCh
   }, [onClose]);
 
   return (
-    <aside className="product-tour" aria-label="DrumScribe product tour" data-testid="product-tour">
+    <aside className="product-tour" aria-label="DrumToScore product tour" data-testid="product-tour">
       <div className="product-tour-progress" aria-label={`Step ${step + 1} of ${TOUR_STEPS.length}`}>
         {TOUR_STEPS.map((tourStep, index) => (
           <button

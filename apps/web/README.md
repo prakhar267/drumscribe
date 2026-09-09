@@ -1,6 +1,6 @@
-# DrumScribe web
+# DrumToScore web
 
-The Next.js product surface for DrumScribe. The app is fully navigable in deterministic demo mode and switches to the versioned service API when it is available.
+The Next.js product surface for DrumToScore. The app is fully navigable in deterministic demo mode and switches to the versioned service API when it is available.
 
 ```bash
 pnpm install --frozen-lockfile

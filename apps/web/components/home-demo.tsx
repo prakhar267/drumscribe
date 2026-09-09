@@ -16,7 +16,7 @@ export function HomeDemo() {
   const playhead = (transport.currentTime % visibleDuration) / visibleDuration * 100;
 
   return (
-    <section className="demo-stage" aria-label="Interactive DrumScribe demo">
+    <section className="demo-stage" aria-label="Interactive DrumToScore demo">
       <div className="demo-shell">
         <div className="demo-topbar">
           <div className="demo-window-dots" aria-hidden="true"><i /><i /><i /></div>

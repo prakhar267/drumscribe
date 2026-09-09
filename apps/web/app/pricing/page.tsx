@@ -7,7 +7,7 @@ import { PricingCheckoutButton } from "@/components/pricing-checkout-button";
 
 export const metadata: Metadata = {
   title: "Pricing",
-  description: "Transcribe one full song free, then buy 10 DrumScribe transcription credits for $15.",
+  description: "Transcribe one full song free, then buy 10 DrumToScore transcription credits for $15.",
 };
 
 export default function PricingPage() {
@@ -21,7 +21,7 @@ export default function PricingPage() {
           <p>No subscription at launch. Try the complete workflow, keep your chart, then add credits when your next song is ready.</p>
         </header>
 
-        <section className="pricing-grid" aria-label="DrumScribe pricing plans">
+        <section className="pricing-grid" aria-label="DrumToScore pricing plans">
           <article className="surface pricing-card">
             <div className="pricing-card-kicker"><Music2 aria-hidden="true" /> Free</div>
             <h2>First song</h2>

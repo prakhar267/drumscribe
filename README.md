@@ -1,6 +1,6 @@
-# DrumScribe
+# DrumToScore
 
-DrumScribe turns an uploaded song into an editable drum chart, keeps its waveform, drum events, and notation synchronized, and supports practice plus MIDI, MusicXML, and PDF export.
+DrumToScore turns an uploaded song into an editable drum chart, keeps its waveform, drum events, and notation synchronized, and supports practice plus MIDI, MusicXML, and PDF export.
 
 This repository is a production-oriented first release, not a claim of perfect automatic transcription. The default development provider creates an editable first draft without commercial model credentials. Any research model is isolated and blocked from production unless its complete code, weights, data, and commercial-use status are explicitly approved in `MODEL_LICENSING.md`.
 

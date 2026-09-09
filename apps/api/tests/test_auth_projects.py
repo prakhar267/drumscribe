@@ -38,7 +38,7 @@ async def test_resend_magic_link_delivery_uses_private_verification_link(setting
         update={
             "magic_link_delivery": "resend",
             "resend_api_key": SecretStr("resend-test-key"),
-            "resend_from_email": "DrumScribe <sign-in@drumscribe.test>",
+            "resend_from_email": "DrumToScore <sign-in@drumtoscore.test>",
         }
     )
     async with httpx.AsyncClient(transport=httpx.MockTransport(send)) as http_client:
@@ -51,7 +51,8 @@ async def test_resend_magic_link_delivery_uses_private_verification_link(setting
     payload = captured["payload"]
     assert isinstance(payload, dict)
     assert payload["to"] == ["drummer@example.com"]
-    assert payload["from"] == "DrumScribe <sign-in@drumscribe.test>"
+    assert payload["from"] == "DrumToScore <sign-in@drumtoscore.test>"
+    assert payload["subject"] == "Sign in to DrumToScore"
     assert "http://testserver/auth/verify?token=opaque%2B%2Ftoken" in str(payload["text"])
     assert "opaque%2B%2Ftoken" in str(payload["html"])
 

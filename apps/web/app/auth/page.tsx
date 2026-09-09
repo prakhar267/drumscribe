@@ -11,7 +11,7 @@ export default function AuthPage() {
         <Brand />
         <div className="auth-quote">
           <blockquote>“The chart gets you close. Your ears finish the job.”</blockquote>
-          <p>DrumScribe product principle</p>
+          <p>DrumToScore product principle</p>
         </div>
       </section>
       <section className="auth-panel"><AuthForm /></section>

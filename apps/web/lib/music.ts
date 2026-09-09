@@ -317,7 +317,7 @@ export function eventsToMusicXml(
   }).join("");
   const scoreInstruments = INSTRUMENTS.map((instrument) => `<score-instrument id="P1-I${GM_PERCUSSION_MAP[instrument]}"><instrument-name>${escapeXml(INSTRUMENT_LABELS[instrument])}</instrument-name></score-instrument>`).join("");
   const midiInstruments = INSTRUMENTS.map((instrument) => `<midi-instrument id="P1-I${GM_PERCUSSION_MAP[instrument]}"><midi-channel>10</midi-channel><midi-unpitched>${GM_PERCUSSION_MAP[instrument]}</midi-unpitched><volume>80</volume><pan>0</pan></midi-instrument>`).join("");
-  return `<?xml version="1.0" encoding="UTF-8"?><score-partwise version="4.0"><work><work-title>${escapeXml(options.title)}</work-title></work><identification><encoding><software>DrumScribe</software><supports element="print" type="yes" attribute="new-system" value="yes"/></encoding></identification><part-list><score-part id="P1"><part-name>Drum Set</part-name><part-abbreviation>Perc.</part-abbreviation>${scoreInstruments}${midiInstruments}</score-part></part-list><part id="P1">${measureXml}</part></score-partwise>`;
+  return `<?xml version="1.0" encoding="UTF-8"?><score-partwise version="4.0"><work><work-title>${escapeXml(options.title)}</work-title></work><identification><encoding><software>DrumToScore</software><supports element="print" type="yes" attribute="new-system" value="yes"/></encoding></identification><part-list><score-part id="P1"><part-name>Drum Set</part-name><part-abbreviation>Perc.</part-abbreviation>${scoreInstruments}${midiInstruments}</score-part></part-list><part id="P1">${measureXml}</part></score-partwise>`;
 }
 
 function variableLength(value: number) {

@@ -6,7 +6,7 @@ export function SiteFooter() {
     <footer className="site-footer">
       <div>
         <Brand />
-        <p>© 2026 DrumScribe. Built for the practice room.</p>
+        <p>© 2026 DrumToScore. Built for the practice room.</p>
       </div>
       <nav className="footer-links" aria-label="Legal">
         <Link href="/pricing">Pricing</Link>

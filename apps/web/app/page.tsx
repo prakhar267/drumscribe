@@ -20,7 +20,7 @@ export default function HomePage() {
                   <Link className="button" href="/projects/demo-groove?tour=1"><PlayCircle size={17} /> Take product tour</Link>
                 </div>
               </div>
-              <p>Upload a recording. DrumScribe isolates the drums, detects the groove, creates notation, and lets you correct, practise and export it.</p>
+              <p>Upload a recording. DrumToScore isolates the drums, detects the groove, creates notation, and lets you correct, practise and export it.</p>
             </div>
           </div>
           <div className="hero-sticker" aria-hidden="true">A strong first draft.<br />You keep the feel.</div>
@@ -29,7 +29,7 @@ export default function HomePage() {
         <HomeDemo />
 
         <section className="benefits-section" aria-labelledby="benefits-title">
-          <h2 className="sr-only" id="benefits-title">Why drummers use DrumScribe</h2>
+          <h2 className="sr-only" id="benefits-title">Why drummers use DrumToScore</h2>
           <div className="benefit-grid">
             <article className="benefit-item">
               <span className="benefit-number">01</span>

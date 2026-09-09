@@ -1,6 +1,6 @@
 # Production services
 
-This is the non-secret source of truth for DrumScribe's pre-launch service topology. Credentials live only in the deployment platform, the ignored local `.env`, or macOS Keychain.
+This is the non-secret source of truth for DrumToScore's pre-launch service topology. Credentials live only in the deployment platform, the ignored local `.env`, or macOS Keychain.
 
 ## Service map
 
@@ -8,19 +8,19 @@ This is the non-secret source of truth for DrumScribe's pre-launch service topol
 | --- | --- | --- | --- |
 | PostgreSQL | Neon project `drumstick` (`cool-cell-64604736`), organization `Prakhar` (`org-winter-sea-89158570`), AWS Ohio | `DRUMSCRIBE_DATABASE_URL` | CLI/MCP are configured. All migrations passed first on an ephemeral branch and then on `production`; pooled application connectivity is verified. |
 | Durable queue and rate-limit state | Upstash Redis `drumscribe-production`, AWS Ohio | `DRUMSCRIBE_REDIS_URL`; production uses `DRUMSCRIBE_QUEUE_BACKEND=celery` | TLS authentication and write/read/delete verified. Localhost stays `inline` so it remains usable without a separate worker process. |
-| Private audio and exports | Neon Object Storage bucket `drumscribe-private`, AWS Ohio | `DRUMSCRIBE_S3_*` | Private bucket, scoped production credential, exact-origin CORS, signed browser upload/download, unsigned denial, streamed move fallback, and cleanup are live-verified. Neon Object Storage is beta, so application retention/deletion remains authoritative. The existing public-read `drumstick` bucket is unused for customer media. |
-| Transactional sign-in email | Resend | `DRUMSCRIBE_MAGIC_LINK_DELIVERY=resend`, `DRUMSCRIBE_RESEND_*` | Adapter and unit test are complete; live delivery to the account email passed. Customer delivery is blocked until a custom domain is verified. |
+| Private audio and exports | Neon Object Storage bucket `drumscribe-private`, AWS Ohio | `DRUMSCRIBE_S3_*` | Private bucket, scoped production credential, exact-origin CORS, signed browser upload/download, unsigned denial, streamed move fallback, and cleanup are live-verified. The production API keeps CORS aligned with `https://drumtoscore.com`, `https://www.drumtoscore.com`, and the fallback Workers URL. Neon Object Storage is beta, so application retention/deletion remains authoritative. The existing public-read `drumstick` bucket is unused for customer media. |
+| Transactional sign-in email | Resend | `DRUMSCRIBE_MAGIC_LINK_DELIVERY=resend`, `DRUMSCRIBE_RESEND_*` | Adapter and unit test are complete. `drumtoscore.com` has DKIM, SPF, and DMARC records published through Cloudflare; Resend verification was requested on 10 September 2026. |
 | Merchant of record and credits | Dodo Payments | `DRUMSCRIBE_BILLING_*`, `DRUMSCRIBE_DODO_*`, `NEXT_PUBLIC_BILLING_ENABLED` | One free complete song, paid-credit reservation/refund, server-created checkout, signed idempotent webhook fulfillment, pricing, and success UX are implemented and tested. Checkout remains disabled until a Dodo test product, API key, and webhook signing key are supplied and the account owner completes onboarding. |
 | API error monitoring | Sentry `python-fastapi` | `DRUMSCRIBE_SENTRY_DSN`, `DRUMSCRIBE_SENTRY_TRACES_SAMPLE_RATE` | SDK wiring and a live ingestion event are verified. |
 | Web error monitoring | Sentry `drumscribe-web` | `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_DSN`, sample-rate variables | Next.js client, server, edge, global-error, and build integration are complete; lint, type checking, tests, and production build pass. Source-map upload needs a CI auth token at deployment time. |
-| Public web | Cloudflare Workers, `drumscribe-web` | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_DEMO_MODE`, `API_ORIGIN` | Production mode is live at `https://drumscribe-web.prakhargupta267.workers.dev`; its same-origin `/api/v1/*` route is verified against the Oracle API. |
+| Public web | Cloudflare Workers, `drumscribe-web` | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_DEMO_MODE`, `API_ORIGIN` | Production mode is live at `https://drumtoscore.com` and `https://www.drumtoscore.com`, with the Workers URL retained as a fallback. Both custom-domain routes and the same-origin `/api/v1/*` proxy are verified. |
 | Public API, worker, and scheduler | Oracle Cloud Always Free Ampere A1, Mumbai | Root-only environment file, Docker Compose, Caddy TLS | `drumscribe-production` is live on 1 OCPU/6 GB with a 46.6 GB boot volume. API readiness, Celery worker, Celery Beat, model-bundle verification, Redis TLS, firewalling, and public HTTPS are verified. No load balancer, NAT gateway, reserved IP, paid plan, or card action was used. |
 | Logs and uptime | GitHub Actions scheduled probe plus Sentry | `PUBLIC_WEB_URL`, `PUBLIC_API_HEALTH_URL`, and the Sentry variables above | The public web is checked every 15 minutes by `.github/workflows/uptime.yml`; failed runs use the repository owner's GitHub Actions notification settings. The API readiness check activates when its public URL is added as a repository variable. Better Stack remains optional. |
 | Source and CI | Public GitHub repository `prakhar267/drumscribe` | Repository secrets and workflows | Hosted Actions are enabled on the public repository. Secret scanning, push protection, vulnerability alerts, and Dependabot security updates are enabled; the local parity suite remains required before push. |
 
 ## Neon boundary
 
-DrumScribe uses Neon PostgreSQL and Neon Object Storage. Other Neon primitives stay disabled unless they are deliberately adopted:
+DrumToScore uses Neon PostgreSQL and Neon Object Storage. Other Neon primitives stay disabled unless they are deliberately adopted:
 
 - Authentication is the application's own first-party magic-link and session implementation, delivered through Resend.
 - Private audio and generated exports use the existing S3-compatible boundary backed by the private `drumscribe-private` bucket.
@@ -43,7 +43,7 @@ DrumScribe uses Neon PostgreSQL and Neon Object Storage. Other Neon primitives s
 
 ## Launch gates that remain external
 
-1. Buy or select the custom domain, verify it in Cloudflare and Resend, and publish Resend SPF/DKIM records.
+1. Wait for Resend to finish its asynchronous DNS verification, then confirm live delivery from `sign-in@drumtoscore.com`.
 2. Preserve the owner-attested commercial approval record for the exact pinned Demucs, Beat This, ADTOF, and first-party model artifacts. The fail-closed validator accepts only the recorded approval reference and approved versions; any model or weight change reopens this gate.
 3. Complete legal-entity/address decisions and qualified review of the customer-facing legal text.
 4. Run a backup restore drill and repeat deletion/security tests on the deployed environment.

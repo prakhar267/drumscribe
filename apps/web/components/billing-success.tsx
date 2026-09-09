@@ -37,7 +37,7 @@ export function BillingSuccess() {
       {credits !== null ? <CheckCircle2 className="billing-success-icon" /> : <LoaderCircle className={checking ? "billing-success-icon spin" : "billing-success-icon"} />}
       <p className="eyebrow">Payment confirmation</p>
       <h1>{credits !== null ? "Credits added." : checking ? "Confirming your payment…" : "Payment is still confirming."}</h1>
-      <p>{credits !== null ? `Your account now has ${credits} paid transcription credits.` : "Credits are granted only after DrumScribe receives a signed confirmation from the payment provider. This normally takes a few seconds."}</p>
+      <p>{credits !== null ? `Your account now has ${credits} paid transcription credits.` : "Credits are granted only after DrumToScore receives a signed confirmation from the payment provider. This normally takes a few seconds."}</p>
       <div className="hero-actions">
         <Link className="button button-primary" href="/upload">Transcribe a song</Link>
         <Link className="button" href="/settings/account">Check account balance</Link>

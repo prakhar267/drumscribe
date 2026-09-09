@@ -4,7 +4,8 @@ import { TransportProvider } from "@/components/transport-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: { default: "DrumScribe — Turn songs into editable drum charts", template: "%s · DrumScribe" },
+  metadataBase: new URL("https://drumtoscore.com"),
+  title: { default: "DrumToScore — Turn songs into editable drum charts", template: "%s · DrumToScore" },
   description: "Upload a recording, generate an editable drum chart, fix the details, and practise in sync.",
   robots: { index: true, follow: true },
 };

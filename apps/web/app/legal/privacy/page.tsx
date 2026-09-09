@@ -4,7 +4,7 @@ import { LegalPage } from "@/components/legal-page";
 export const metadata: Metadata = { title: "Privacy policy" };
 
 export default function PrivacyPage() {
-  return <LegalPage title="Privacy policy" updated="29 August 2026" intro="DrumScribe is designed around private musical work. This draft describes the intended data practices and must be reviewed by qualified counsel for every launch jurisdiction." sections={[
+  return <LegalPage title="Privacy policy" updated="10 September 2026" intro="DrumToScore is designed around private musical work. This draft describes the intended data practices and must be reviewed by qualified counsel for every launch jurisdiction." sections={[
     { title: "What we collect", paragraphs: ["We collect account details, private project metadata, uploaded audio, generated drum stems, transcriptions, edits, exports, and limited service telemetry needed to operate and secure the product."] },
     { title: "How audio is used", paragraphs: ["Audio is processed only to provide the features you request. Projects are private, are not indexed, and are not used for model training unless you separately opt in. The model-improvement preference defaults to off."] },
     { title: "Storage and deletion", paragraphs: ["Customer audio is stored in private object storage and accessed through short-lived signed links. Temporary processing assets and abandoned anonymous uploads follow configurable lifecycle deletion. Project and account deletion controls are available in Settings."] },

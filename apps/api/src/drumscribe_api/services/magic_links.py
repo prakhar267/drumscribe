@@ -28,16 +28,16 @@ class MagicLinkDelivery:
                 json={
                     "from": self.settings.resend_from_email,
                     "to": [email],
-                    "subject": "Sign in to DrumScribe",
+                    "subject": "Sign in to DrumToScore",
                     "text": (
-                        "Use this private link to sign in to DrumScribe. "
+                        "Use this private link to sign in to DrumToScore. "
                         f"It expires in 15 minutes:\n\n{link}\n\n"
                         "If you did not request this email, you can ignore it."
                     ),
                     "html": (
-                        "<p>Use this private link to sign in to DrumScribe. "
+                        "<p>Use this private link to sign in to DrumToScore. "
                         "It expires in 15 minutes.</p>"
-                        f'<p><a href="{escape(link, quote=True)}">Sign in to DrumScribe</a></p>'
+                        f'<p><a href="{escape(link, quote=True)}">Sign in to DrumToScore</a></p>'
                         "<p>If you did not request this email, you can ignore it.</p>"
                     ),
                 },

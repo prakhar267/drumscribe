@@ -9,7 +9,7 @@ export const DEMO_DURATION = DEMO_MEASURES * 4 * (60 / DEMO_BPM);
 export const demoProject: DrumProject = {
   id: DEMO_PROJECT_ID,
   title: "Neon Room Groove",
-  artist: "DrumScribe Studio",
+  artist: "DrumToScore Studio",
   durationSeconds: DEMO_DURATION,
   bpm: DEMO_BPM,
   beatsPerMeasure: 4,
