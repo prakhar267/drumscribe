@@ -162,6 +162,15 @@ review. Paid launch remains gated on the operator details and legal decisions in
 No production customer record, object or account was changed or deleted by the
 drills.
 
+### Dependency hygiene
+
+- Removed the obsolete nested `apps/web/pnpm-lock.yaml`. It was not used by the
+  root pnpm workspace but still pinned a vulnerable development-only `sharp`
+  release and caused a GitHub high-severity alert.
+- The canonical root lockfile enforces patched `sharp` `0.35.4` throughout the
+  workspace. Frozen installation, the web production build and the high-severity
+  pnpm audit pass with no known vulnerabilities.
+
 ## Verification evidence
 
 | Check | Result |
