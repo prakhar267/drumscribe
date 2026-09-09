@@ -87,6 +87,10 @@ and production billing remains disabled.
   `production`.
 - Application database connections remain pooled; migration and restore work use
   a direct connection as required by the Neon runbook.
+- Migration `9f4b8d16a2c7` was first verified on a disposable release branch,
+  applied to `production`, and confirmed as the production Alembic head. The
+  release branch was deleted after the successful deployment; only `production`
+  remains.
 - Customer media continues to use the private `drumscribe-private` Neon Object
   Storage bucket. No storage upgrade or card was used.
 
@@ -115,6 +119,8 @@ this record or Git.
 - Gmail/Googlemail dot and plus aliases share the same free entitlement.
 - Deleting and recreating an account no longer resets a used free song.
 - Added an idempotent production backfill for accounts created before the claim.
+- Ran that backfill after deployment; durable claims were established for all 10
+  existing accounts without consuming a transcription credit.
 - Serialized checkout creation for a user/idempotency key.
 - Tied each paid job to the purchase pack that funded it.
 - Failed or cancelled paid jobs restore the credit to the correct pack.
@@ -188,11 +194,18 @@ drills.
 | Live edge/security audit | 9 of 9 passed |
 | Full integrated local release gate, including dependency audits | Passed; no known dependency vulnerabilities found |
 | Neon branch-first migration check | Passed on disposable release branch |
-| Production deploy and smoke test | Pending final integrated deploy |
-| Hosted GitHub CI | Pending final push |
+| Production database migration | Passed; `9f4b8d16a2c7` is the live head |
+| Oracle production deployment | Passed; API, ML worker, scheduler and proxy healthy |
+| Cloudflare web deployment | Passed; Worker version `48a775ec-bc21-431f-9425-458b146f111f` |
+| Public route smoke test | Passed; homepage, pricing, demo, API readiness and all four legal pages returned HTTP 200 |
+| Production free-claim backfill | Passed; 10 existing accounts processed |
+| Hosted GitHub CI | Passed for release commit: [run 34411777668](https://github.com/prakhar267/drumscribe/actions/runs/34411777668) |
+| Hosted production uptime probe | Passed after release: [run 34412600218](https://github.com/prakhar267/drumscribe/actions/runs/34412600218) |
 
-The final release commit, migration revision, deployment result and hosted CI run
-must be appended here after integration.
+Release source commit `c81839472ffce2db98d43faeaa8c3a9335fe9021` is pushed to
+the public GitHub repository and deployed. The final public security audit ran at
+`2026-09-09T22:39:24Z` and passed all 9 checks, including live database, queue,
+private storage and provider readiness.
 
 ## Explicit remaining blockers
 
