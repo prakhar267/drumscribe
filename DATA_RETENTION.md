@@ -14,6 +14,7 @@ recorded per environment.
 | Signed media/export URL | 10 minutes | Expiry; new URLs refused after deletion | Object follows its lifecycle |
 | Session | 30 days | Revocation, account deletion or expiry | Database cleanup policy |
 | Magic link | 15 minutes, single use | Consumption/expiry | Database cleanup policy |
+| Free-song abuse-prevention claim | While the one-free-song offer operates | Detached from deleted account | Keyed HMAC identity and used timestamp only; no email is retained in the claim |
 | Provider copy | Contract-specific | Provider API/contract-specific | Record `retentionExpiresAt` per model run |
 
 Object keys are opaque and private. Soft deletion immediately blocks application

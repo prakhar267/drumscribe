@@ -1,6 +1,6 @@
 # Third-party dependency register
 
-Last reviewed: 2026-08-29. This engineering register is not legal advice. Exact
+Last reviewed: 2026-09-10. This engineering register is not legal advice. Exact
 versions and integrity hashes are pinned in `pnpm-lock.yaml` and the three
 `uv.lock` files; CI audits every release graph and blocks high-severity findings.
 
@@ -22,8 +22,11 @@ versions and integrity hashes are pinned in `pnpm-lock.yaml` and the three
 
 Model, checkpoint, and dataset rights are governed separately in
 `MODEL_LICENSING.md`; a library's code license never authorizes a model or its
-training data. Demucs and every unresolved/non-commercial research provider stay
-outside production images and are rejected by the production configuration gate.
+training data. The production image includes only hash-pinned, application-
+approved model components. Demucs is included under the founder's separately
+asserted permission, whose underlying grant remains a paid-launch evidence item;
+every other unresolved or non-commercial research provider stays outside
+production images and is rejected by the production configuration gate.
 
 Before a public release, generate an SBOM from the locked dependency graphs,
 archive all corresponding license texts with the release artifact, and have

@@ -79,9 +79,20 @@ DRUMSCRIBE_CREDIT_PACK_SIZE=10
 ```
 
 Point the provider webhook at `POST /api/v1/billing/webhooks/dodo` and subscribe to
-`payment.succeeded`. Credits are granted only after signature verification, purchase/user/session
-matching, and exact product validation. Replayed events and checkout attempts cannot grant the pack
-twice. Set `NEXT_PUBLIC_BILLING_ENABLED=true` only in the web build that targets this configured API.
+`payment.succeeded` and `refund.succeeded`. Credits are granted only after signature verification,
+purchase/user/session matching, and exact product/quantity validation. A full refund revokes only
+the unused credits belonging to that purchase; spent transcriptions and credits from other packs
+are not altered. Partial refunds deliberately fail closed for operator reconciliation because song
+credits are indivisible. Replayed success/refund events and checkout attempts cannot grant or revoke
+the pack twice. Set `NEXT_PUBLIC_BILLING_ENABLED=true` only in the web build that targets this
+configured API.
+
+After applying the claim migration, run the idempotent backfill before opening billing or announcing
+the free trial. It creates only keyed hashes—never plain email copies—and does not contact a provider:
+
+```bash
+uv run python -m drumscribe_api.ops backfill-free-transcription-claims
+```
 
 ## Security invariants
 

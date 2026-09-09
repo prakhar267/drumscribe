@@ -2,13 +2,13 @@ from dataclasses import dataclass
 from datetime import timedelta
 
 from fastapi import Request, Response
-from sqlalchemy import select, update
+from sqlalchemy import select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .config import Settings
 from .enums import UserKind
 from .errors import APIError
-from .models import MagicLink, Project, Session, User
+from .models import FreeTranscriptionClaim, MagicLink, Project, Session, User
 from .security import as_utc, opaque_token, privacy_hash, token_hash, utcnow
 
 
@@ -20,6 +20,88 @@ class Principal:
 
 def normalize_email(email: str) -> str:
     return email.strip().casefold()
+
+
+def free_transcription_identity(email: str) -> str:
+    """Collapse only well-documented consumer Gmail aliases for the free-use policy."""
+    normalized = normalize_email(email)
+    local, separator, domain = normalized.rpartition("@")
+    if not separator:
+        return normalized
+    if domain in {"gmail.com", "googlemail.com"}:
+        local = local.split("+", 1)[0].replace(".", "")
+        domain = "gmail.com"
+    return f"{local}@{domain}"
+
+
+async def attach_free_transcription_claim(
+    db: AsyncSession,
+    user: User,
+    email: str,
+    settings: Settings,
+) -> None:
+    """Attach and synchronize the durable pseudonymous one-free-song claim."""
+    # Every entitlement mutation uses the same user -> claim lock order.
+    user = (await db.execute(select(User).where(User.id == user.id).with_for_update())).scalar_one()
+    identity_hash = privacy_hash(
+        f"free-transcription:{free_transcription_identity(email)}",
+        settings.session_secret_bytes,
+    )
+    # PostgreSQL and SQLite both support this form. It makes simultaneous
+    # first-time sign-ins for aliases converge on one durable claim row.
+    await db.execute(
+        text(
+            "INSERT INTO free_transcription_claims (identity_hash, used_at) "
+            "VALUES (:identity_hash, :used_at) "
+            "ON CONFLICT (identity_hash) DO NOTHING"
+        ),
+        {
+            "identity_hash": identity_hash,
+            "used_at": user.free_transcription_used_at,
+        },
+    )
+    claim = (
+        await db.execute(
+            select(FreeTranscriptionClaim)
+            .where(FreeTranscriptionClaim.identity_hash == identity_hash)
+            .with_for_update()
+        )
+    ).scalar_one()
+    user.free_transcription_claim_hash = identity_hash
+    if claim.used_at is None and user.free_transcription_used_at is not None:
+        claim.used_at = user.free_transcription_used_at
+    elif claim.used_at is not None:
+        user.free_transcription_used_at = claim.used_at
+
+
+async def sync_free_transcription_claim(db: AsyncSession, user: User) -> None:
+    """Refresh the denormalized account display value from its authoritative claim."""
+    if user.free_transcription_claim_hash is None:
+        return
+    claim = await db.get(FreeTranscriptionClaim, user.free_transcription_claim_hash)
+    if claim is not None:
+        user.free_transcription_used_at = claim.used_at
+
+
+async def backfill_free_transcription_claims(db: AsyncSession, settings: Settings) -> int:
+    """Attach durable claims to accounts created before the claim schema existed."""
+    users = list(
+        (
+            await db.execute(
+                select(User).where(
+                    User.kind == UserKind.REGISTERED,
+                    User.email.is_not(None),
+                    User.deleted_at.is_(None),
+                    User.free_transcription_claim_hash.is_(None),
+                )
+            )
+        ).scalars()
+    )
+    for user in users:
+        assert user.email is not None
+        await attach_free_transcription_claim(db, user, user.email, settings)
+    await db.commit()
+    return len(users)
 
 
 async def create_session(
@@ -191,6 +273,7 @@ async def consume_magic_link(
         new_session, raw_session_token = await create_session(db, target, settings)
         principal = Principal(user=target, session=new_session)
 
+    await attach_free_transcription_claim(db, target, link_email, settings)
     await db.flush()
     return principal, raw_session_token
 

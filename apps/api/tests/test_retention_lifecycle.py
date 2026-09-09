@@ -7,13 +7,67 @@ from sqlalchemy import select
 
 from drumscribe_api.enums import JOB_STAGE_PROGRESS, AssetKind, AssetStatus, JobStage
 from drumscribe_api.errors import APIError
-from drumscribe_api.models import AudioAsset, ProcessingJob, Project
+from drumscribe_api.models import AudioAsset, ProcessingJob, Project, Session, User
 from drumscribe_api.security import utcnow
 from drumscribe_api.services.retention import RetentionService
 from drumscribe_api.services.storage import LocalPrivateStorage
 from drumscribe_api.tasks import celery_app, process_job_task
 
 from .conftest import create_project, create_session, process_project, upload_wav, wav_bytes
+
+
+def test_account_delete_revokes_access_and_physically_removes_private_audio(
+    client: TestClient, app
+) -> None:
+    token = create_session(client)
+    project = create_project(client)
+    upload_wav(client, project["id"])
+    process_project(client, app, project["id"])
+    old_url = client.get(f"/api/v1/projects/{project['id']}/audio/original/url").json()["url"]
+    assert client.get(old_url).status_code == 200
+
+    deleted = client.request(
+        "DELETE",
+        "/api/v1/account",
+        json={"confirmation": "DELETE MY ACCOUNT"},
+    )
+    assert deleted.status_code == 200, deleted.text
+    assert client.get(old_url).status_code == 404
+    assert (
+        client.get(
+            f"/api/v1/projects/{project['id']}",
+            headers={"Authorization": f"Bearer {token}"},
+        ).status_code
+        == 401
+    )
+
+    async def deletion_state() -> tuple[bool, bool, list[AssetStatus]]:
+        async with app.state.database.session_factory() as db:
+            project_row = await db.get(Project, uuid.UUID(project["id"]))
+            assert project_row is not None
+            user = await db.get(User, project_row.owner_id)
+            assert user is not None
+            session = (
+                await db.execute(select(Session).where(Session.user_id == user.id))
+            ).scalar_one()
+            assets = list(
+                (
+                    await db.execute(
+                        select(AudioAsset).where(AudioAsset.project_id == project_row.id)
+                    )
+                ).scalars()
+            )
+            return (
+                user.deleted_at is not None and user.email is None,
+                project_row.deleted_at is not None and session.revoked_at is not None,
+                [asset.status for asset in assets],
+            )
+
+    assert client.portal is not None
+    identity_deleted, access_revoked, statuses = client.portal.call(deletion_state)
+    assert identity_deleted is True
+    assert access_revoked is True
+    assert statuses and set(statuses) == {AssetStatus.DELETED}
 
 
 def test_processing_worker_uses_acks_late_and_bounded_transient_retries() -> None:

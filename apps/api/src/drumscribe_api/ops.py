@@ -3,6 +3,7 @@ import asyncio
 import json
 from collections.abc import Sequence
 
+from .auth import backfill_free_transcription_claims
 from .config import get_settings
 from .database import Database
 from .services.retention import RetentionService
@@ -18,16 +19,29 @@ async def _purge_expired_data() -> dict[str, int]:
         await database.dispose()
 
 
+async def _backfill_free_transcription_claims() -> dict[str, int]:
+    settings = get_settings()
+    database = Database(settings)
+    try:
+        async with database.session_factory() as db:
+            count = await backfill_free_transcription_claims(db, settings)
+            return {"accounts": count}
+    finally:
+        await database.dispose()
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="DrumScribe production operations")
     parser.add_argument(
         "operation",
-        choices=("purge-expired-data",),
+        choices=("purge-expired-data", "backfill-free-transcription-claims"),
         help="Idempotent operation to run",
     )
     args = parser.parse_args(argv)
     if args.operation == "purge-expired-data":
         print(json.dumps(asyncio.run(_purge_expired_data()), sort_keys=True))
+    elif args.operation == "backfill-free-transcription-claims":
+        print(json.dumps(asyncio.run(_backfill_free_transcription_claims()), sort_keys=True))
     return 0
 
 

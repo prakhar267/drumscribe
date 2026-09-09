@@ -1,29 +1,41 @@
-# Commercial model-rights approval
+# Commercial model-rights owner attestation
+
+Status: **internal authorization record; underlying rights evidence is
+incomplete in this repository**
 
 Approval reference: `OWNER-ATTESTATION-2026-09-05`
 
 Date: 2026-09-05
 
-Approver: DrumScribe company owner
+Approver: DrumToScore founder (registered legal identity not recorded here)
 
 Territory: India and international
 
-Use: hosted commercial inference inside the DrumScribe product
+Intended use: hosted commercial inference inside the DrumToScore product
 
-The company owner explicitly confirmed that DrumScribe holds commercial-use
-rights for the following self-hosted production pipeline and directed that it
-be enabled without another approval step:
+The founder explicitly confirmed that DrumToScore holds separately obtained
+commercial-use rights for the following self-hosted production pipeline and
+directed engineering to enable the pinned artifacts:
 
 - Demucs `htdemucs_ft` source separation.
 - ADTOF / ADTOF-pytorch drum transcription.
 - Beat This `final0` beat and downbeat tracking.
 
-This is the internal authorization record used by the fail-closed provider
-gate. It records a separately obtained DrumScribe commercial grant; it does not
-change or broaden the licenses offered publicly by the upstream repositories.
-The model files must remain private to DrumScribe infrastructure, upstream
+This record is the reference checked by the application configuration gate. It
+is evidence of the founder's instruction, but **is not by itself evidence that
+an upstream rightsholder granted commercial rights**. It does not change or
+broaden the public upstream licenses. Before the first paid transaction, the
+company must archive the actual grant/contract or written permission for each
+component, including the grantor, recipient legal identity, permitted hosted
+use, territory, term, checkpoint coverage, redistribution limits and any
+attribution obligations. Legal counsel should confirm that the grant covers the
+deployed combination.
+
+Until that evidence is attached to the private company records and reviewed,
+engineering approval and legal clearance must not be treated as equivalent.
+The model files must remain private to DrumToScore infrastructure, upstream
 attribution must be retained, and customer audio is not authorized for model
-training by this approval.
+training by this attestation.
 
 ## Pinned artifacts
 
@@ -42,3 +54,24 @@ training by this approval.
 Production deployments must set
 `DRUMSCRIBE_COMMERCIAL_PROVIDER_LICENSE_CONFIRMED=true` and
 `DRUMSCRIBE_COMMERCIAL_PROVIDER_APPROVAL_REFERENCE=OWNER-ATTESTATION-2026-09-05`.
+Those settings confirm that the deployer selected this internal record; they do
+not validate the underlying grant.
+
+## Evidence still required outside the public repository
+
+For each of Demucs/`htdemucs_ft`, ADTOF-pytorch and Beat This `final0`, retain:
+
+- the applicable public license and README snapshot and, where public terms do
+  not cover the intended use, the original email, contract or signed permission;
+- the rightsholder/grantor and the exact individual or entity receiving rights;
+- permission for paid, hosted inference in India and internationally;
+- the exact code revision and checkpoint hashes covered by the permission;
+- rules for copying weights to cloud servers, backup, modification and
+  redistribution;
+- attribution, notice, audit, termination and data-use obligations; and
+- counsel's approval or a dated risk acceptance by the correctly identified
+  business owner.
+
+Do not commit private contracts, email headers, signatures or personal data to
+the public GitHub repository. Store them in access-controlled company records
+and record only a non-secret evidence identifier here after review.

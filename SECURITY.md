@@ -26,4 +26,15 @@ Set an exact origin allow-list; do not use wildcard CORS with credentials. At th
 
 ## Reporting
 
-This private pre-release repository has no public security intake address yet. Establish one before launch and add coordinated-disclosure terms. Legal, privacy, terms, and copyright copy requires counsel review.
+Report suspected vulnerabilities privately to `security@drumtoscore.com`. Include a
+clear description, affected URL or component, reproducible steps, impact, and a
+safe proof of concept when available. Do not include customer audio, credentials,
+tokens, full payment details, or another person's personal data.
+
+Please avoid privacy violations, service disruption, destructive testing,
+automated high-volume traffic, social engineering, and accessing data beyond the
+minimum needed to demonstrate the issue. DrumToScore will acknowledge a report as
+capacity allows, investigate in good faith, and coordinate remediation and public
+disclosure with the reporter. This is not a paid bug-bounty promise or permission
+to violate applicable law. Customer-facing legal text and this disclosure process
+still require qualified counsel review before a paid launch.

@@ -8,6 +8,7 @@ from ...auth import (
     create_anonymous_principal,
     issue_magic_link,
     set_session_cookie,
+    sync_free_transcription_claim,
 )
 from ...dependencies import (
     AppSettings,
@@ -128,7 +129,11 @@ async def logout(
 
 
 @account_router.get("/me", response_model=UserResponse)
-async def account_me(principal: CurrentPrincipal) -> UserResponse:
+async def account_me(db: DBSession, principal: CurrentPrincipal) -> UserResponse:
+    before = principal.user.free_transcription_used_at
+    await sync_free_transcription_claim(db, principal.user)
+    if principal.user.free_transcription_used_at != before:
+        await db.commit()
     return UserResponse.model_validate(principal.user)
 
 

@@ -79,6 +79,9 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
     free_transcription_used_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    free_transcription_claim_hash: Mapped[str | None] = mapped_column(
+        String(64), index=True, nullable=True
+    )
     paid_credit_balance: Mapped[int] = mapped_column(Integer, default=0)
 
     sessions: Mapped[list["Session"]] = relationship(back_populates="user")
@@ -96,6 +99,15 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
     @property
     def can_start_full_transcription(self) -> bool:
         return self.free_transcriptions_remaining > 0 or self.paid_credit_balance > 0
+
+
+class FreeTranscriptionClaim(TimestampMixin, Base):
+    """Pseudonymous, durable one-free-song entitlement used for abuse prevention."""
+
+    __tablename__ = "free_transcription_claims"
+
+    identity_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class Session(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -221,6 +233,9 @@ class ProcessingJob(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     credit_refunded_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    credit_purchase_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("credit_purchases.id", ondelete="SET NULL"), index=True, nullable=True
+    )
 
     project: Mapped[Project] = relationship(back_populates="jobs")
     model_runs: Mapped[list["ModelRun"]] = relationship(back_populates="job")
@@ -231,6 +246,14 @@ class CreditPurchase(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __table_args__ = (
         UniqueConstraint("user_id", "idempotency_key", name="uq_purchase_user_idempotency"),
         CheckConstraint("credit_count > 0", name="purchase_credit_count"),
+        CheckConstraint(
+            "remaining_credit_count >= 0 AND remaining_credit_count <= credit_count",
+            name="purchase_remaining_credits",
+        ),
+        CheckConstraint(
+            "revoked_credit_count >= 0 AND revoked_credit_count <= credit_count",
+            name="purchase_revoked_credits",
+        ),
     )
 
     user_id: Mapped[uuid.UUID] = mapped_column(
@@ -246,8 +269,11 @@ class CreditPurchase(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         enum_column(CreditPurchaseStatus), default=CreditPurchaseStatus.PENDING, index=True
     )
     credit_count: Mapped[int] = mapped_column(Integer, default=10)
+    remaining_credit_count: Mapped[int] = mapped_column(Integer, default=0)
+    revoked_credit_count: Mapped[int] = mapped_column(Integer, default=0)
     paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     refunded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    provider_refund_id: Mapped[str | None] = mapped_column(String(255), unique=True, nullable=True)
 
     user: Mapped[User] = relationship(back_populates="credit_purchases")
 

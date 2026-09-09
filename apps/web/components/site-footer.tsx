@@ -12,7 +12,9 @@ export function SiteFooter() {
         <Link href="/pricing">Pricing</Link>
         <Link href="/legal/privacy">Privacy</Link>
         <Link href="/legal/terms">Terms</Link>
+        <Link href="/legal/refunds">Refunds</Link>
         <Link href="/legal/copyright">Upload policy</Link>
+        <a href="mailto:support@drumtoscore.com">Support</a>
         <Link href="/settings/account">Account</Link>
       </nav>
     </footer>

@@ -39,12 +39,40 @@ lifecycle rules aligned with `DATA_RETENTION.md`. Quarterly, restore the databas
 to an isolated environment, restore a sampled private object, verify ownership,
 run migrations, open/export a project, then destroy the drill environment.
 
+The safe beta drill has two parts. First, create a short-lived Neon branch from
+`production`, compare exact row-count and normalized schema fingerprints, and
+delete the branch. This validates Neon's copy-on-write recovery path without
+exporting customer rows. Second, use a schema-only branch with a synthetic
+canary, run PostgreSQL 18 `pg_dump`/`pg_restore` into a fresh database, compare
+the canary hash, verify the Alembic head, and delete the branch. Never restore a
+production dump into a public or shared environment.
+
+Run the read-only edge drill with:
+
+```sh
+python3 scripts/audit_production_security.py
+```
+
 ## Capacity and rollback
 
 Watch processing seconds/audio minute, queue wait, scratch-disk high-water mark,
 memory, FFmpeg CPU and provider concurrency. Scale API and workers separately.
 Keep a global queue admission limit so provider or GPU saturation cannot become an
 unbounded cost event.
+
+### Free-beta capacity policy
+
+- Keep exactly one API, one worker at concurrency `1`, and one scheduler on the
+  current 1 OCPU/6 GB Oracle host. Do not promise an SLA on this single host.
+- Warn at 70% RAM or disk, 70% CPU for 15 minutes, queue age of 10 minutes, or
+  three job failures in 15 minutes. Stop new uploads at 85% RAM or disk, queue
+  age of 30 minutes, or readiness failure.
+- The host snapshot on 10 September 2026 showed 4.5 GiB available RAM, 22 GiB
+  free disk, near-zero idle load, and four healthy/running containers. This is
+  an idle baseline, not a transcription throughput measurement.
+- GitHub's scheduled probe is a best-effort free alert and can run later than
+  its 15-minute cron expression. Do not call it a 15-minute detection SLA. Add
+  a redundant monitor only after choosing a provider that needs no card.
 
 Application rollback may use only a schema-compatible release. Do not downgrade
 the database destructively. Disable a bad provider/model through reviewed
