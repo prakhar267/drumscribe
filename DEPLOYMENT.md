@@ -44,7 +44,7 @@ DRUMSCRIBE_MODEL_BUNDLE_SHA256=f2b01777aae9be874af24dcef06345e13cf15fe516280e1ce
 
 Its entrypoint downloads that private Neon object, verifies the archive and every approved checkpoint hash, installs it atomically, and only then starts Celery. Public Beat This and Demucs artifacts are revision- and hash-pinned in the image and run with the Hugging Face client offline at runtime. Redis uses `rediss://` with `ssl_cert_reqs=required`.
 
-Until a custom domain exists, the API is `https://api.137.23.63.132.nip.io` and the public web origin is `https://drumscribe-web.prakhargupta267.workers.dev`. The Cloudflare build uses `NEXT_PUBLIC_API_URL=/api/v1`, `NEXT_PUBLIC_DEMO_MODE=false`, and that API hostname as `API_ORIGIN`, so the browser sees a same-origin API and the secure session cookie works reliably.
+The canonical public web origin is `https://drumtoscore.com`; `https://www.drumtoscore.com` redirects to the canonical host while preserving the path and query string. Cloudflare enforces HTTPS, TLS 1.2 or newer, and the production response-header rule. The API remains `https://api.137.23.63.132.nip.io` behind the web worker's same-origin `/api/v1/*` proxy. The Cloudflare build uses `NEXT_PUBLIC_API_URL=/api/v1`, `NEXT_PUBLIC_DEMO_MODE=false`, and that API hostname as `API_ORIGIN`, so secure session cookies remain first-party. The Workers URL is retained only as a deployment fallback.
 
 ## Scaling
 
