@@ -71,11 +71,27 @@ The non-financial onboarding profile was prepared with:
 - use-case description: one free AI drum transcription, followed by pay-as-you-go
   transcription credits with a merchant of record.
 
-The flow reached Dodo's merchant disclaimer and agreement checkbox. It was left
-unticked because it declares that the account owner has read and accepted the
-Merchant Acceptance Policy, Terms of Service and Privacy Policy. No card was
-requested or used, no product was created, no API/webhook secret was obtained,
-and production billing remains disabled.
+The Dodo test-mode integration is now configured end to end:
+
+- test product `pdt_0NnK4Qfm2vKzBmmpU4hOO` represents a one-time USD 15 pack
+  of 10 full-song transcription credits;
+- webhook endpoint `ep_3J9V7vBTD1QrDXAhA40KOPCmqzk` sends only
+  `payment.succeeded` and `refund.succeeded` to the production API;
+- the API is explicitly configured for Dodo `test_mode`; and
+- API and endpoint-specific webhook credentials are secret, uncommitted and
+  stored in the root-owned `0600` production environment file.
+
+A complete sandbox checkout succeeded using only Dodo's published test card.
+The signed webhook returned HTTP 200, changed the matching Neon purchase to
+`PAID`, and granted exactly 10 credits. Replaying the same event returned HTTP
+200 without increasing the balance beyond 10. The three exact synthetic test
+accounts were deleted afterward. No actual card or real-money transaction was
+used. Full evidence is in
+`docs/audit/dodo-test-mode-2026-09-11.md`.
+
+Dodo still shows **Product Information Form Pending**. Production billing and
+the public Buy button remain disabled until merchant verification and live-mode
+configuration are complete.
 
 ### Neon
 
@@ -199,6 +215,7 @@ drills.
 | Cloudflare web deployment | Passed; Worker version `48a775ec-bc21-431f-9425-458b146f111f` |
 | Public route smoke test | Passed; homepage, pricing, demo, API readiness and all four legal pages returned HTTP 200 |
 | Production free-claim backfill | Passed; 10 existing accounts processed |
+| Dodo sandbox checkout and signed webhook | Passed; 10 credits granted exactly once and duplicate replay remained at 10 |
 | Hosted GitHub CI | Passed for release commit: [run 34411777668](https://github.com/prakhar267/drumscribe/actions/runs/34411777668) |
 | Hosted production uptime probe | Passed after release: [run 34412600218](https://github.com/prakhar267/drumscribe/actions/runs/34412600218) |
 
@@ -209,11 +226,12 @@ private storage and provider readiness.
 
 ## Explicit remaining blockers
 
-1. The owner must personally read and accept Dodo's merchant agreement, complete
-   legal/tax/identity/payout-bank verification, create the test product and provide
-   restricted test credentials. Stop if Dodo requests a card or paid plan.
-2. Run the complete Dodo test-mode flow before any live-mode decision. Checkout
-   stays disabled until the signed success and refund webhooks reconcile exactly.
+1. The owner must personally complete Dodo's pending product-information,
+   legal/tax/identity and payout-bank verification. Stop if Dodo requests a card
+   or paid plan.
+2. After Dodo approval, create separate live credentials, product and webhook;
+   run an explicitly authorized live-mode smoke transaction; then enable the
+   public checkout. Test and live Dodo data must remain isolated.
 3. Privately archive the actual grants for the exact Demucs and ADTOF code/weights
    and have qualified counsel verify paid hosted commercial use. The public Demucs
    code license does not cover its pretrained weights, and the pinned ADTOF-pytorch
@@ -226,9 +244,11 @@ private storage and provider readiness.
 6. Approve a paid capacity plan before promising an SLA or accepting traffic that
    exceeds the single free Oracle worker. No paid scaling is authorized now.
 
-## No-card and no-paid-action ledger
+## No-actual-card and no-paid-action ledger
 
-- No payment card number was viewed, copied, entered, selected or submitted.
+- Only Dodo's published Test Mode card number was submitted for the sandbox
+  checkout. No actual payment card number was viewed, copied, entered, selected
+  or submitted.
 - No charge, purchase, paid plan, trial requiring a card or billable resource was
   authorized.
 - Dodo merchant terms were not accepted on the founder's behalf.
