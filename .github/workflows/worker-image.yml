@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Build the production CPU worker and pinned public model cache
         run: docker build --progress=plain --tag drumscribe-worker:ci --file infra/docker/worker.Dockerfile .
       - name: Verify runtime imports
