@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     queue_backend: Literal["celery", "inline", "none"] = "inline"
     pipeline_provider: Literal["development", "music_engine"] = "development"
     source_separation_provider: str = "passthrough"
+    demucs_model: Literal["htdemucs_ft", "htdemucs"] = "htdemucs_ft"
     music_transcription_provider: str = "mock"
     beat_tracking_provider: str = "mock"
     commercial_provider_license_confirmed: bool = False

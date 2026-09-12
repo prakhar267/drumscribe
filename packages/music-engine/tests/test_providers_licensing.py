@@ -229,6 +229,14 @@ def test_owner_approved_adtof_and_demucs_are_production_safe():
         require_production_safe(provider, production=True)
 
 
+def test_owner_approved_fast_demucs_model_is_production_safe():
+    provider = DemucsAdapter(model="htdemucs", python_executable="/safe/python")
+    assert provider.version == "htdemucs"
+    assert provider.license.status.value == "commercial_allowed"
+    assert "2026-09-13" in provider.license.decision
+    require_production_safe(provider, production=True)
+
+
 def test_owner_approved_recall_fusion_is_production_safe():
     provider = DrumScribeRecallFusionTranscriptionProvider(
         ("/safe/runner",), model_version="drumscribe-recall-fusion-v6"
@@ -274,7 +282,7 @@ def test_recall_fusion_passes_mixture_and_stem_as_separate_argv(monkeypatch, tmp
 def test_owner_approval_is_pinned_to_exact_model_artifacts():
     providers = (
         ADTOFResearchTranscriptionProvider(("/safe/runner",), model_version="different-adtof"),
-        DemucsAdapter(model="htdemucs", python_executable="/safe/python"),
+        DemucsAdapter(model="unapproved-model", python_executable="/safe/python"),
         ResearchBeatThisTrackingProvider(checkpoint="different", device="cpu"),
         DrumScribeRecallFusionTranscriptionProvider(
             ("/safe/runner",), model_version="different-fusion"

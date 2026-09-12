@@ -23,7 +23,8 @@ class DemucsAdapter:
             "standard upstream model terms plus separately obtained DrumScribe commercial grant"
         ),
         training_data_license=(
-            "commercial inference rights covered by OWNER-ATTESTATION-2026-09-05"
+            "commercial inference rights covered by OWNER-ATTESTATION-2026-09-05, "
+            "supplemented for htdemucs by the founder's 2026-09-13 instruction"
         ),
         attribution_required=True,
         distribution_restrictions=(
@@ -32,9 +33,11 @@ class DemucsAdapter:
         ),
         decision=(
             "Self-hosted commercial inference approved by the company owner under "
-            "OWNER-ATTESTATION-2026-09-05."
+            "OWNER-ATTESTATION-2026-09-05; htdemucs coverage was reaffirmed on 2026-09-13."
         ),
     )
+
+    approved_models = frozenset({"htdemucs_ft", "htdemucs"})
 
     def __init__(self, *, model: str = "htdemucs_ft", python_executable: str | None = None) -> None:
         if not model or any(
@@ -45,7 +48,7 @@ class DemucsAdapter:
         self.model = model
         self.version = model
         self.python_executable = python_executable or sys.executable
-        if model != "htdemucs_ft":
+        if model not in self.approved_models:
             self.license = replace(
                 type(self).license,
                 status=LicenseStatus.UNRESOLVED,

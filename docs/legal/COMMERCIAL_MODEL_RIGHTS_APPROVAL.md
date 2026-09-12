@@ -18,6 +18,10 @@ commercial-use rights for the following self-hosted production pipeline and
 directed engineering to enable the pinned artifacts:
 
 - Demucs `htdemucs_ft` source separation.
+- Demucs `htdemucs` source separation. The founder reaffirmed on 2026-09-13
+  that the separately obtained commercial-use permission covers this exact
+  checkpoint and directed engineering to use it for the production speed
+  rollout.
 - ADTOF / ADTOF-pytorch drum transcription.
 - Beat This `final0` beat and downbeat tracking.
 
@@ -49,6 +53,7 @@ training by this attestation.
 | Demucs model `d12395a8` | `5b01a97567ae9a3178a6236fb520251045c03eb8834bc8c24a4eec11d6c8fb56` |
 | Demucs model `f7e0c4bc` | `2c85ab3c62dd6edd8e0b965e38b16fd1cdde357cc25de6b6bc9ce7c83f60925f` |
 | Demucs bag configuration | `69470b8c1bbd674437b51bc9fb491327a10ab0396b702c93389b9cf750016346` |
+| Demucs model `955717e8` (`htdemucs`) | `8726e21a993978c7ba086d3872e7608d7d5bfca646ca4aca459ffda844faa8b4` |
 | Beat This `final0` checkpoint | `8c328b45f59d8dd3dff219253ff6a8d6482be57d0133a29140e2febbf8eb8331` |
 
 Production deployments must set

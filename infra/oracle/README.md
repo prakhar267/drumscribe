@@ -36,13 +36,16 @@ one until a sealed capacity run proves that greater concurrency preserves API
 readiness; niceness protects responsiveness but does not make the free host
 suitable for an advertised processing-time or availability SLA.
 
-The 13 September 2026 180-second production-equivalent probe took 10 minutes 26
-seconds on 4 OCPUs/24 GB: 9 minutes 41 seconds in HTDemucs-ft and 45 seconds in
-recall fusion. It peaked at 3.74 GiB memory, produced 1,423 events, and kept
-public readiness at HTTP 200. This fresh rights-cleared workload is equivalent
-in duration and stages, but not identical in content, to the former
-1-OCPU/6-GB probe that took 34 minutes 16 seconds. The result is a 3.28x speedup
-and 69.6% wall-time reduction, but remains 3.48x slower than real time. Before
-any later resize, inspect all tenancy A1 allocations and confirm the new total
-remains inside the documented Always Free allowance; never select a paid shape
-or attach a payment method without explicit approval.
+The original 13 September 2026 180-second production-equivalent probe took 10
+minutes 26 seconds on 4 OCPUs/24 GB with the four-model HTDemucs-ft ensemble.
+A same-input separator A/B later measured 134 seconds for HTDemucs-ft and 37
+seconds for the single HTDemucs model on a 36.37-second rights-cleared mixture.
+On the two-track, 105-second notation check, HTDemucs changed five-family F1 at
+50 ms from 61.64% to 61.47% while the two full separation/transcription runs
+completed in 55 and 70 seconds. Production selects the pinned model with
+`DRUMSCRIBE_DEMUCS_MODEL`; the launch setting is `htdemucs`, while
+`htdemucs_ft` remains the rollback quality ensemble. See
+`docs/benchmarks/ORACLE_FAST_SEPARATOR_2026-09-13.md` for the measured boundary.
+Before any later resize, inspect all tenancy A1 allocations and confirm the new
+total remains inside the documented Always Free allowance; never select a paid
+shape or attach a payment method without explicit approval.

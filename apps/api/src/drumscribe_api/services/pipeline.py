@@ -262,9 +262,13 @@ class MusicEngineAdapter:
                 workflow=self.settings.music_ai_separation_workflow or "",
                 result_key=self.settings.music_ai_drum_result_key,
             )
+        if selected == "demucs":
+            provider_class = getattr(engine, "DemucsAdapter", None)
+            if provider_class is None:
+                raise RuntimeError("Configured provider 'demucs' is not installed.")
+            return provider_class(model=self.settings.demucs_model)
         class_name = {
             "passthrough": "PassthroughSourceSeparationProvider",
-            "demucs": "DemucsAdapter",
         }
         return self._provider(engine, self.settings.source_separation_provider, class_name)
 

@@ -5,6 +5,7 @@ from types import SimpleNamespace
 import pytest
 from drumscribe_music import (
     ADTOFResearchTranscriptionProvider,
+    DemucsAdapter,
     DrumScribeHybridTranscriptionProvider,
     DrumScribeRecallFusionTranscriptionProvider,
     OaFDrumsTranscriptionProvider,
@@ -23,6 +24,7 @@ def research_engine() -> SimpleNamespace:
         ADTOFResearchTranscriptionProvider=ADTOFResearchTranscriptionProvider,
         DrumScribeHybridTranscriptionProvider=DrumScribeHybridTranscriptionProvider,
         DrumScribeRecallFusionTranscriptionProvider=DrumScribeRecallFusionTranscriptionProvider,
+        DemucsAdapter=DemucsAdapter,
     )
 
 
@@ -72,6 +74,18 @@ def test_research_model_selection_requires_an_explicit_command() -> None:
     )
     with pytest.raises(RuntimeError, match="model command"):
         MusicEngineAdapter(settings)._transcription_provider(research_engine())
+
+
+def test_demucs_model_selection_is_explicit() -> None:
+    settings = Settings(
+        _env_file=None,
+        pipeline_provider="music_engine",
+        source_separation_provider="demucs",
+        demucs_model="htdemucs",
+    )
+    provider = MusicEngineAdapter(settings)._separation_provider(research_engine())
+    assert isinstance(provider, DemucsAdapter)
+    assert provider.version == "htdemucs"
 
 
 def test_owner_approved_self_hosted_pipeline_can_be_selected_in_production() -> None:

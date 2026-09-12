@@ -16,6 +16,10 @@ BEAT_THIS_SHA256 = "8c328b45f59d8dd3dff219253ff6a8d6482be57d0133a29140e2febbf8eb
 BEAT_THIS_URL = (
     "https://cloud.cp.jku.at/public.php/dav/files/7ik4RrBKTS273gp/final0.ckpt"
 )
+HTDEMUCS_SHA256 = "8726e21a993978c7ba086d3872e7608d7d5bfca646ca4aca459ffda844faa8b4"
+HTDEMUCS_URL = (
+    "https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/955717e8-8726e21a.th"
+)
 DEMUCS_REPOSITORY = "adefossez/HTDemucs-ft"
 DEMUCS_SNAPSHOT = "d74ac89c3a1e874fc78f152555cf4d8533f06cd4"
 DEMUCS_FILES = {
@@ -88,6 +92,32 @@ def download_beat_this(cache_root: Path) -> None:
         temporary.unlink(missing_ok=True)
 
 
+def download_htdemucs(cache_root: Path) -> None:
+    destination = cache_root / "torch" / "hub" / "checkpoints" / "955717e8-8726e21a.th"
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if destination.is_file() and sha256_file(destination) == HTDEMUCS_SHA256:
+        return
+    temporary = destination.with_name(f".{destination.name}.{os.getpid()}.partial")
+    written = 0
+    try:
+        request = urllib.request.Request(
+            HTDEMUCS_URL, headers={"User-Agent": "DrumScribe-build/1"}
+        )
+        with (
+            urllib.request.urlopen(request, timeout=120) as response,
+            temporary.open("wb") as handle,
+        ):
+            while chunk := response.read(1024 * 1024):
+                written += len(chunk)
+                if written > 128 * 1024 * 1024:
+                    raise RuntimeError("HTDemucs checkpoint exceeds its build-time size limit")
+                handle.write(chunk)
+        require_sha256(temporary, HTDEMUCS_SHA256)
+        temporary.replace(destination)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
 def download_demucs(cache_root: Path) -> None:
     from huggingface_hub import hf_hub_download
 
@@ -133,6 +163,7 @@ def main() -> int:
     cache_root.mkdir(parents=True, exist_ok=True)
     copy_adtof_weights(repository)
     download_beat_this(cache_root)
+    download_htdemucs(cache_root)
     download_demucs(cache_root)
     print("production_model_cache=ready")
     return 0

@@ -16,7 +16,7 @@ The provided Compose stack is for local development and acceptance testing. The 
 6. Set secure cookies, exact API CORS origins, trusted proxy ranges, and Redis-backed production rate limits. Set `DRUMSCRIBE_ALLOWED_HOSTS` to the public API hostname and retain a one-year-or-longer `DRUMSCRIBE_HSTS_MAX_AGE_SECONDS` after TLS is verified.
    Managed dependencies can cold-start; keep `DRUMSCRIBE_READINESS_TIMEOUT_SECONDS=10` unless target-region measurements justify a lower bounded value.
 7. Configure Resend or the magic-link delivery webhook and its secret; disable development token exposure. Resend requires a verified sending domain before emails can be sent to customers.
-8. Set `DRUMSCRIBE_PIPELINE_PROVIDER=music_engine` and select only provider adapters whose exact code, weights, data, contract, and commercial use are approved in `MODEL_LICENSING.md`. The owner-approved self-hosted path must use the exact pinned revisions and hashes recorded in the approval evidence; changing a model or weight requires a new review.
+8. Set `DRUMSCRIBE_PIPELINE_PROVIDER=music_engine` and select only provider adapters whose exact code, weights, data, contract, and commercial use are approved in `MODEL_LICENSING.md`. Set `DRUMSCRIBE_DEMUCS_MODEL=htdemucs` for the benchmarked Oracle fast path or `htdemucs_ft` for the slower rollback quality ensemble. The owner-approved self-hosted path must use the exact pinned revisions and hashes recorded in the approval evidence; changing a model or weight requires a new review.
 9. Run Celery workers and exactly one Celery Beat (or equivalent managed scheduler) so retention and deletion purges execute. Compose uses `worker --beat` only for a single-node local stack.
 10. Configure Sentry-compatible exception/tracing capture with filename and audio-metadata redaction.
 11. Run web, API, music-engine, migration, authorization, signed-URL, bucket-CORS, and full-stack browser tests against the release images.
@@ -57,7 +57,7 @@ immediately after deployment.
 
 Scale API processes independently from workers. Queue routing can later separate CPU normalization, GPU separation/transcription, and export work without changing the REST contract. Keep stage outputs deterministic and checkpointed so a retry starts at the last successful stage. Use per-user and global concurrency controls before increasing worker count.
 
-The free launch host is one Oracle `VM.Standard.A1.Flex` instance with 1 OCPU, 6 GB RAM, and a 46.6 GB boot volume. Keep worker concurrency at one and use queue backpressure. This is appropriate for validation and a low-traffic beta, not an advertised availability or processing-time SLA.
+The free launch host is one Oracle `VM.Standard.A1.Flex` instance with 4 OCPUs, 24 GB RAM, and a 46.6 GB boot volume. It consumes the console-confirmed A1 Always Free allowance. Keep worker concurrency at one and use queue backpressure. This is appropriate for validation and a low-traffic beta, not an advertised availability or processing-time SLA.
 
 - API: one process on the free host. For sustained traffic, move the API to redundant hosts only after the owner explicitly approves a paid capacity plan. The API is stateless, and rate-limit/session state is in Redis.
 - Worker: concurrency remains `1`; scale from queue age/depth only after capacity and budget are explicitly approved. Do not increase Celery concurrency inside the free host because Demucs and transcription models are memory-heavy.
