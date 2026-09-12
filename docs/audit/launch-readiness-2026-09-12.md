@@ -14,7 +14,8 @@ resource was used during this work.
 | Private-object restore canary | Pass | Upload, signed playback, export, delete and byte-exact restore all worked |
 | Public readiness | Pass | Database, queue, storage and model provider all reported ready |
 | Unused host listener | Remediated | `rpcbind` is disabled and port 111 is closed |
-| Three-minute capacity probe | Fail | One free CPU completed safely but took 34m16s; no processing-time SLA is supportable |
+| Three-minute capacity probe | Fail | The pre-resize one-CPU run took 34m16s; the current two-CPU host has not yet been re-benchmarked |
+| Oracle host recovery | Pass | Key-only SSH and all public readiness dependencies pass on 2 OCPUs/12 GB |
 | GitHub failure email | Confirmed | Founder confirmed on 12 September 2026 that notifications reach the monitored inbox |
 | Fresh isolated-drum control | 91.34% five-family F1 | Detector control passes the 90% target on these two recordings only |
 | Fresh constructed full mixes | 61.64% five-family F1 | Broad 90% full-song marketing claim remains blocked |
@@ -78,6 +79,16 @@ pruned while every running container, volume, current image tag and rollback
 image tag was retained. Root-disk use fell from 78% to 40%, and readiness again
 returned HTTP 200.
 
+On 13 September the production A1 VM was resized within the Oracle console's
+free allocation to 2 OCPUs and 12 GB RAM. The resize exposed a pre-existing UFW
+rule that allowed SSH only from an obsolete client IP. With production stopped,
+its boot volume was attached to a temporary rescue VM, the firewall was amended
+to allow key-only SSH, and password authentication was confirmed disabled. The
+disk was returned to production, the temporary rescue VM was stopped, and the
+public site plus database, queue, private storage and provider readiness checks
+all returned HTTP 200. No card, paid shape or paid resource was selected. This
+was a recovery and capacity change, not a new transcription-speed benchmark.
+
 ## Fresh accuracy control
 
 Selection was frozen before inference. The 105-second check used two previously
@@ -127,7 +138,7 @@ provide the reproducible audit path.
    do not advertise a broad 90% accuracy claim from the isolated control.
 4. Obtain qualified legal/tax review before relying on the current international
    terms, consumer-refund wording or GST position.
-5. Before promising an SLA, verify the tenancy's remaining Always Free allowance
-   and schedule a resize to at most the documented free A1 total, or validate a
-   materially faster commercially permitted pipeline. Do not attach a card,
-   enable a paid shape or incur a charge without separate explicit approval.
+5. Before promising an SLA, repeat the sealed production-equivalent capacity
+   probe on the current 2-OCPU/12-GB host and record queue wait, API latency,
+   memory and wall time. Do not attach a card, enable a paid shape or incur a
+   charge without separate explicit approval.
