@@ -57,10 +57,10 @@ pre-change backup was immediately restored, the update was reapplied as an
 80-line file, and the API was recreated. Final readiness passed with PostgreSQL,
 queue, private object storage and model provider all reporting `ok`.
 
-## Remaining live-launch gate
+## Live-launch status update — 12 September 2026
 
-Dodo still shows **Product Information Form Pending**. Live credentials and the
-public Buy button must not be enabled until the owner completes Dodo's legal,
-identity, tax and payout verification and Dodo approves the account. A final
-live-mode smoke transaction also requires a separate, explicit owner decision;
-this test-mode audit does not authorize any actual card or real charge.
+The owner subsequently completed Dodo's product, identity and bank steps. Dodo
+now shows live payments active while its review is pending. Live resources were
+prepared without activating the public Buy button; see
+`docs/audit/dodo-live-staging-2026-09-12.md`. This test-mode audit does not
+authorize any actual card or real charge.

@@ -89,9 +89,13 @@ accounts were deleted afterward. No actual card or real-money transaction was
 used. Full evidence is in
 `docs/audit/dodo-test-mode-2026-09-11.md`.
 
-Dodo still shows **Product Information Form Pending**. Production billing and
-the public Buy button remain disabled until merchant verification and live-mode
-configuration are complete.
+Dodo now records the product, identity and bank steps as complete and shows
+**LIVE PAYMENTS ACTIVE** while it reviews the submitted details. The validated
+test product has been imported to live mode, and a dedicated live webhook and
+API credential have been created. A read-only live API product lookup returned
+HTTP 200. Live credentials are staged as dormant server variables; the running
+application remains in `test_mode` and the public Buy button remains disabled.
+Full evidence is in `docs/audit/dodo-live-staging-2026-09-12.md`.
 
 ### Neon
 
@@ -121,7 +125,7 @@ configuration are complete.
 | Passwordless sign-in delivery | Resend |
 | Error/performance telemetry | Sentry |
 | Source, CI and uptime probes | Public GitHub repository and GitHub Actions |
-| Merchant of record | Dodo integration implemented; external onboarding incomplete and checkout disabled |
+| Merchant of record | Dodo verification submitted and live resources staged; review pending and checkout disabled |
 
 Production secrets remain only in ignored local configuration/keychain or the
 root-owned `0600` environment file on the Oracle host. No secret was added to
@@ -226,12 +230,12 @@ private storage and provider readiness.
 
 ## Explicit remaining blockers
 
-1. The owner must personally complete Dodo's pending product-information,
-   legal/tax/identity and payout-bank verification. Stop if Dodo requests a card
-   or paid plan.
-2. After Dodo approval, create separate live credentials, product and webhook;
-   run an explicitly authorized live-mode smoke transaction; then enable the
-   public checkout. Test and live Dodo data must remain isolated.
+1. Wait for Dodo's review to change from pending to approved. Live resources are
+   prepared, but public checkout must remain disabled during review.
+2. After approval, atomically promote the staged live credentials, run a
+   no-charge checkout-session smoke test, deploy the web application with public
+   billing enabled, and monitor the first signed live webhook. A real payment or
+   card test requires separate explicit authorization.
 3. Privately archive the actual grants for the exact Demucs and ADTOF code/weights
    and have qualified counsel verify paid hosted commercial use. The public Demucs
    code license does not cover its pretrained weights, and the pinned ADTOF-pytorch
@@ -251,7 +255,9 @@ private storage and provider readiness.
   or submitted.
 - No charge, purchase, paid plan, trial requiring a card or billable resource was
   authorized.
-- Dodo merchant terms were not accepted on the founder's behalf.
+- Dodo's product-information attestation was submitted only after the founder's
+  explicit confirmation. The founder completed identity and bank verification
+  personally.
 - Checkout is disabled in production.
 - Neon was verified as the free plan.
 - Cloudflare Email Routing was configured as a free inbound service.
