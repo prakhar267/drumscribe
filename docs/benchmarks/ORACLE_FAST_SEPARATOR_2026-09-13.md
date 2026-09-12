@@ -58,3 +58,32 @@ by 72.4% for a 0.17-point F1 change at the product's 50ms comparison tolerance.
 - Founder-reported commercial permission was reaffirmed for this exact model on
   13 September 2026. The private underlying grant remains an external legal
   evidence requirement before paid launch.
+
+## Live production verification
+
+Commit `30ebf31` was deployed to the Oracle worker with
+`DRUMSCRIBE_DEMUCS_MODEL=htdemucs`. The rebuilt image verified the checkpoint
+hash during the build, loaded the model with network access disabled, passed the
+production provider-safety gate, and started Celery with zero restarts.
+
+A fresh anonymous user flow uploaded the 45-second rights-cleared rock mix
+through the public `https://drumtoscore.com/api/v1` proxy. Job
+`82047208-0d1b-409c-a73d-94a1e2a68930` reached `READY` without retries or an
+error. It recorded separation provider version `demucs-isolated-v5/htdemucs`.
+
+| Production stage | Seconds |
+| --- | ---: |
+| Validation | 7.5714 |
+| Normalization | 8.3091 |
+| Drum separation | **46.8065** |
+| Transcription | 33.2509 |
+| Beat detection | 9.4301 |
+| Quantization | 4.5418 |
+| Score generation | 5.5302 |
+| Finalization | 3.7880 |
+
+Worker start-to-finish time was 126.15 seconds; queue submission-to-ready time
+was 137.36 seconds. Public readiness remained HTTP 200 after the run. The exact
+test project was then soft-deleted. Database verification showed its project
+deletion timestamp and all five derived assets marked for recoverable deletion;
+no customer project or object was read, modified, or deleted.
