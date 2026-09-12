@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "benchmarkId": "oracle-capacity-2026-09-13",
+  "checkedAt": "2026-09-12T19:30:03.069626+00:00",
+  "billing": {
+    "cardUsed": false,
+    "paidResourceUsed": false,
+    "consoleConfirmedMonthlyAlwaysFreeAllowance": {
+      "ocpuHours": 3000,
+      "memoryGigabyteHours": 18000
+    }
+  },
+  "host": {
+    "provider": "Oracle Cloud Always Free",
+    "shape": "VM.Standard.A1.Flex",
+    "region": "ap-mumbai-1",
+    "ocpus": 4,
+    "memoryGigabytes": 24,
+    "workerConcurrency": 1
+  },
+  "input": {
+    "description": "A 60-second rights-cleared constructed funk-108 full mixture repeated three times for an exact 180-second capacity workload.",
+    "durationSeconds": 180,
+    "sha256": "bc59ccb95327e1aeac99099b4b17f71eb50da0c4070e43f57d3ce8a97b5d266b",
+    "limitations": "Equivalent to the former probe in duration and production stages, but not identical in musical content. This is capacity evidence, not an accuracy result."
+  },
+  "pipeline": [
+    "Demucs htdemucs_ft two-stem drum separation",
+    "DrumToScore recall-fusion-v6 transcription"
+  ],
+  "result": {
+    "demucsSeconds": 581,
+    "fusionSeconds": 45,
+    "totalSeconds": 626,
+    "peakMemoryBytes": 4017020928,
+    "predictedEvents": 1423,
+    "slowerThanRealTimeFactor": 3.4778,
+    "workerNiceness": 10,
+    "publicReadinessStayedHttp200": true,
+    "containerRestartCounts": {
+      "api": 0,
+      "worker": 0,
+      "scheduler": 0,
+      "edge": 0
+    },
+    "celeryPingAfterRun": "ok",
+    "securityAuditAfterRun": "passed"
+  },
+  "formerOneOcpuBaseline": {
+    "totalSeconds": 2056,
+    "demucsSeconds": 2009,
+    "fusionSeconds": 47,
+    "speedupFactor": 3.2843,
+    "wallTimeReductionPercent": 69.5525
+  },
+  "outputHashes": {
+    "isolatedDrumsWav": "fc2fcc0a3968f3937aa64be82147a244687ba1286e1efb6509470b0eb0e97fb3",
+    "predictionJson": "a941258d94a77eb01e969319b1b21cd6a29589dbc78418a029fcba256a39589e"
+  }
+}

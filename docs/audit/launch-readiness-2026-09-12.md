@@ -14,8 +14,8 @@ resource was used during this work.
 | Private-object restore canary | Pass | Upload, signed playback, export, delete and byte-exact restore all worked |
 | Public readiness | Pass | Database, queue, storage and model provider all reported ready |
 | Unused host listener | Remediated | `rpcbind` is disabled and port 111 is closed |
-| Three-minute capacity probe | Fail | The pre-resize one-CPU run took 34m16s; the current two-CPU host has not yet been re-benchmarked |
-| Oracle host recovery | Pass | Key-only SSH and all public readiness dependencies pass on 2 OCPUs/12 GB |
+| Three-minute capacity probe | Improved, still limited | The four-CPU run took 10m26s, 3.28x faster than the 34m16s one-CPU baseline but still 3.48x slower than real time |
+| Oracle host recovery | Pass | Key-only SSH and all public readiness dependencies pass on 4 OCPUs/24 GB |
 | GitHub failure email | Confirmed | Founder confirmed on 12 September 2026 that notifications reach the monitored inbox |
 | Fresh isolated-drum control | 91.34% five-family F1 | Detector control passes the 90% target on these two recordings only |
 | Fresh constructed full mixes | 61.64% five-family F1 | Broad 90% full-song marketing claim remains blocked |
@@ -79,15 +79,29 @@ pruned while every running container, volume, current image tag and rollback
 image tag was retained. Root-disk use fell from 78% to 40%, and readiness again
 returned HTTP 200.
 
-On 13 September the production A1 VM was resized within the Oracle console's
-free allocation to 2 OCPUs and 12 GB RAM. The resize exposed a pre-existing UFW
+On 13 September the production A1 VM was resized to the Oracle console's
+full free allocation of 4 OCPUs and 24 GB RAM. The resize exposed a pre-existing UFW
 rule that allowed SSH only from an obsolete client IP. With production stopped,
 its boot volume was attached to a temporary rescue VM, the firewall was amended
 to allow key-only SSH, and password authentication was confirmed disabled. The
-disk was returned to production, the temporary rescue VM was stopped, and the
+disk was returned to production, the temporary rescue VM and disk were deleted, and the
 public site plus database, queue, private storage and provider readiness checks
 all returned HTTP 200. No card, paid shape or paid resource was selected. This
-was a recovery and capacity change, not a new transcription-speed benchmark.
+used the console-displayed Always Free allowance of 3,000 OCPU hours and 18,000
+GB hours monthly; production now consumes the full A1 allowance.
+
+A fresh production-equivalent capacity run repeated the 60-second rights-cleared
+constructed `funk-108` mixture three times to exactly 180 seconds, then used the
+same HTDemucs-ft and recall-fusion-v6 stages as production. Separation took 9
+minutes 41 seconds, fusion 45 seconds, and total wall time 10 minutes 26 seconds.
+The run produced 1,423 events and peaked at 3.74 GiB memory. Public readiness
+returned HTTP 200 throughout, Celery pinged after the run, and all four
+containers retained zero restarts. This is a 3.28x speedup and 69.6% wall-time
+reduction against the former 34m16s one-core result, although it remains 3.48x
+slower than real time. The workload matches the old probe's duration and stages,
+but its content differs, so the comparison is operational capacity evidence and
+not an identical-input model benchmark. The non-secret raw evidence is recorded
+in `docs/audit/oracle-capacity-2026-09-13.json`.
 
 ## Fresh accuracy control
 
@@ -138,7 +152,8 @@ provide the reproducible audit path.
    do not advertise a broad 90% accuracy claim from the isolated control.
 4. Obtain qualified legal/tax review before relying on the current international
    terms, consumer-refund wording or GST position.
-5. Before promising an SLA, repeat the sealed production-equivalent capacity
-   probe on the current 2-OCPU/12-GB host and record queue wait, API latency,
-   memory and wall time. Do not attach a card, enable a paid shape or incur a
-   charge without separate explicit approval.
+5. Do not promise an SLA on the single free host. The four-CPU capacity probe is
+   materially faster but still 3.48x slower than real time; add queue-age
+   admission controls and separately approved redundant capacity before making
+   processing-time or availability guarantees. Do not attach a card, enable a
+   paid shape or incur a charge without separate explicit approval.

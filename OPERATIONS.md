@@ -63,7 +63,7 @@ unbounded cost event.
 ### Free-beta capacity policy
 
 - Keep exactly one API, one worker at concurrency `1`, and one scheduler on the
-  current 2 OCPU/12 GB Oracle host. Do not promise an SLA on this single host.
+  current 4 OCPU/24 GB Oracle host. Do not promise an SLA on this single host.
 - Run the CPU-heavy worker at niceness 10 so an active transcription yields CPU
   time to the API, proxy and scheduler. This improves control-plane responsiveness
   but does not add throughput or redundancy.
@@ -81,12 +81,20 @@ unbounded cost event.
   11.4x slower than real time and is a failed throughput target, not a launch
   SLA. Six- and twelve-minute repetitions were not run because linear runtime
   would exceed the one-hour job limit and provide no new capacity evidence.
-- On 13 September the production VM was resized within the console-confirmed
-  free A1 allocation to 2 OCPUs and 12 GB RAM. SSH recovery required an offline
+- On 13 September the production VM was resized to the console-confirmed full
+  free A1 allocation of 4 OCPUs and 24 GB RAM. SSH recovery required an offline
   boot-volume repair because UFW still restricted port 22 to an obsolete client
   IP. Key-only SSH is restored, password authentication remains disabled, and
-  the public readiness check passes. The historical 34m16s result above has not
-  yet been rerun on this larger shape and must not be presented as improved.
+  the temporary rescue VM and disk were deleted after recovery. No card, paid
+  shape, or paid resource was used.
+- A fresh 180-second production-equivalent workload then took 10 minutes 26
+  seconds: 9 minutes 41 seconds in HTDemucs-ft and 45 seconds in recall fusion.
+  It produced 1,423 events, peaked at 3.74 GiB, used up to approximately four
+  CPU cores, and kept public readiness at HTTP 200. Against the former 34m16s
+  one-core baseline this is 3.28x faster and a 69.6% wall-time reduction, but
+  still 3.48x slower than real time. The fresh probe has the same duration and
+  stages but different rights-cleared content, so treat the comparison as
+  capacity evidence rather than an identical-input microbenchmark.
 - The same audit removed 21.08 GB of unused, regenerable Docker build cache;
   active images, volumes and both current and rollback release tags were kept.
   Root-disk use fell from 78% to 40%.
