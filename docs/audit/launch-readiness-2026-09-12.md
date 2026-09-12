@@ -15,6 +15,7 @@ resource was used during this work.
 | Public readiness | Pass | Database, queue, storage and model provider all reported ready |
 | Unused host listener | Remediated | `rpcbind` is disabled and port 111 is closed |
 | Three-minute capacity probe | Fail | One free CPU completed safely but took 34m16s; no processing-time SLA is supportable |
+| GitHub failure email | Confirmed | Founder confirmed on 12 September 2026 that notifications reach the monitored inbox |
 | Fresh isolated-drum control | 91.34% five-family F1 | Detector control passes the 90% target on these two recordings only |
 | Fresh constructed full mixes | 61.64% five-family F1 | Broad 90% full-song marketing claim remains blocked |
 | Dodo live review | Pending | Public live checkout must remain disabled |
@@ -126,8 +127,7 @@ provide the reproducible audit path.
    do not advertise a broad 90% accuracy claim from the isolated control.
 4. Obtain qualified legal/tax review before relying on the current international
    terms, consumer-refund wording or GST position.
-5. Confirm that GitHub failure notifications reach the monitored founder inbox.
-6. Before promising an SLA, verify the tenancy's remaining Always Free allowance
+5. Before promising an SLA, verify the tenancy's remaining Always Free allowance
    and schedule a resize to at most the documented free A1 total, or validate a
    materially faster commercially permitted pipeline. Do not attach a card,
    enable a paid shape or incur a charge without separate explicit approval.
