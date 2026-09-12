@@ -34,6 +34,9 @@ services:
     env_file:
       - ${DRUMSCRIBE_ENV_FILE:-/etc/drumscribe/drumscribe.env}
     command:
+      - nice
+      - -n
+      - "10"
       - celery
       - -A
       - drumscribe_api.tasks:celery_app

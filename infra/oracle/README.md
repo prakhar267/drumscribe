@@ -28,3 +28,14 @@ file or copy secret values into logs.
 Only TCP 80/443 are publicly exposed by the stack. The API and worker stay on the
 private Compose network, and the worker has no inbound port. Restrict SSH at both
 the OCI network layer and the host firewall.
+
+The worker starts through `nice -n 10` so model inference yields CPU time to the
+public API and scheduler on the one-OCPU beta host. Keep Celery concurrency at
+one; niceness protects responsiveness but does not make the free host suitable
+for an advertised processing-time or availability SLA.
+
+The measured 180-second production-equivalent probe took 34 minutes 16 seconds
+on this shape and peaked at 3.70 GiB memory. Treat the instance as a constrained
+beta host. Before resizing, inspect all tenancy A1 allocations and confirm the
+new total remains inside the documented Always Free allowance; never select a
+paid shape or attach a payment method without explicit approval.

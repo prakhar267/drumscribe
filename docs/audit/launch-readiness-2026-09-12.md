@@ -14,6 +14,7 @@ resource was used during this work.
 | Private-object restore canary | Pass | Upload, signed playback, export, delete and byte-exact restore all worked |
 | Public readiness | Pass | Database, queue, storage and model provider all reported ready |
 | Unused host listener | Remediated | `rpcbind` is disabled and port 111 is closed |
+| Three-minute capacity probe | Fail | One free CPU completed safely but took 34m16s; no processing-time SLA is supportable |
 | Fresh isolated-drum control | 91.34% five-family F1 | Detector control passes the 90% target on these two recordings only |
 | Fresh constructed full mixes | 61.64% five-family F1 | Broad 90% full-song marketing claim remains blocked |
 | Dodo live review | Pending | Public live checkout must remain disabled |
@@ -35,6 +36,15 @@ applicable browser and device projects. Manual screenshots of the homepage,
 upload page and editor were inspected at desktop, iPad and Pixel dimensions. The
 tablet editor toolbar was corrected so Undo and Redo remain available.
 
+Cloudflare Worker version `c20e0e17-8c0f-47fc-a19b-d5bd28276dcc` contains the
+legal and responsive changes. The first publish omitted the build-time API
+origin; the immediate post-deploy smoke test caught a 404 on readiness and the
+Worker was rolled forward with the production origin, demo mode off, billing
+explicitly off and the existing Sentry DSN. The final homepage, upload page,
+four legal pages and API readiness endpoint all returned HTTP 200. A new
+pre-deploy verifier now refuses a publish when any of those critical production
+settings are absent.
+
 ## Production operations
 
 The Oracle host was checked before changing `rpcbind`: there were no NFS mounts,
@@ -50,6 +60,23 @@ and final cleanup. The restored audio SHA-256 was
 `56d4af65701c26df20bd4021eda95b6e830348ce3a746086079fe89285548dc9`.
 No customer object was read, changed or deleted.
 
+An exact production-equivalent capacity run processed a 180-second,
+rights-cleared track through HTDemucs-ft and recall fusion on the one-OCPU
+worker. Separation took 33 minutes 29 seconds, fusion about 47 seconds and total
+wall time 34 minutes 16 seconds (approximately 11.4 times slower than real
+time). It produced 1,208 events, saturated the worker core and reached 3.70 GiB
+peak cgroup memory without an OOM. Public readiness remained HTTP 200, although
+observed response time rose to 1.7--2.6 seconds during and immediately after the
+load. Six- and twelve-minute repetitions were deliberately not run: linear
+runtime would exceed the configured one-hour job limit and the three-minute run
+had already falsified acceptable throughput on this shape.
+
+After the probe, only its exact temporary paths were deleted. A storage audit
+then found 21.08 GB of unused Docker build cache. That regenerable cache was
+pruned while every running container, volume, current image tag and rollback
+image tag was retained. Root-disk use fell from 78% to 40%, and readiness again
+returned HTTP 200.
+
 ## Fresh accuracy control
 
 Selection was frozen before inference. The 105-second check used two previously
@@ -63,7 +90,7 @@ At a 50 ms matching tolerance:
 | Condition | Five-family micro F1 | Detailed micro F1 |
 | --- | ---: | ---: |
 | Original isolated human drum performances | 91.34% | 89.59% |
-| Constructed full mixtures through production-equivalent separation and fusion | 61.64% | 54.87% |
+| Constructed full mixtures through production-equivalent separation and fusion | 61.64% | 55.62% |
 
 The isolated control confirms that the onset/class detector can exceed 90% on
 these performances. It does **not** establish 90% full-song accuracy. In the
@@ -100,5 +127,7 @@ provide the reproducible audit path.
 4. Obtain qualified legal/tax review before relying on the current international
    terms, consumer-refund wording or GST position.
 5. Confirm that GitHub failure notifications reach the monitored founder inbox.
-6. Approve a paid capacity plan before promising an SLA or exceeding the single
-   free-worker capacity. Any card or charge requires separate explicit approval.
+6. Before promising an SLA, verify the tenancy's remaining Always Free allowance
+   and schedule a resize to at most the documented free A1 total, or validate a
+   materially faster commercially permitted pipeline. Do not attach a card,
+   enable a paid shape or incur a charge without separate explicit approval.

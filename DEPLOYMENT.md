@@ -46,6 +46,13 @@ Its entrypoint downloads that private Neon object, verifies the archive and ever
 
 The canonical public web origin is `https://drumtoscore.com`; `https://www.drumtoscore.com` redirects to the canonical host while preserving the path and query string. Cloudflare enforces HTTPS, TLS 1.2 or newer, and the production response-header rule. The API remains `https://api.137.23.63.132.nip.io` behind the web worker's same-origin `/api/v1/*` proxy. The Cloudflare build uses `NEXT_PUBLIC_API_URL=/api/v1`, `NEXT_PUBLIC_DEMO_MODE=false`, and that API hostname as `API_ORIGIN`, so secure session cookies remain first-party. The Workers URL is retained only as a deployment fallback.
 
+`pnpm --filter @drumscribe/web deploy:vinext` now fails closed unless the
+production API origin, same-origin browser API path, production/demo flags,
+explicit billing flag and both Sentry DSNs are present. Supply them through the
+approved local secret source or deployment environment; never paste their values
+into this document or commit them. Always run the public readiness smoke test
+immediately after deployment.
+
 ## Scaling
 
 Scale API processes independently from workers. Queue routing can later separate CPU normalization, GPU separation/transcription, and export work without changing the REST contract. Keep stage outputs deterministic and checkpointed so a retry starts at the last successful stage. Use per-user and global concurrency controls before increasing worker count.
