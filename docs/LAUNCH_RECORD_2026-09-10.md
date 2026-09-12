@@ -11,14 +11,17 @@ secrets, database URLs, storage credentials, card data, cookies and sign-in link
 | Product brand | DrumToScore |
 | Domain | `drumtoscore.com` |
 | Founder/operator contact supplied earlier | Prakhar Gupta |
-| Address supplied earlier | 25/38 Kaveri Path, Mansarovar, Jaipur, Rajasthan, India |
+| Legal structure | Individual sole proprietor using DrumToScore as a trade name |
+| Address supplied earlier | 25/38 Kaveri Path, Mansarovar, Jaipur, Rajasthan 302020, India |
+| GST status | Currently not GST-registered; obligations must be monitored |
 | Launch territory | India and international |
 | Offer | One free complete-song transcription, then a one-time 10-credit pack intended at approximately USD 15 |
+| Refund approach | Final sale/no change-of-mind, subject to failed delivery, duplicate/unauthorized charge, material defect, Dodo rules and mandatory law |
 | Payment safety rule | No payment card may be entered, selected, charged or authorized. Stop if any provider requests a card or paid plan. |
 
-The registered legal operator name, entity type, postal code and tax/GST status
-have not been confirmed. Earlier notes used the business name “DrumScribe” while
-the product now uses DrumToScore; this must be resolved before paid launch.
+On 12 September 2026 the founder confirmed individual operation, the postal code
+302020 and current non-registration for GST. DrumToScore is recorded as the trade
+and product name, not a separate registered legal person.
 
 ## External configuration completed
 
@@ -182,8 +185,15 @@ review. Paid launch remains gated on the operator details and legal decisions in
 - The live Oracle host and public edge were audited read-only. All nine public
   HTTPS, redirect, header, HSTS, CORS, authorization, readiness and certificate
   checks pass.
+- The unused `rpcbind` service and socket were disabled after confirming there
+  were no NFS mounts or dependencies. Port 111 is now closed.
+- A production private-object canary passed signed playback, export parsing,
+  deletion and byte-exact restore without touching customer objects.
+- Desktop Chromium, Firefox and WebKit plus iPad and Pixel functional browser
+  projects pass. Hosted CI now runs the expanded browser matrix.
 - The complete evidence and non-secret hashes are in
-  `docs/audit/production-operations-2026-09-10.md`.
+  `docs/audit/production-operations-2026-09-10.md` and
+  `docs/audit/launch-readiness-2026-09-12.md`.
 
 No production customer record, object or account was changed or deleted by the
 drills.
@@ -220,7 +230,7 @@ drills.
 | Public route smoke test | Passed; homepage, pricing, demo, API readiness and all four legal pages returned HTTP 200 |
 | Production free-claim backfill | Passed; 10 existing accounts processed |
 | Dodo sandbox checkout and signed webhook | Passed; 10 credits granted exactly once and duplicate replay remained at 10 |
-| Hosted GitHub CI | Passed for release commit: [run 34411777668](https://github.com/prakhar267/drumscribe/actions/runs/34411777668) |
+| Hosted GitHub CI | Passed for the MinIO registry repair: [run 34699847192](https://github.com/prakhar267/drumscribe/actions/runs/34699847192) |
 | Hosted production uptime probe | Passed after release: [run 34412600218](https://github.com/prakhar267/drumscribe/actions/runs/34412600218) |
 
 Release source commit `c81839472ffce2db98d43faeaa8c3a9335fe9021` is pushed to
@@ -240,12 +250,15 @@ private storage and provider readiness.
    and have qualified counsel verify paid hosted commercial use. The public Demucs
    code license does not cover its pretrained weights, and the pinned ADTOF-pytorch
    tree does not contain a clear root license grant.
-4. Confirm the legal operator/entity name, postal code, tax/GST position, governing
-   law, age eligibility, liability/dispute provisions, final refund window and
-   international consumer/privacy terms.
+4. Obtain qualified review of the now-published operator, governing-law,
+   liability, refund, international consumer/privacy and current GST wording.
 5. Review provider DPAs, subprocessors, cross-border transfer terms and support/
    audit retention periods.
-6. Approve a paid capacity plan before promising an SLA or accepting traffic that
+6. Improve and independently validate full-mixture accuracy. The fresh
+   rights-cleared 12 September diagnostic reached 91.34% five-family F1 on its
+   isolated-drum controls but only 61.64% after constructed full-song mixing and
+   production-equivalent separation/fusion.
+7. Approve a paid capacity plan before promising an SLA or accepting traffic that
    exceeds the single free Oracle worker. No paid scaling is authorized now.
 
 ## No-actual-card and no-paid-action ledger

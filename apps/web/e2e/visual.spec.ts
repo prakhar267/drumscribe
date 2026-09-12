@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
-test.beforeEach(async ({ page, isMobile }) => {
-  test.skip(Boolean(isMobile), "Visual baselines use the fixed desktop viewport");
+test.beforeEach(async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "chromium", "Visual baselines use desktop Chromium");
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.emulateMedia({ reducedMotion: "reduce" });
 });

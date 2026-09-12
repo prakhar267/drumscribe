@@ -5196,7 +5196,6 @@ kbd {
     padding: 0 var(--space-3);
   }
 
-  .editor-brand > .icon-button,
   .editor-brand .toolbar-divider,
   .editor-practice-button {
     display: none;
@@ -5269,6 +5268,7 @@ kbd {
     width: min(180px, 45vw);
   }
 
+  .editor-brand > .icon-button,
   .editor-actions > .icon-button,
   .editor-actions > .button:not(.button-primary),
   .project-menu {

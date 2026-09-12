@@ -76,7 +76,7 @@ export function ProjectsDashboard() {
           {visible.map((project, projectIndex) => (
             <article className="project-card" key={project.id}>
               <Link href={`/projects/${project.id}`} aria-label={`Open ${project.title}`}>
-                <div className="project-wave" aria-hidden="true">{demoWaveform.slice(0, 42).map((height, index) => <i key={index} style={{ height: `${Math.max(12, height * (72 - projectIndex * 2))}%` }} />)}</div>
+                <div className="project-wave" aria-hidden="true">{demoWaveform.slice(0, 42).map((height, index) => <i key={index} style={{ height: `${Math.max(12, height * (72 - projectIndex * 2)).toFixed(6)}%` }} />)}</div>
               </Link>
               <div className="project-card-body">
                 <h2><Link href={`/projects/${project.id}`}>{project.title}</Link></h2>

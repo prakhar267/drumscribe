@@ -132,7 +132,7 @@ export function JobProgress({ jobId }: { jobId: string }) {
         <p>{ready ? "We found a few sections that may need review. Your original timing is preserved, and every generated hit remains editable." : terminal ? statusMessage ?? (terminal === "FAILED" ? "No project data was made public. You can retry the processing job safely." : "Your uploaded project remains private and can be restarted.") : cancelRequested ? statusMessage : "You can safely close this page. Processing continues in the background and the project will be waiting in your library."}</p>
         <div className="processing-track" aria-label="Recording being processed">
           <div><strong>{projectTitle}</strong><span>{projectDuration === null ? "Reading recording metadata…" : `${formatTime(projectDuration)} · Private upload`}</span></div>
-          <div className="processing-waveform" aria-hidden="true">{visiblePeaks.map((peak, index) => <i key={index} style={{ height: `${Math.max(.08, peak) * 100}%` }} />)}</div>
+          <div className="processing-waveform" aria-hidden="true">{visiblePeaks.map((peak, index) => <i key={index} style={{ height: `${(Math.max(.08, peak) * 100).toFixed(6)}%` }} />)}</div>
         </div>
         {pollIssue && <p className="form-error" role="alert">{pollIssue}</p>}
         <div className="stage-list" aria-label="Processing stages">

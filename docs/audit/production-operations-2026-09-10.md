@@ -83,8 +83,9 @@ python3 scripts/audit_production_security.py
 - Containers: API healthy; worker, scheduler, and Caddy running
 - Runtime secret file: `root:root`, mode `0600`
 - Firewall: default-deny incoming; 80/443 public; SSH limited to owner IP
-- Defense-in-depth follow-up: `rpcbind` listens on host port 111, but UFW does
-  not allow it. Disable `rpcbind` after confirming OCI has no dependency.
+- Defense in depth completed 12 September: after confirming no NFS mounts,
+  `/etc/fstab` entries or reverse dependencies, `rpcbind.socket` and
+  `rpcbind.service` were disabled and stopped. Port 111 is closed.
 
 These are idle measurements, not proof of transcription throughput.
 
@@ -102,11 +103,18 @@ and upload admission closure at 85% memory/disk, 30-minute queue age, or failed
 readiness. Do not advertise an SLA until a redundant paid plan is explicitly
 approved by the owner.
 
-## Remaining operations blockers
+## 12 September follow-up
 
-1. Run a private-object restore/playback/export drill in locked staging.
-2. Confirm GitHub failure notifications reach a monitored human; the free
+A synthetic, operations-only private-object canary passed storage health, signed
+playback, signed MusicXML export and parsing, deletion, byte-exact restore and
+final cleanup. It touched no customer objects. The restored audio SHA-256 was
+`56d4af65701c26df20bd4021eda95b6e830348ce3a746086079fe89285548dc9`.
+
+Remaining operations blockers:
+
+1. Confirm GitHub failure notifications reach a monitored human; the free
    scheduler alone is not an on-call system.
-3. Measure 3-, 6-, and 12-minute transcription throughput before publishing a
-   processing-time promise.
-4. Disable the unused `rpcbind` listener after an OCI dependency check.
+2. Finish representative throughput measurement before publishing a processing-
+   time promise; the single free CPU worker provides no SLA.
+3. Rehearse the support and incident procedure periodically and after material
+   provider or data-flow changes.

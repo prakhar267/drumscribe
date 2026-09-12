@@ -38,7 +38,7 @@ export function HomeDemo() {
           </div>
         </div>
         <div className="demo-waveform" aria-hidden="true">
-          {demoWaveform.map((height, index) => <i className="wave-bar" key={index} style={{ height: `${height * 92}%` }} />)}
+          {demoWaveform.map((height, index) => <i className="wave-bar" key={index} style={{ height: `${(height * 92).toFixed(6)}%` }} />)}
           <div className="demo-playhead" style={{ left: `${playhead}%` }} />
         </div>
         <div className="demo-transport">

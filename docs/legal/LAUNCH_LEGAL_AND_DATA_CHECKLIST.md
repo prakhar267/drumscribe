@@ -1,6 +1,6 @@
 # Launch legal and data checklist
 
-Last audited: 2026-09-10
+Last audited: 2026-09-12
 
 This is an engineering and product-readiness record, not legal advice. It keeps
 confirmed facts separate from founder decisions and items that require qualified
@@ -12,33 +12,35 @@ live.
 | Field | Current value | Status |
 | --- | --- | --- |
 | Product/service name | DrumToScore | Confirmed product brand |
-| Earlier supplied business name | DrumScribe | Conflicts with the current brand; founder must choose the legal/operator name |
+| Legal operator | Prakhar Gupta, individual sole proprietor using DrumToScore as a trade name | Founder confirmed individual operation; DrumToScore is not described as a separate registered entity |
 | Support email | `support@drumtoscore.com` | Active Cloudflare Email Routing rule forwarding to the verified founder Gmail destination |
 | Privacy email | `privacy@drumtoscore.com` | Active Cloudflare Email Routing rule forwarding to the verified founder Gmail destination |
 | Copyright email | `copyright@drumtoscore.com` | Active Cloudflare Email Routing rule forwarding to the verified founder Gmail destination |
 | Security email | `security@drumtoscore.com` | Active Cloudflare Email Routing rule forwarding to the verified founder Gmail destination |
-| Address | 25/38 Kaveri Path, Mansarovar, Jaipur, Rajasthan, India | Founder supplied; postal code and legal service-of-notice suitability are unconfirmed |
+| Address | 25/38 Kaveri Path, Mansarovar, Jaipur, Rajasthan 302020, India | Founder supplied and confirmed for service notices |
+| GST status | Currently not GST-registered | Present-status disclosure only; registration obligations must be monitored as turnover, customer locations and law change |
 | Launch territory | India and international | Too broad for one generic legal review; prioritize actual sales countries |
 | Commercial model | One full song free, then a one-time 10-credit pack intended at about USD 15 | Implemented; production checkout remains disabled |
-| Merchant of record | Intended: Dodo Payments | Not onboarded or enabled |
+| Refund approach | Final sale/no change-of-mind refunds, with exceptions for failed delivery, duplicate or unauthorized charges, material defects, merchant rules and mandatory law | Founder supplied “no refund”; narrowed to a legally safer enforceable form |
+| Merchant of record | Dodo Payments | Sandbox verified; live product, credential and webhook staged; review pending and public checkout disabled |
 
-Do not describe DrumToScore as a company, corporation or registered entity until
-the founder records the exact legal proprietor/entity name, registration type,
-registration number if applicable, tax/GST status and postal code.
+Do not describe DrumToScore as a company, corporation or separate registered
+entity. It is currently a trade name used by the individual operator named above.
 
 ## Implemented public disclosures
 
-- `/legal/terms` describes the beta service, user-content permission, copyright
-  responsibility, accuracy limitations, intended credit model and unfinished
-  legal provisions.
+- `/legal/terms` identifies the individual operator, 18+ eligibility, user-content
+  permission, copyright responsibility, accuracy limitations, intended credit
+  model, liability baseline, governing law and Jaipur venue.
 - `/legal/privacy` describes collected data, purposes, providers, approximate
   technical retention periods, model-training opt-in boundary and user controls.
 - `/legal/copyright` gives a usable initial rights-notice route without claiming
   a jurisdiction-specific safe-harbour procedure.
-- `/legal/refunds` discloses that checkout is disabled and avoids inventing a
-  refund window before merchant onboarding.
-- Every policy identifies the supplied contact and address while clearly flagging
-  the unresolved operator identity.
+- `/legal/refunds` records the final-sale/no-change-of-mind approach while
+  preserving failed-delivery, duplicate/unauthorized-charge, material-defect,
+  merchant and mandatory-law remedies.
+- Every policy identifies the operator, contact, full address and current
+  checkout status.
 
 These are conservative beta policies for the currently live free service. They
 are not counsel-approved final terms and should not be presented as such.
@@ -54,7 +56,7 @@ are not counsel-approved final terms and should not be presented as such.
 | Resend | Account email and one-time sign-in messages | Provider-managed | Live and domain verified; retain DPA/subprocessor/retention terms |
 | Sentry | Error and sampled performance telemetry; default PII sending disabled | Provider-managed | Live at 5% trace sampling; document retention, scrubbing and access settings |
 | GitHub | Public source repository, CI and endpoint uptime checks | Provider-managed | Live; uptime checks do not intentionally send customer audio |
-| Dodo Payments | Future checkout, tax, order, payer and refund data | Provider-managed | Disabled; do not list as an active recipient until onboarding and checkout are enabled |
+| Dodo Payments | Checkout, tax, order, payer and refund data after activation; no uploaded audio | Provider-managed | Sandbox verified; live resources staged; review pending and public checkout disabled |
 
 The privacy policy names the current providers, but counsel must select lawful
 bases, international-transfer mechanisms, contractual safeguards, retention
@@ -101,22 +103,23 @@ conclusions have since changed.
 
 ## Required founder and counsel decisions before paid launch
 
-1. Record the exact legal operator name, entity/proprietor status, postal code,
-   tax/GST position and address authorized for legal notices.
-2. Privately archive the original model-rights grants and have counsel confirm
+1. Privately archive the original model-rights grants and have counsel confirm
    that the grant recipient matches the operator and covers paid hosted use,
    cloud copies, territories and exact checkpoint hashes.
-3. Approve governing law, dispute venue, age requirement, warranty/limitation of
-   liability, suspension/appeal and jurisdiction-specific consumer provisions.
-4. Complete Dodo test onboarding without entering or charging a card, record the
-   merchant legal name, final currency/tax display and refund terms, and run a
-   verified test webhook flow before live mode.
-5. Set a defensible retention schedule for database, product, audit, support,
+2. Obtain qualified review of governing law, dispute venue, age requirement,
+   warranty/limitation of liability, suspension/appeal and jurisdiction-specific
+   consumer provisions before expanding paid sales internationally.
+3. Wait for Dodo's live review to complete, then verify the live checkout display
+   without making a real purchase before enabling the public Buy button.
+4. Set a defensible retention schedule for database, product, audit, support,
    email, queue and Sentry records; run deletion and restore drills.
-6. Retain provider DPAs/subprocessor lists and approve cross-border transfer
+5. Retain provider DPAs/subprocessor lists and approve cross-border transfer
    mechanisms for prioritized launch countries.
-7. Document an auditable request-handling procedure for the active support,
-   privacy and copyright forwarding addresses, with response owners and deadlines.
+6. Operate and periodically rehearse
+   `docs/operations/SUPPORT_AND_INCIDENT_PROCEDURE.md`, which now records the
+   request routes, response owner, internal targets and incident workflow.
+7. Monitor GST registration obligations; the present “not GST-registered” status
+   is not a permanent exemption determination.
 
 If any onboarding step asks for a payment card, paid plan or charge, stop and
 obtain the founder's explicit permission. No card use is authorized by this

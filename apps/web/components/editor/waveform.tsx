@@ -56,7 +56,7 @@ export function Waveform({ project, currentTime, loop, peaks, onSeek, onLoopChan
         <em>Click to seek · drag to set a loop</em>
       </div>
       <div className="editor-waveform" onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} data-testid="editor-waveform">
-        {peaks?.length ? peaks.map((height, index) => <i key={index} style={{ height: `${Math.max(.03, height) * 90}%` }} />) : <span className="waveform-unavailable">Waveform peaks are still preparing</span>}
+        {peaks?.length ? peaks.map((height, index) => <i key={index} style={{ height: `${(Math.max(.03, height) * 90).toFixed(6)}%` }} />) : <span className="waveform-unavailable">Waveform peaks are still preparing</span>}
         {loop.enabled && <div className="wave-loop" style={{ left: `${loop.start / project.durationSeconds * 100}%`, width: `${(loop.end - loop.start) / project.durationSeconds * 100}%` }} />}
         {preview && <div className="wave-loop is-preview" style={{ left: `${preview.start / project.durationSeconds * 100}%`, width: `${(preview.end - preview.start) / project.durationSeconds * 100}%` }} />}
         <div className="editor-playhead" style={{ left: `${currentTime / project.durationSeconds * 100}%` }} />

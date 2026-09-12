@@ -372,7 +372,7 @@ export function TimingEditor({
           >
             <div className="timing-waveform" aria-hidden="true">
               {(peaks ?? []).map((height, index) => (
-                <i key={index} style={{ height: `${Math.max(4, height * 78)}%` }} />
+                <i key={index} style={{ height: `${Math.max(4, height * 78).toFixed(6)}%` }} />
               ))}
               {!peaks?.length && <span>Waveform data unavailable</span>}
             </div>

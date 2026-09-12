@@ -11,7 +11,7 @@ This is the non-secret source of truth for DrumToScore's pre-launch service topo
 | Private audio and exports | Neon Object Storage bucket `drumscribe-private`, AWS Ohio | `DRUMSCRIBE_S3_*` | Private bucket, scoped production credential, exact-origin CORS, signed browser upload/download, unsigned denial, streamed move fallback, and cleanup are live-verified. The production API keeps CORS aligned with `https://drumtoscore.com`, `https://www.drumtoscore.com`, and the fallback Workers URL. Neon Object Storage is beta, so application retention/deletion remains authoritative. The existing public-read `drumstick` bucket is unused for customer media. |
 | Transactional sign-in email | Resend | `DRUMSCRIBE_MAGIC_LINK_DELIVERY=resend`, `DRUMSCRIBE_RESEND_*` | `drumtoscore.com` is verified with DKIM, SPF, and DMARC records published through Cloudflare. A production magic link from `DrumToScore <sign-in@drumtoscore.com>` was accepted by the API and marked delivered by Resend on 10 September 2026. |
 | Inbound customer email | Cloudflare Email Routing | DNS-managed routing only; no application secret | Free routing is enabled for `support@`, `privacy@`, `copyright@`, and `security@drumtoscore.com`; each active rule forwards to the founder's verified Gmail destination. The `support@` route was live-tested with a production DrumToScore email on 10 September 2026. |
-| Merchant of record and credits | Dodo Payments | `DRUMSCRIBE_BILLING_*`, `DRUMSCRIBE_DODO_*`, `NEXT_PUBLIC_BILLING_ENABLED` | One free complete song, paid-credit reservation/refund, server-created checkout, signed idempotent webhook fulfillment, pricing, and success UX are implemented and tested. Checkout remains disabled until a Dodo test product, API key, and webhook signing key are supplied and the account owner completes onboarding. |
+| Merchant of record and credits | Dodo Payments | `DRUMSCRIBE_BILLING_*`, `DRUMSCRIBE_DODO_*`, `NEXT_PUBLIC_BILLING_ENABLED` | One free complete song and the one-time 10-credit pack are implemented. Sandbox checkout/webhook fulfillment passed; live product, key and webhook are staged dormant. Review is pending, the public Buy action is disabled and the running API remains in test mode. |
 | API error monitoring | Sentry `python-fastapi` | `DRUMSCRIBE_SENTRY_DSN`, `DRUMSCRIBE_SENTRY_TRACES_SAMPLE_RATE` | SDK wiring and a live ingestion event are verified. |
 | Web error monitoring | Sentry `drumscribe-web` | `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_DSN`, sample-rate variables | Next.js client, server, edge, global-error, and build integration are complete; lint, type checking, tests, and production build pass. Source-map upload needs a CI auth token at deployment time. |
 | Public web | Cloudflare Workers, `drumscribe-web` | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_DEMO_MODE`, `API_ORIGIN` | Production mode is live at `https://drumtoscore.com`; `www` redirects to the canonical host with its path and query intact. Cloudflare enforces HTTPS, TLS 1.2+, and the verified response-security headers. Both Workers routes and the same-origin `/api/v1/*` proxy are verified; the Workers URL remains a fallback. |
@@ -45,7 +45,19 @@ DrumToScore uses Neon PostgreSQL and Neon Object Storage. Other Neon primitives 
 ## Launch gates that remain external
 
 1. Privately archive and obtain legal review of the actual rightsholder grants for the exact pinned Demucs, Beat This, ADTOF, and first-party model artifacts. The existing owner attestation and fail-closed validator record an engineering decision; they do not independently prove commercial rights. Any model or weight change reopens this gate.
-2. Complete legal-entity/address decisions and qualified review of the customer-facing legal text.
-3. Repeat backup/restore and deletion/security drills before material releases. The 10 September 2026 no-card rehearsal passed Neon snapshot parity, PostgreSQL dump/restore with a synthetic canary, Alembic-head validation, local account-deletion lifecycle tests, and all nine live read-only edge/security checks after enabling one-year Cloudflare HSTS.
-4. Complete merchant-of-record onboarding, create the $15 one-time 10-credit product, configure and verify the signed webhook in test mode, then repeat in live mode and enable checkout. Payment stays disabled until the owner explicitly approves this work.
-5. Approve paid redundant capacity before promising an SLA or scaling beyond the single free host. The free-beta thresholds and measured idle baseline are documented in `OPERATIONS.md`.
+2. Obtain qualified review of the customer-facing legal, international consumer,
+   privacy and current GST wording. The founder-supplied individual operator,
+   address and policy decisions are now recorded and published in source.
+3. Repeat backup/restore and deletion/security drills before material releases.
+   The 10 and 12 September no-card rehearsals passed database parity, restore,
+   private-object playback/export/restore, account deletion and public security
+   checks without touching customer objects.
+4. Wait for Dodo's live review, verify the live checkout display without a real
+   purchase, and enable checkout only after the signed live webhook and credit
+   mapping pass. A real card or charge requires separate explicit approval.
+5. Improve and independently validate full-mixture accuracy before advertising a
+   broad percentage. The fresh 12 September isolated-drum control reached 91.34%
+   five-family F1, while its constructed full-mix diagnostic reached 61.64%.
+6. Approve paid redundant capacity before promising an SLA or scaling beyond the
+   single free host. The free-beta thresholds and measured evidence are documented
+   in `OPERATIONS.md` and `docs/audit/launch-readiness-2026-09-12.md`.
