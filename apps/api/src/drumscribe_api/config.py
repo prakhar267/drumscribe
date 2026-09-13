@@ -25,6 +25,10 @@ class Settings(BaseSettings):
     pipeline_provider: Literal["development", "music_engine"] = "development"
     source_separation_provider: str = "passthrough"
     demucs_model: Literal["htdemucs_ft", "htdemucs"] = "htdemucs_ft"
+    modal_demucs_endpoint: str | None = None
+    modal_proxy_token_id: str | None = None
+    modal_proxy_token_secret: SecretStr | None = None
+    modal_max_response_bytes: int = Field(default=256 * 1024 * 1024, gt=0)
     music_transcription_provider: str = "mock"
     beat_tracking_provider: str = "mock"
     commercial_provider_license_confirmed: bool = False
@@ -143,6 +147,19 @@ class Settings(BaseSettings):
             raise ValueError(
                 "Dodo billing requires API key, webhook key, product ID, return URL, and cancel URL"
             )
+        modal_fields = (
+            self.modal_demucs_endpoint,
+            self.modal_proxy_token_id,
+            self.modal_proxy_token_secret,
+        )
+        if any(value is not None for value in modal_fields) and not all(
+            value is not None for value in modal_fields
+        ):
+            raise ValueError(
+                "Modal Demucs requires endpoint, proxy token ID, and proxy token secret"
+            )
+        if self.modal_demucs_endpoint and self.source_separation_provider.casefold() != "demucs":
+            raise ValueError("Modal Demucs can only be used with the Demucs separation provider")
         for name, url in {
             "billing return URL": self.billing_return_url,
             "billing cancel URL": self.billing_cancel_url,
@@ -152,6 +169,8 @@ class Settings(BaseSettings):
                 if self.environment is not Environment.DEVELOPMENT and not local_test_url:
                     raise ValueError(f"{name} must use HTTPS")
         if self.environment is Environment.PRODUCTION:
+            if self.modal_demucs_endpoint and not self.modal_demucs_endpoint.startswith("https://"):
+                raise ValueError("production Modal Demucs endpoint must use HTTPS")
             if any(origin == "*" for origin in self.web_origins):
                 raise ValueError("production CORS origins must be explicit")
             if not self.allowed_hosts or any(

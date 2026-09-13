@@ -1,3 +1,4 @@
+import io
 import json
 import os
 import subprocess
@@ -14,6 +15,7 @@ from drumscribe_music import (
     ExternalModelError,
     MockBeatTrackingProvider,
     MockDrumTranscriptionProvider,
+    ModalDemucsAdapter,
     OaFDrumsTranscriptionProvider,
     PassthroughSourceSeparationProvider,
     RawDrumHit,
@@ -191,6 +193,49 @@ def test_demucs_adapter_is_process_isolated_and_argv_safe(monkeypatch, tmp_path)
     assert observed["argv"][:3] == ("/safe/python", "-m", "demucs.separate")
     with pytest.raises(ValueError, match="model"):
         DemucsAdapter(model="htdemucs; unsafe")
+
+
+def test_modal_demucs_adapter_uses_proxy_auth_and_streams_response(monkeypatch, tmp_path):
+    source = tmp_path / "mix.wav"
+    source.write_bytes(b"source audio")
+    destination = tmp_path / "nested" / "drums.wav"
+    observed = {}
+
+    def fake_urlopen(request, *, timeout):
+        observed["body"] = request.data
+        observed["headers"] = {key.casefold(): value for key, value in request.header_items()}
+        observed["timeout"] = timeout
+        return io.BytesIO(b"separated audio")
+
+    monkeypatch.setattr(
+        "drumscribe_music.providers.demucs.urllib.request.urlopen",
+        fake_urlopen,
+    )
+    provider = ModalDemucsAdapter(
+        endpoint="https://workspace--separator.modal.run/separate",
+        proxy_token_id="token-id",
+        proxy_token_secret="token-secret",
+        timeout_seconds=45,
+        compress_transport=False,
+    )
+
+    assert provider.separate_drums(source, destination) == destination
+    assert destination.read_bytes() == b"separated audio"
+    assert observed["body"] == b"source audio"
+    assert observed["headers"]["modal-key"] == "token-id"
+    assert observed["headers"]["modal-secret"] == "token-secret"
+    assert observed["headers"]["x-drumtoscore-model"] == "htdemucs"
+    assert observed["timeout"] == 45
+    require_production_safe(provider, production=True)
+
+
+def test_modal_demucs_adapter_rejects_insecure_remote_endpoint():
+    with pytest.raises(ValueError, match="HTTPS"):
+        ModalDemucsAdapter(
+            endpoint="http://example.com/separate",
+            proxy_token_id="token-id",
+            proxy_token_secret="token-secret",
+        )
 
 
 def test_provider_registry_rejects_duplicate_ids():

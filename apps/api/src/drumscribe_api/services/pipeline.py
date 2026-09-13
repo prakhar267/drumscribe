@@ -263,6 +263,22 @@ class MusicEngineAdapter:
                 result_key=self.settings.music_ai_drum_result_key,
             )
         if selected == "demucs":
+            if self.settings.modal_demucs_endpoint:
+                provider_class = getattr(engine, "ModalDemucsAdapter", None)
+                if provider_class is None:
+                    raise RuntimeError("Configured Modal Demucs provider is not installed.")
+                proxy_secret = self.settings.modal_proxy_token_secret
+                if not self.settings.modal_proxy_token_id or not proxy_secret:
+                    raise RuntimeError("Configured Modal Demucs credentials are incomplete.")
+                return provider_class(
+                    endpoint=self.settings.modal_demucs_endpoint,
+                    proxy_token_id=self.settings.modal_proxy_token_id,
+                    proxy_token_secret=proxy_secret.get_secret_value(),
+                    model=self.settings.demucs_model,
+                    timeout_seconds=self.settings.provider_timeout_seconds,
+                    max_response_bytes=self.settings.modal_max_response_bytes,
+                    ffmpeg_binary=self.settings.ffmpeg_binary,
+                )
             provider_class = getattr(engine, "DemucsAdapter", None)
             if provider_class is None:
                 raise RuntimeError("Configured provider 'demucs' is not installed.")

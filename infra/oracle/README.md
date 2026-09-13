@@ -5,6 +5,18 @@ Celery Beat scheduler, and a Caddy TLS edge on a single Ampere A1 VM. PostgreSQL
 Redis, private object storage, email delivery, and error reporting remain managed
 services and are configured through `/etc/drumscribe/drumscribe.env`.
 
+Production source separation can be delegated to the protected, scale-to-zero
+Modal L4 endpoint documented in `infra/modal/README.md`. Oracle keeps the API,
+queue worker, transcription, beat tracking and score generation; only the
+Demucs separation stage leaves the host. Removing the three
+`DRUMSCRIBE_MODAL_*` credential values and restarting the worker restores the
+local CPU separator without a code rollback.
+
+`configure_modal_env.py` accepts the endpoint proxy credential and exact Git
+release tag as JSON on standard input, validates them, creates a mode-`0600`
+timestamped backup and atomically updates the root-only environment. It reports
+only the backup path, never the secret values.
+
 The Oracle console currently shows an Always Free Ampere allowance of 3,000 OCPU
 hours and 18,000 GB hours monthly, equivalent to 4 OCPUs and 24 GB RAM across the
 tenancy. Keep the sum of every running A1 instance inside that allowance. The

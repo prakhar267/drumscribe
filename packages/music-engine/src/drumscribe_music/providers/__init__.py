@@ -1,5 +1,5 @@
 from .commercial import CommercialProviderConfig
-from .demucs import DemucsAdapter
+from .demucs import DemucsAdapter, ModalDemucsAdapter
 from .external import (
     ADTOFResearchTranscriptionProvider,
     DrumScribeHybridTranscriptionProvider,
@@ -24,6 +24,7 @@ from .research import (
 __all__ = [
     "CommercialProviderConfig",
     "DemucsAdapter",
+    "ModalDemucsAdapter",
     "ADTOFResearchTranscriptionProvider",
     "DrumScribeRecallFusionTranscriptionProvider",
     "DrumScribeHybridTranscriptionProvider",

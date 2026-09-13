@@ -1,6 +1,6 @@
 # Launch legal and data checklist
 
-Last audited: 2026-09-12
+Last audited: 2026-09-13
 
 This is an engineering and product-readiness record, not legal advice. It keeps
 confirmed facts separate from founder decisions and items that require qualified
@@ -51,6 +51,7 @@ are not counsel-approved final terms and should not be presented as such.
 | --- | --- | --- | --- |
 | Cloudflare | Website delivery, edge proxy, request/network metadata | Global edge | Free plan active; obtain/retain applicable DPA and subprocessor list |
 | Oracle Cloud | API and ML worker; temporarily processes customer audio and project/job requests | Mumbai, India | Always Free host live; record tenancy terms, security ownership and deletion procedure |
+| Modal | GPU source separation; temporarily receives the uploaded audio and returns a drum stem to the Oracle worker | Asia-Pacific South request route; provider-managed compute locations | Protected endpoint, scale-to-zero L4 and $1 hard cap active; retain DPA, subprocessor, deletion and location evidence before paid launch |
 | Neon | Account/project database plus private audio and exports | AWS Ohio, USA | Live; private bucket and signed links verified; beta-storage terms and DPA need review |
 | Upstash | Queue, job coordination and rate-limit state | AWS Ohio, USA | Live; confirm persistence, retention and DPA settings |
 | Resend | Account email and one-time sign-in messages | Provider-managed | Live and domain verified; retain DPA/subprocessor/retention terms |

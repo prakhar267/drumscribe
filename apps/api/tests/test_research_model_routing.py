@@ -8,6 +8,7 @@ from drumscribe_music import (
     DemucsAdapter,
     DrumScribeHybridTranscriptionProvider,
     DrumScribeRecallFusionTranscriptionProvider,
+    ModalDemucsAdapter,
     OaFDrumsTranscriptionProvider,
     YourMT3PlusTranscriptionProvider,
 )
@@ -25,6 +26,7 @@ def research_engine() -> SimpleNamespace:
         DrumScribeHybridTranscriptionProvider=DrumScribeHybridTranscriptionProvider,
         DrumScribeRecallFusionTranscriptionProvider=DrumScribeRecallFusionTranscriptionProvider,
         DemucsAdapter=DemucsAdapter,
+        ModalDemucsAdapter=ModalDemucsAdapter,
     )
 
 
@@ -86,6 +88,31 @@ def test_demucs_model_selection_is_explicit() -> None:
     provider = MusicEngineAdapter(settings)._separation_provider(research_engine())
     assert isinstance(provider, DemucsAdapter)
     assert provider.version == "htdemucs"
+
+
+def test_modal_demucs_selection_is_explicit_and_keeps_secrets_server_side() -> None:
+    settings = Settings(
+        _env_file=None,
+        pipeline_provider="music_engine",
+        source_separation_provider="demucs",
+        demucs_model="htdemucs",
+        modal_demucs_endpoint="https://workspace--separator.modal.run/separate",
+        modal_proxy_token_id="token-id",
+        modal_proxy_token_secret="token-secret",
+    )
+    provider = MusicEngineAdapter(settings)._separation_provider(research_engine())
+    assert isinstance(provider, ModalDemucsAdapter)
+    assert provider.version == "htdemucs"
+    assert provider.endpoint.endswith("/separate")
+
+
+def test_modal_demucs_configuration_is_all_or_nothing() -> None:
+    with pytest.raises(ValueError, match="endpoint, proxy token ID, and proxy token secret"):
+        Settings(
+            _env_file=None,
+            source_separation_provider="demucs",
+            modal_demucs_endpoint="https://workspace--separator.modal.run/separate",
+        )
 
 
 def test_owner_approved_self_hosted_pipeline_can_be_selected_in_production() -> None:
