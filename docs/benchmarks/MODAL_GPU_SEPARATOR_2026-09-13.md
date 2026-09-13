@@ -12,7 +12,7 @@ workspace retained its $1 hard usage cap.
 ## Deployment boundary
 
 - App: `drumtoscore-separator`
-- Accelerator: one L4 GPU with four vCPUs, maximum one running container
+- Accelerator: one L4 GPU with two vCPUs, maximum one running container
 - Scaling: zero idle containers; 30-second scale-down window
 - Request route: Asia-Pacific South
 - Authentication: server-side Modal proxy token; never exposed to browsers
@@ -72,8 +72,9 @@ it must not be presented as a general product-accuracy percentage.
 ## Cost and launch guardrails
 
 The Modal billing report after deployment, diagnostics and the validation calls
-showed approximately $0.23 of usage before the production end-to-end run. The workspace has no payment method and a
-$1 hard cap. H100 and L40S attempts were rejected by Modal because they required
+showed approximately $0.23 of usage before the production end-to-end run. The
+workspace has no payment method and a $1 hard cap. H100 and L40S attempts were
+rejected by Modal because they required
 a payment method; neither became the live deployment. Do not attach a card,
 raise the hard cap or select a paid accelerator without fresh founder approval.
 
@@ -82,3 +83,41 @@ To roll back, remove `DRUMSCRIBE_MODAL_DEMUCS_ENDPOINT`,
 from `/etc/drumscribe/drumscribe.env`, then restart the Oracle worker. The
 existing `DRUMSCRIBE_DEMUCS_MODEL=htdemucs` setting continues to select the
 local CPU model.
+
+## Live production verification
+
+Release `94404af` was deployed to the Oracle API, worker and scheduler. The
+worker resolved `demucs-modal-gpu-v1/htdemucs`, reached the protected health
+endpoint from inside its container and confirmed the checkpoint hash above.
+Cloudflare production version `11b3f1d0-e514-4e9b-bfa5-ed66099d66bf` published
+the updated privacy disclosure.
+
+A fresh anonymous browser-equivalent flow created a project, presigned and
+uploaded the 45-second rights-cleared `rock-100` WAV, completed the upload,
+submitted a job, polled it to `READY`, read its events and timing map, and then
+soft-deleted the test project. Job
+`8ccadd4c-47d1-4c5a-81ec-e7603d64260c` produced 316 events, 107.14 BPM, 4/4 and
+82 timing beats without a retry or job error.
+
+| Production stage | Seconds |
+| --- | ---: |
+| Validation | 8.6558 |
+| Normalization | 7.8859 |
+| Modal drum separation, cold | **22.9568** |
+| Transcription | 33.5263 |
+| Beat detection | 9.3269 |
+| Quantization | 4.4173 |
+| Score generation | 4.9778 |
+| Finalization | 3.7317 |
+
+The Celery task completed in 110.52 seconds; process submission to `READY` took
+111.77 seconds. Including anonymous-session creation, project creation and the
+browser-equivalent upload, the complete scripted journey took 142.25 seconds.
+The recorded model-stage sum fell from 119.23 seconds on the prior Oracle-only
+45-second production run to 95.48 seconds, a 19.9% reduction. The cold
+separation stage fell from 46.81 to 22.96 seconds; a warm Modal container remains
+substantially faster.
+
+The final Modal billing report after the production test was approximately
+$0.26, leaving about $0.74 below the existing $1 hard cap. No payment method was
+added, opened or used.
