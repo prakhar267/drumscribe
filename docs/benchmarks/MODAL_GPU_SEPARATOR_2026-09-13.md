@@ -121,3 +121,59 @@ substantially faster.
 The final Modal billing report after the production test was approximately
 $0.26, leaving about $0.74 below the existing $1 hard cap. No payment method was
 added, opened or used.
+
+## Full three-minute production verification
+
+A second production run measured the complete registered-user path with an
+exact 180-second timing fixture. The fixture repeated the same rights-cleared
+45-second `rock-100` mixture four times and had SHA-256
+`c87ee850c62d7911e01ae6ce54a28241a694e4a4fa092ffd012e30400642cd7e`.
+This was a runtime and integration measurement, not a new-song accuracy test.
+
+An initial anonymous-path probe was correctly rejected during validation with
+`AUDIO_TOO_LONG`: anonymous previews are limited to 90 seconds, while
+registered accounts support the configured 12-minute full-song limit. The
+successful run used an isolated registered test account with no email and no
+paid-credit balance. It consumed the account's one free transcription. After
+the run, the project was deleted through the public API and the isolated user,
+session, project and job records were permanently removed.
+
+| Public user activity | Seconds |
+| --- | ---: |
+| Anonymous session creation | 3.208 |
+| Project creation | 3.900 |
+| Upload presign | 2.652 |
+| Upload transfer, 31.75 MB | 4.060 |
+| Upload completion | 3.694 |
+| Processing submission | 7.549 |
+| Submission to `READY` | **128.739** |
+| Events fetch | 3.959 |
+| Timing-map fetch | 2.568 |
+| Project media cleanup | 20.735 |
+
+The user-facing journey from session creation through `READY` took **153.802
+seconds** (2m33.8s). Fetching the events and timing map brought the loaded-result
+journey to **160.329 seconds** (2m40.3s). Cleanup is deliberately excluded from
+those user-facing completion figures.
+
+| Worker stage | Seconds |
+| --- | ---: |
+| Validation | 7.9665 |
+| Normalization | 14.8185 |
+| Modal drum separation | **25.4337** |
+| Transcription | 31.1228 |
+| Beat detection | 13.6278 |
+| Quantization | 8.0087 |
+| Score generation | 7.3490 |
+| Finalization | 5.0564 |
+
+The exact worker-stage sum was 113.3834 seconds. Queue dispatch, database
+commits, public polling and other orchestration account for the difference to
+the 128.739-second submission-to-ready observation. The job completed without
+a retry and produced 1,258 events, 325 timing beats, 107.14 BPM and a 4/4 time
+signature using the expected Modal Demucs, recall-fusion v6 and Beat This
+providers.
+
+The Modal billing report after this run was approximately $0.276 for the day,
+an increase of about $0.019 from the preceding total. The workspace remained
+under its $1 hard cap and still had no payment method.
