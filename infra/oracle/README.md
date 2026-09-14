@@ -42,6 +42,17 @@ exact public hostname in `DRUMSCRIBE_API_HOST`, production-safe application
 settings, and the hash-pinned private model bundle variables. Never commit that
 file or copy secret values into logs.
 
+After enabling Neon Auth on the production branch, apply its public endpoint and
+the release revision atomically. The helper validates the production Neon host,
+keeps a mode-`0600` backup, and never reads or prints other environment values:
+
+```sh
+sudo python3 infra/oracle/configure_neon_auth_env.py \
+  /etc/drumscribe/drumscribe.env \
+  https://ep-example.neonauth.us-east-2.aws.neon.tech/neondb/auth \
+  <git-revision>
+```
+
 Only TCP 80/443 are publicly exposed by the stack. The API and worker stay on the
 private Compose network, and the worker has no inbound port. Restrict SSH at both
 the OCI network layer and the host firewall.
