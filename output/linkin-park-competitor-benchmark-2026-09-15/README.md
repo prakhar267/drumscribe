@@ -48,4 +48,28 @@ Drum2Notes does not expose a full-song result without payment, so no honest full
 
 The same full 216.4-second file was submitted to <https://www.drumtranscription.com/> using its no-card free workflow. Its site says results are delivered by email as PDF, MIDI, and MusicXML. No result email had arrived after repeated checks during this run; score it only after structured output is received.
 
+## Third competitor: Music Demixer
+
+The same source file was uploaded to <https://musicdemixer.com/>. Its no-card free preview selected audio seconds **95–125** and returned original-timing drum MIDI, beat-aligned drum MIDI, PDF, and MusicXML.
+
+For the event comparison, the Songsterr part was aligned once to the uploaded audio (`audio_time = -0.3498714285 + 0.9992 × score_time`) using the measured first main drum onset and an audio-onset timing fit. Both systems were then scored on exactly the competitor-selected 30-second window with one-to-one, five-family onset matching.
+
+| System | Predicted events | Reference events | TP | FP | FN | Precision | Recall | Micro F1 @ 50 ms |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| DrumToScore | 202 | 196 | 180 | 22 | 16 | 89.11% | 91.84% | **90.45%** |
+| Music Demixer | 297 | 196 | 193 | 104 | 3 | 64.98% | 98.47% | **78.30%** |
+
+Family F1 at 50 ms:
+
+| System | Kick | Snare | Hi-hat | Toms | Cymbals |
+|---|---:|---:|---:|---:|---:|
+| DrumToScore | 92.44% | 89.36% | 92.59% | 66.67% | 70.59% |
+| Music Demixer | 99.21% | 65.63% | 81.25% | 100.00% | 31.58% |
+
+DrumToScore wins this 30-second comparison by **12.15 percentage points**. Music Demixer had excellent recall, but its 104 false positives—especially extra snares and cymbals—reduced precision. The tom and cymbal supports are only four and six reference events, respectively, so those family percentages are not stable whole-song estimates.
+
+Music Demixer's beat-aligned export correctly identified **105 BPM**, but encoded the section in **3/4** instead of the reference **4/4**. DrumToScore's project tempo remained **120 BPM**, so DrumToScore won event placement while Music Demixer won tempo detection; neither result is perfect notation.
+
+The free preview was consumed without entering or using a payment method. Its downloaded ZIP remains local and is not committed because it is derived from the user-supplied recording.
+
 No payment method was entered or used for any competitor test.
