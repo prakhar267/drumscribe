@@ -54,15 +54,12 @@ services:
     env_file:
       - ${DRUMSCRIBE_ENV_FILE:-/etc/drumscribe/drumscribe.env}
     command:
-      - nice
-      - -n
-      - "10"
-      - celery
-      - -A
-      - drumscribe_api.tasks:celery_app
-      - worker
-      - --loglevel=INFO
-      - --concurrency=1
+      - sh
+      - -ec
+      - >-
+        python -m drumscribe_api.worker_recovery &&
+        exec nice -n 10 celery -A drumscribe_api.tasks:celery_app worker
+        --loglevel=INFO --concurrency=1
     depends_on:
       api:
         condition: service_healthy

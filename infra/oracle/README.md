@@ -52,6 +52,14 @@ one until a sealed capacity run proves that greater concurrency preserves API
 readiness; niceness protects responsiveness but does not make the free host
 suitable for an advertised processing-time or availability SLA.
 
+Immediately before the single worker starts, `drumscribe_api.worker_recovery`
+requeues every non-terminal job that had advanced beyond `RECEIVED`. This
+closes Redis visibility-timeout downtime after a worker or VM process crash.
+The durable stage checkpoint reruns the interrupted stage; if the broker's old
+delivery becomes visible later, the terminal-state guard turns it into a no-op.
+This startup reconciler assumes this Compose deployment's single-worker model;
+replace it with leased job ownership before horizontally scaling workers.
+
 The original 13 September 2026 180-second production-equivalent probe took 10
 minutes 26 seconds on 4 OCPUs/24 GB with the four-model HTDemucs-ft ensemble.
 A same-input separator A/B later measured 134 seconds for HTDemucs-ft and 37
