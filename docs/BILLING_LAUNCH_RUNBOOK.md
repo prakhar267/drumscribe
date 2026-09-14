@@ -1,8 +1,9 @@
 # DrumToScore billing launch runbook
 
 This is the handoff record for the freemium and Dodo Payments implementation. It contains no
-credentials, card information or customer payment data. Keep production billing disabled until
-every external item below is supplied and the test-mode acceptance flow passes.
+credentials, card information or customer payment data. Dodo verification completed and production
+billing was activated on 14 September 2026 after every external item below was supplied and the
+test-mode acceptance flow passed.
 
 ## Product rules implemented
 
@@ -30,7 +31,7 @@ secrets. `processing_jobs.credit_purchase_id` records which pack funded a paid j
 matching claim hash and aggregate paid-credit balance. Secret values remain in server environment
 configuration and must not be copied into this document, Git, logs or support tickets.
 
-## External inputs still required
+## External inputs supplied
 
 1. Approved Dodo Payments merchant account. Stop if onboarding asks for a credit card or any paid
    upgrade; the owner must decide separately.
@@ -42,6 +43,17 @@ configuration and must not be copied into this document, Git, logs or support ti
    `payment.succeeded` and `refund.succeeded`.
 5. Merchant legal, tax, payout-bank and identity verification completed by the owner. These values
    must be entered only in Dodo's trusted dashboard, never sent through source code or chat.
+
+## Production activation result
+
+- A temporary Neon branch was created before the configuration change.
+- The root-only Oracle environment was backed up and atomically promoted to Dodo `live_mode`.
+- API readiness passed, a no-charge live checkout session returned HTTP `201`, and its hosted page
+  displayed the expected DrumToScore USD 15 offer.
+- Invalid webhook signatures remained fail-closed with HTTP `401`.
+- Cloudflare Worker version `03a3fb2c-9ec2-4bac-aaa6-17fae9baba6a` enabled the public Buy action.
+- No real card or payment was used. Monitor the first genuine signed live payment webhook and verify
+  that it grants exactly 10 credits once.
 
 ## Safe activation sequence
 

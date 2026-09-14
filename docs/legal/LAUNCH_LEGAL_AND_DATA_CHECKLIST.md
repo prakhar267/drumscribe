@@ -1,6 +1,6 @@
 # Launch legal and data checklist
 
-Last audited: 2026-09-13
+Last audited: 2026-09-14
 
 This is an engineering and product-readiness record, not legal advice. It keeps
 confirmed facts separate from founder decisions and items that require qualified
@@ -20,9 +20,9 @@ live.
 | Address | 25/38 Kaveri Path, Mansarovar, Jaipur, Rajasthan 302020, India | Founder supplied and confirmed for service notices |
 | GST status | Currently not GST-registered | Present-status disclosure only; registration obligations must be monitored as turnover, customer locations and law change |
 | Launch territory | India and international | Too broad for one generic legal review; prioritize actual sales countries |
-| Commercial model | One full song free, then a one-time 10-credit pack intended at about USD 15 | Implemented; production checkout remains disabled |
+| Commercial model | One full song free, then a one-time 10-credit pack for USD 15 | Implemented; production checkout is live |
 | Refund approach | Final sale/no change-of-mind refunds, with exceptions for failed delivery, duplicate or unauthorized charges, material defects, merchant rules and mandatory law | Founder supplied “no refund”; narrowed to a legally safer enforceable form |
-| Merchant of record | Dodo Payments | Sandbox verified; live product, credential and webhook staged; review pending and public checkout disabled |
+| Merchant of record | Dodo Payments | Verification complete; live checkout enabled after a no-charge display smoke test |
 
 Do not describe DrumToScore as a company, corporation or separate registered
 entity. It is currently a trade name used by the individual operator named above.
@@ -42,7 +42,7 @@ entity. It is currently a trade name used by the individual operator named above
 - Every policy identifies the operator, contact, full address and current
   checkout status.
 
-These are conservative beta policies for the currently live free service. They
+These are conservative beta policies for the currently live freemium service. They
 are not counsel-approved final terms and should not be presented as such.
 
 ## Current service-provider data map
@@ -57,7 +57,7 @@ are not counsel-approved final terms and should not be presented as such.
 | Resend | Account email and one-time sign-in messages | Provider-managed | Live and domain verified; retain DPA/subprocessor/retention terms |
 | Sentry | Error and sampled performance telemetry; default PII sending disabled | Provider-managed | Live at 5% trace sampling; document retention, scrubbing and access settings |
 | GitHub | Public source repository, CI and endpoint uptime checks | Provider-managed | Live; uptime checks do not intentionally send customer audio |
-| Dodo Payments | Checkout, tax, order, payer and refund data after activation; no uploaded audio | Provider-managed | Sandbox verified; live resources staged; review pending and public checkout disabled |
+| Dodo Payments | Checkout, tax, order, payer and refund data; no uploaded audio | Provider-managed | Verification complete; live checkout enabled; retain DPA, subprocessor and retention evidence |
 
 The privacy policy names the current providers, but counsel must select lawful
 bases, international-transfer mechanisms, contractual safeguards, retention
@@ -110,7 +110,8 @@ conclusions have since changed.
 2. Obtain qualified review of governing law, dispute venue, age requirement,
    warranty/limitation of liability, suspension/appeal and jurisdiction-specific
    consumer provisions before expanding paid sales internationally.
-3. Wait for Dodo's live review to complete, then verify the live checkout display
+3. Monitor the first genuine Dodo purchase for a signed HTTP `200` webhook and
+   an exactly-once 10-credit grant. The live checkout display was verified
    without making a real purchase before enabling the public Buy button.
 4. Set a defensible retention schedule for database, product, audit, support,
    email, queue and Sentry records; run deletion and restore drills.

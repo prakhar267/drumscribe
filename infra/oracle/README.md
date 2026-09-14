@@ -73,3 +73,22 @@ completed in 55 and 70 seconds. Production selects the pinned model with
 Before any later resize, inspect all tenancy A1 allocations and confirm the new
 total remains inside the documented Always Free allowance; never select a paid
 shape or attach a payment method without explicit approval.
+
+## Dodo live activation
+
+After Dodo confirms merchant verification, first verify the staged live product
+and webhook through Dodo's live API. Then promote the already staged credentials
+without printing them:
+
+```sh
+sudo python3 infra/oracle/activate_dodo_live_env.py \
+  /etc/drumscribe/drumscribe.env
+```
+
+The utility requires the exact DrumToScore return/cancel URLs, a `pdt_` live
+product ID, a mode-`0600` environment file, and the three
+`DRUMSCRIBE_DODO_LIVE_*` staged values. It creates a timestamped mode-`0600`
+backup before atomically changing the active provider to Dodo `live_mode`.
+Restart the API after promotion, verify readiness, and create only a no-charge
+checkout session for the smoke test. A successful browser return never grants
+credits; only a verified `payment.succeeded` webhook does.

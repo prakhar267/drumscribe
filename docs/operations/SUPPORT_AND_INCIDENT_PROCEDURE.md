@@ -48,11 +48,10 @@ best-effort and does not create a guaranteed detection time.
 
 ## Billing and refund handling
 
-Dodo Payments is the merchant of record. Public live checkout stays disabled
-until Dodo's review is complete. When enabled, send duplicate, unauthorized,
-failed-delivery and approved refund cases through Dodo and reconcile the signed
-webhook result with the matching purchase and credit pack. Do not manually grant
-credits from an email alone.
+Dodo Payments is the merchant of record and public live checkout is enabled.
+Send duplicate, unauthorized, failed-delivery and approved refund cases through
+Dodo and reconcile the signed webhook result with the matching purchase and
+credit pack. Do not manually grant credits from an email alone.
 
 The published policy is final sale/no change of mind, subject to paid credits not
 being delivered, duplicate or unauthorized charges, material defects that cannot

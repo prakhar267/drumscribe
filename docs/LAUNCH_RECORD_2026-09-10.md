@@ -92,13 +92,14 @@ accounts were deleted afterward. No actual card or real-money transaction was
 used. Full evidence is in
 `docs/audit/dodo-test-mode-2026-09-11.md`.
 
-Dodo now records the product, identity and bank steps as complete and shows
-**LIVE PAYMENTS ACTIVE** while it reviews the submitted details. The validated
-test product has been imported to live mode, and a dedicated live webhook and
-API credential have been created. A read-only live API product lookup returned
-HTTP 200. Live credentials are staged as dormant server variables; the running
-application remains in `test_mode` and the public Buy button remains disabled.
-Full evidence is in `docs/audit/dodo-live-staging-2026-09-12.md`.
+Dodo completed verification on 14 September 2026 and confirmed that live
+payments can be received and paid out. The validated live product, webhook and
+credential returned HTTP 200; the Oracle API was atomically promoted to
+`live_mode`; and a no-charge live checkout session returned HTTP 201 and showed
+the correct USD 15 offer. Cloudflare Worker version
+`03a3fb2c-9ec2-4bac-aaa6-17fae9baba6a` enabled the public Buy action. No actual
+card or real-money transaction was used. Full evidence is in
+`docs/audit/dodo-live-staging-2026-09-12.md`.
 
 ### Neon
 
@@ -128,7 +129,7 @@ Full evidence is in `docs/audit/dodo-live-staging-2026-09-12.md`.
 | Passwordless sign-in delivery | Resend |
 | Error/performance telemetry | Sentry |
 | Source, CI and uptime probes | Public GitHub repository and GitHub Actions |
-| Merchant of record | Dodo verification submitted and live resources staged; review pending and checkout disabled |
+| Merchant of record | Dodo Payments verified; USD 15/10-credit live checkout enabled |
 
 Production secrets remain only in ignored local configuration/keychain or the
 root-owned `0600` environment file on the Oracle host. No secret was added to
@@ -230,6 +231,8 @@ drills.
 | Public route smoke test | Passed; homepage, pricing, demo, API readiness and all four legal pages returned HTTP 200 |
 | Production free-claim backfill | Passed; 10 existing accounts processed |
 | Dodo sandbox checkout and signed webhook | Passed; 10 credits granted exactly once and duplicate replay remained at 10 |
+| Dodo live no-charge checkout display | Passed; HTTP 201 session, HTTPS hosted checkout, correct USD 15 offer, invalid signature rejected with HTTP 401 |
+| Cloudflare billing activation | Passed; Worker version `03a3fb2c-9ec2-4bac-aaa6-17fae9baba6a` exposes the signed-out Buy action and routes it to sign-in |
 | Hosted GitHub CI | Passed for the MinIO registry repair: [run 34699847192](https://github.com/prakhar267/drumscribe/actions/runs/34699847192) |
 | Hosted production uptime probe | Passed after release: [run 34412600218](https://github.com/prakhar267/drumscribe/actions/runs/34412600218) |
 
@@ -240,25 +243,22 @@ private storage and provider readiness.
 
 ## Explicit remaining blockers
 
-1. Wait for Dodo's review to change from pending to approved. Live resources are
-   prepared, but public checkout must remain disabled during review.
-2. After approval, atomically promote the staged live credentials, run a
-   no-charge checkout-session smoke test, deploy the web application with public
-   billing enabled, and monitor the first signed live webhook. A real payment or
-   card test requires separate explicit authorization.
-3. Privately archive the actual grants for the exact Demucs and ADTOF code/weights
+1. Monitor the first genuine Dodo purchase for a signed HTTP `200` webhook and
+   one exactly-once 10-credit grant. Live activation testing did not use a real
+   payment or card.
+2. Privately archive the actual grants for the exact Demucs and ADTOF code/weights
    and have qualified counsel verify paid hosted commercial use. The public Demucs
    code license does not cover its pretrained weights, and the pinned ADTOF-pytorch
    tree does not contain a clear root license grant.
-4. Obtain qualified review of the now-published operator, governing-law,
+3. Obtain qualified review of the now-published operator, governing-law,
    liability, refund, international consumer/privacy and current GST wording.
-5. Review provider DPAs, subprocessors, cross-border transfer terms and support/
+4. Review provider DPAs, subprocessors, cross-border transfer terms and support/
    audit retention periods.
-6. Improve and independently validate full-mixture accuracy. The fresh
+5. Improve and independently validate full-mixture accuracy. The fresh
    rights-cleared 12 September diagnostic reached 91.34% five-family F1 on its
    isolated-drum controls but only 61.64% after constructed full-song mixing and
    production-equivalent separation/fusion.
-7. Approve a paid capacity plan before promising an SLA or accepting traffic that
+6. Approve a paid capacity plan before promising an SLA or accepting traffic that
    exceeds the single free Oracle worker. No paid scaling is authorized now.
 
 ## No-actual-card and no-paid-action ledger
@@ -271,7 +271,8 @@ private storage and provider readiness.
 - Dodo's product-information attestation was submitted only after the founder's
   explicit confirmation. The founder completed identity and bank verification
   personally.
-- Checkout is disabled in production.
+- Live checkout is enabled. Its activation and display smoke test used no actual
+  card and created no real-money transaction.
 - Neon was verified as the free plan.
 - Cloudflare Email Routing was configured as a free inbound service.
 - Existing Namecheap auto-renew settings were observed but not changed or invoked;

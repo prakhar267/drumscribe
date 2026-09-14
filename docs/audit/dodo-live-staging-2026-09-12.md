@@ -9,8 +9,8 @@ secrets, bank details, identity-document data, cookies or card data.
   product-information attestation.
 - Dodo recorded the product information.
 - The owner completed the identity and bank steps personally.
-- Dodo now displays **LIVE PAYMENTS ACTIVE** and **We're reviewing your
-  details**, with a stated review time of up to 72 hours.
+- On 14 September 2026, Dodo displayed **Live payments are active**, **You can
+  now receive and pay out**, and **Verification is complete**.
 
 ## Live resources prepared
 
@@ -28,25 +28,38 @@ request from the Oracle host authenticated with the staged live credential,
 returned HTTP `200`, and matched the live product ID. An earlier one-time key
 whose copy was not retained was deleted; only the replacement key remains.
 
-## Safe staging state
+## Activation record — 14 September 2026
 
 Live credentials are stored as dormant `DRUMSCRIBE_DODO_LIVE_*` values in the
 root-owned `0600` Oracle environment file. They are not committed to Git and
 were not printed into this record.
 
-The running application remains on the already validated Dodo `test_mode`, and
-`NEXT_PUBLIC_BILLING_ENABLED=false`. Therefore the public Buy button is hidden
-and no live checkout was created. The live product and webhook are ready, but
-the website cannot initiate customer charges in its current configuration.
+Immediately before activation, Neon branch `billing-live-pre-20260914`
+(`br-green-band-a5ctyvhy`) was created from the production branch as a
+time-limited database restore point. The activation utility made root-only
+backup `/etc/drumscribe/drumscribe.env.pre-dodo-live-20260914T085449Z`, then
+atomically promoted the staged values. The running API now uses Dodo
+`live_mode`, the live product and the live signing key.
+
+The live product and webhook endpoint each returned HTTP `200`. A production
+checkout-session request returned HTTP `201`, produced an HTTPS `dodo.pe`
+checkout URL, and the hosted page displayed DrumToScore's 10-credit, USD 15
+offer. The temporary smoke-test account was deleted. An invalid-signature
+webhook was rejected with HTTP `401`.
+
+Cloudflare Worker version `03a3fb2c-9ec2-4bac-aaa6-17fae9baba6a` was deployed
+with public billing enabled. The live pricing page now shows **Sign in to buy
+credits** to a signed-out visitor and routes that action to the production
+magic-link sign-in page.
 
 No actual payment card, real transaction, paid plan or billable infrastructure
-action was used while preparing live mode.
+action was used while staging, activating or testing live mode.
 
-## Activation gate
+## Remaining live verification
 
-After Dodo's review changes from pending to approved, activation must be an
-atomic release: back up the environment file, promote the staged live values to
-the active Dodo variables, set the Dodo environment to `live_mode`, restart the
-API, confirm readiness, create a no-charge checkout-session smoke test, deploy
-the web application with public billing enabled, and monitor the first signed
-live webhook. A real payment test is not authorized by this record.
+No live `payment.succeeded` event was generated because that requires a real
+purchase. The first genuine customer purchase must be monitored for a signed
+HTTP `200` webhook response and one exactly-once 10-credit grant. The earlier
+test-mode flow already proved signed success, duplicate-event idempotency,
+credit reservation/return and refund handling. A real card test remains outside
+this record's authorization.
