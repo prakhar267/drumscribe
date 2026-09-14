@@ -10,26 +10,26 @@ function unavailable() {
 }
 
 export async function GET(request: Request, context: AuthRouteContext) {
-  const auth = getNeonAuth();
+  const auth = await getNeonAuth();
   return auth ? auth.handler().GET(request, context) : unavailable();
 }
 
 export async function POST(request: Request, context: AuthRouteContext) {
-  const auth = getNeonAuth();
+  const auth = await getNeonAuth();
   return auth ? auth.handler().POST(request, context) : unavailable();
 }
 
 export async function PUT(request: Request, context: AuthRouteContext) {
-  const auth = getNeonAuth();
+  const auth = await getNeonAuth();
   return auth ? auth.handler().PUT(request, context) : unavailable();
 }
 
 export async function DELETE(request: Request, context: AuthRouteContext) {
-  const auth = getNeonAuth();
+  const auth = await getNeonAuth();
   return auth ? auth.handler().DELETE(request, context) : unavailable();
 }
 
 export async function PATCH(request: Request, context: AuthRouteContext) {
-  const auth = getNeonAuth();
+  const auth = await getNeonAuth();
   return auth ? auth.handler().PATCH(request, context) : unavailable();
 }
