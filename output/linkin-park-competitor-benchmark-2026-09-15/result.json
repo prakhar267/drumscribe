@@ -1,0 +1,71 @@
+{
+  "date": "2026-09-15",
+  "audio": {
+    "filename": "Linkin Park - In the End (Instrumental).mp3",
+    "sha256": "15f6579096803361f77f82026273d4ec59f0938457b0e71827a12d2786a4aaf2",
+    "duration_seconds": 216.398333
+  },
+  "reference": {
+    "tempo_bpm": 105,
+    "audio_first_main_drum_onset_seconds": 19.2059,
+    "common_window_seconds": [0, 20],
+    "events_in_common_window": 6,
+    "songsterr_revision": 8352935,
+    "songsterr_part": 9,
+    "limitations": [
+      "The uploaded instrumental is not proven to be the identical master or mix used by the reference notation.",
+      "Songsterr is community-authored notation rather than contractual ground truth.",
+      "Only six reference events occur inside Drum2Notes' free 20-second window."
+    ]
+  },
+  "common_20_second_probe": {
+    "matching": "one-to-one class-aware onset matching",
+    "scores_identical_at_tolerances_ms": [30, 50, 100],
+    "drum2notes": {
+      "predicted_events": 8,
+      "true_positives": 5,
+      "false_positives": 3,
+      "false_negatives": 1,
+      "precision": 0.625,
+      "recall": 0.8333333333,
+      "micro_f1": 0.7142857143,
+      "tempo_bpm": 103,
+      "tempo_absolute_error_bpm": 2
+    },
+    "drumtoscore": {
+      "predicted_events": 12,
+      "true_positives": 5,
+      "false_positives": 7,
+      "false_negatives": 1,
+      "precision": 0.4166666667,
+      "recall": 0.8333333333,
+      "micro_f1": 0.5555555556,
+      "tempo_bpm": 120,
+      "tempo_absolute_error_bpm": 15
+    },
+    "winner": "Drum2Notes",
+    "generalizable_to_full_song": false
+  },
+  "drumtoscore_full_song": {
+    "micro_f1": {
+      "30_ms": 0.4638,
+      "50_ms": 0.6742,
+      "100_ms": 0.8958
+    },
+    "precision_50_ms": 0.6498,
+    "recall_50_ms": 0.7005,
+    "family_f1_50_ms": {
+      "kick": 0.7372,
+      "hihat": 0.6645,
+      "cymbal": 0.6316,
+      "snare": 0.6313,
+      "tom": 0.3871
+    }
+  },
+  "second_competitor": {
+    "name": "DrumTranscription.com",
+    "same_audio_submitted": true,
+    "payment_method_used": false,
+    "status": "submitted_no_result_email_received_during_run"
+  }
+}
