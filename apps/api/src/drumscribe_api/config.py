@@ -1,6 +1,7 @@
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal
+from urllib.parse import urlsplit
 
 from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -92,6 +93,8 @@ class Settings(BaseSettings):
     resend_api_url: str = "https://api.resend.com"
     resend_api_key: SecretStr | None = None
     resend_from_email: str | None = None
+    neon_auth_base_url: str | None = None
+    neon_auth_jwks_url: str | None = None
 
     billing_provider: Literal["disabled", "dodo"] = "disabled"
     dodo_payments_environment: Literal["test_mode", "live_mode"] = "test_mode"
@@ -158,6 +161,12 @@ class Settings(BaseSettings):
             raise ValueError(
                 "Modal Demucs requires endpoint, proxy token ID, and proxy token secret"
             )
+        for name, url in {
+            "Neon Auth base URL": self.neon_auth_base_url,
+            "Neon Auth JWKS URL": self.neon_auth_jwks_url,
+        }.items():
+            if url and urlsplit(url).scheme != "https":
+                raise ValueError(f"{name} must use HTTPS")
         if self.modal_demucs_endpoint and self.source_separation_provider.casefold() != "demucs":
             raise ValueError("Modal Demucs can only be used with the Demucs separation provider")
         for name, url in {
@@ -286,6 +295,21 @@ class Settings(BaseSettings):
     @property
     def session_secret_bytes(self) -> bytes:
         return self.session_secret.get_secret_value().encode("utf-8")
+
+    @property
+    def neon_auth_issuer(self) -> str | None:
+        if not self.neon_auth_base_url:
+            return None
+        parsed = urlsplit(self.neon_auth_base_url)
+        return f"{parsed.scheme}://{parsed.netloc}"
+
+    @property
+    def neon_auth_jwks_endpoint(self) -> str | None:
+        if self.neon_auth_jwks_url:
+            return self.neon_auth_jwks_url
+        if not self.neon_auth_base_url:
+            return None
+        return f"{self.neon_auth_base_url.rstrip('/')}/.well-known/jwks.json"
 
     @property
     def feature_flags(self) -> dict[str, bool]:

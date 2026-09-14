@@ -281,6 +281,13 @@ function toJobStatus(job: WireJob): JobStatus {
 }
 
 export const api = {
+  async exchangeNeonSession(token: string) {
+    return request<{ user: { id: string; email: string | null }; expiresAt: string }>(
+      "/auth/neon/exchange",
+      { method: "POST", headers: { Authorization: `Bearer ${token}` } },
+    );
+  },
+
   async requestMagicLink(email: string) {
     try {
       return await request<{ accepted: true; devToken?: string }>("/auth/magic-link/request", { method: "POST", body: JSON.stringify({ email }) });

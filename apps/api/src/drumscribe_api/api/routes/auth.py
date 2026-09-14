@@ -5,8 +5,10 @@ from sqlalchemy import select
 from ...auth import (
     clear_session_cookie,
     consume_magic_link,
+    consume_verified_identity,
     create_anonymous_principal,
     issue_magic_link,
+    resolve_principal,
     set_session_cookie,
     sync_free_transcription_claim,
 )
@@ -17,6 +19,7 @@ from ...dependencies import (
     OptionalPrincipal,
 )
 from ...enums import AssetStatus
+from ...errors import APIError
 from ...models import AudioAsset, Export, Project, Session
 from ...schemas import (
     AccountDeleteRequest,
@@ -31,6 +34,7 @@ from ...schemas import (
 from ...security import utcnow
 from ...services.audit import record_audit
 from ...services.magic_links import MagicLinkDelivery
+from ...services.neon_auth import verify_neon_identity
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 account_router = APIRouter(prefix="/account", tags=["account"])
@@ -109,6 +113,42 @@ async def consume_link(
         "account.magic_link_consumed",
         user_id=principal.user.id,
         request_id=getattr(request.state, "request_id", None),
+    )
+    await db.commit()
+    if raw_session_token is not None:
+        set_session_cookie(response, raw_session_token, settings)
+    return _session_response(principal, settings)
+
+
+@router.post("/neon/exchange", response_model=SessionResponse)
+async def exchange_neon_session(
+    response: Response,
+    request: Request,
+    db: DBSession,
+    settings: AppSettings,
+) -> SessionResponse:
+    authorization = request.headers.get("authorization", "")
+    scheme, _, token = authorization.partition(" ")
+    if scheme.casefold() != "bearer" or not token:
+        raise APIError(
+            401,
+            "NEON_TOKEN_REQUIRED",
+            "A verified account token is required.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    identity = await verify_neon_identity(token, settings)
+    # The bearer token belongs to Neon. Resolve the pre-login anonymous identity
+    # from our own cookie so its upload/project can be transferred atomically.
+    current = await resolve_principal(db, request.cookies.get(settings.session_cookie_name))
+    principal, raw_session_token = await consume_verified_identity(
+        db, identity.email, settings, current
+    )
+    record_audit(
+        db,
+        "account.neon_identity_exchanged",
+        user_id=principal.user.id,
+        request_id=getattr(request.state, "request_id", None),
+        metadata={"provider": "neon"},
     )
     await db.commit()
     if raw_session_token is not None:

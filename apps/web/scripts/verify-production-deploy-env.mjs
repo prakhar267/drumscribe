@@ -31,6 +31,16 @@ if (!["true", "false"].includes(process.env.NEXT_PUBLIC_BILLING_ENABLED ?? "")) 
   failures.push("NEXT_PUBLIC_BILLING_ENABLED must be explicitly true or false");
 }
 
+if (process.env.NEXT_PUBLIC_AUTH_PROVIDER === "neon") {
+  const authBaseUrl = process.env.NEON_AUTH_BASE_URL;
+  if (!authBaseUrl?.startsWith("https://")) {
+    failures.push("NEON_AUTH_BASE_URL must be an HTTPS URL when Neon Auth is enabled");
+  }
+  if ((process.env.NEON_AUTH_COOKIE_SECRET?.length ?? 0) < 32) {
+    failures.push("NEON_AUTH_COOKIE_SECRET must be at least 32 characters when Neon Auth is enabled");
+  }
+}
+
 for (const name of ["NEXT_PUBLIC_SENTRY_DSN", "SENTRY_DSN"]) {
   if (!process.env[name]) failures.push(`${name} is required`);
 }

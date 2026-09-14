@@ -2,7 +2,8 @@ import { defineConfig } from "@neon/config/v1";
 
 export default defineConfig({
   // Declare your Neon services here
-  auth: false,
+  // Managed Better Auth runs against each branch's isolated database.
+  auth: true,
   preview: {
     buckets: {
       // Existing public beta bucket is preserved but never used for customer media.

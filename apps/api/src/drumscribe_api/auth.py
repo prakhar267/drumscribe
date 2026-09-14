@@ -231,7 +231,17 @@ async def consume_magic_link(
     )
     if claimed is None:
         raise APIError(400, "MAGIC_LINK_INVALID", "This sign-in link is invalid or expired.")
-    link_email = str(claimed["email"])
+    return await consume_verified_identity(db, str(claimed["email"]), settings, current)
+
+
+async def consume_verified_identity(
+    db: AsyncSession,
+    email: str,
+    settings: Settings,
+    current: Principal | None,
+) -> tuple[Principal, str | None]:
+    """Link a provider-verified email to the existing DrumToScore account/session."""
+    link_email = normalize_email(email)
 
     target = (
         await db.execute(

@@ -7,6 +7,7 @@ from pydantic import SecretStr
 
 from drumscribe_api.auth import free_transcription_identity
 from drumscribe_api.services.magic_links import MagicLinkDelivery
+from drumscribe_api.services.neon_auth import NeonIdentity
 
 from .conftest import create_project, create_session
 
@@ -101,6 +102,35 @@ def test_magic_link_transfers_anonymous_projects(client: TestClient) -> None:
     replay = client.post("/api/v1/auth/magic-link/consume", json={"token": token})
     assert replay.status_code == 400
     assert replay.json()["code"] == "MAGIC_LINK_INVALID"
+
+
+def test_neon_identity_transfers_anonymous_projects(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    async def verified_identity(_token, _settings) -> NeonIdentity:
+        return NeonIdentity(subject="neon-user-1", email="drummer@example.com")
+
+    monkeypatch.setattr(
+        "drumscribe_api.api.routes.auth.verify_neon_identity", verified_identity
+    )
+    create_session(client)
+    project = create_project(client, title="Keep me through provider signup")
+
+    exchange = client.post(
+        "/api/v1/auth/neon/exchange",
+        headers={"Authorization": "Bearer verified-neon-token"},
+    )
+
+    assert exchange.status_code == 200, exchange.text
+    assert exchange.json()["user"]["email"] == "drummer@example.com"
+    assert exchange.json()["user"]["kind"] == "REGISTERED"
+    assert client.get(f"/api/v1/projects/{project['id']}").status_code == 200
+
+
+def test_neon_identity_exchange_requires_bearer_token(client: TestClient) -> None:
+    response = client.post("/api/v1/auth/neon/exchange")
+    assert response.status_code == 401
+    assert response.json()["code"] == "NEON_TOKEN_REQUIRED"
 
 
 def test_project_search_sort_soft_delete_and_restore(client: TestClient) -> None:

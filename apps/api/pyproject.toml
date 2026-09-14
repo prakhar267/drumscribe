@@ -16,6 +16,7 @@ dependencies = [
   "httpx>=0.28,<1",
   "mutagen>=1.47,<2",
   "pydantic-settings>=2.7,<3",
+  "pyjwt[crypto]>=2.10,<3",
   "python-multipart>=0.0.20,<1",
   "redis>=5.2,<7",
   "sentry-sdk[fastapi]>=2.20,<3",
