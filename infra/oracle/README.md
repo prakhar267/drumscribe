@@ -2,8 +2,12 @@
 
 This deployment runs the public API, one CPU-only transcription worker, one
 Celery Beat scheduler, and a Caddy TLS edge on a single Ampere A1 VM. PostgreSQL,
-Redis, private object storage, email delivery, and error reporting remain managed
-services and are configured through `/etc/drumscribe/drumscribe.env`.
+private object storage, email delivery, and error reporting remain managed
+services and are configured through `/etc/drumscribe/drumscribe.env`. The
+Celery broker and rate-limit store run as a private, persistent Valkey service
+on the same VM so production is not coupled to a request-capped free Redis
+plan. Set `DRUMSCRIBE_REDIS_URL=redis://valkey:6379/0`; Valkey has no published
+host port and persists its append-only log in the `valkey-data` volume.
 
 Production source separation can be delegated to the protected, scale-to-zero
 Modal L4 endpoint documented in `infra/modal/README.md`. Oracle keeps the API,

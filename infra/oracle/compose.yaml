@@ -1,6 +1,23 @@
 name: drumscribe-production
 
 services:
+  valkey:
+    image: valkey/valkey:8-alpine
+    command:
+      - valkey-server
+      - --appendonly
+      - "yes"
+      - --maxmemory-policy
+      - noeviction
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - valkey-data:/data
+    restart: unless-stopped
+
   api:
     image: drumscribe-api:${DRUMSCRIBE_RELEASE_TAG:-main}
     build:
@@ -24,6 +41,9 @@ services:
       timeout: 10s
       retries: 20
       start_period: 30s
+    depends_on:
+      valkey:
+        condition: service_healthy
     restart: unless-stopped
 
   worker:
@@ -84,3 +104,4 @@ services:
 volumes:
   caddy-data:
   caddy-config:
+  valkey-data:
