@@ -40,10 +40,10 @@ function nextId() {
 export function EditorClient({ projectId }: { projectId: string }) {
   const searchParams = useSearchParams();
   const transport = useTransport();
-  const { loadAudioSources } = transport;
+  const { clearAudioSources, loadAudioSources, loadDemoAudio } = transport;
   const isDemoProject = demoProjects.some((item) => item.id === projectId);
   const [project, setProject] = useState<DrumProject>({ ...demoProject, id: projectId });
-  const { events, apply, replace, undo, redo, canUndo, canRedo } = useEditorHistory(createDemoEvents().map((event) => ({ ...event, projectId })));
+  const { events, apply, replace, undo, redo, canUndo, canRedo } = useEditorHistory(isDemoProject ? createDemoEvents().map((event) => ({ ...event, projectId })) : []);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [snap, setSnap] = useState<SnapValue>("sixteenth");
   const [zoom, setZoom] = useState(2.25);
@@ -59,6 +59,7 @@ export function EditorClient({ projectId }: { projectId: string }) {
   );
   const [timing, setTiming] = useState<TimingMap | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [hydrated, setHydrated] = useState(false);
   const revisionRef = useRef(1);
   const clipboardRef = useRef<DrumEvent[]>([]);
   const hydratedRef = useRef(false);
@@ -127,6 +128,8 @@ export function EditorClient({ projectId }: { projectId: string }) {
   useEffect(() => {
     let active = true;
     let audioRefreshTimer: number | undefined;
+    hydratedRef.current = false;
+    clearAudioSources();
     const refreshAudio = async (bpm: number, beatsPerMeasure: number, preservePosition: boolean) => {
       try {
         const sources = await api.getAudioSources(projectId);
@@ -149,15 +152,25 @@ export function EditorClient({ projectId }: { projectId: string }) {
       replace(hydratedEvents);
       revisionRef.current = result.revision;
       hydratedRef.current = true;
+      setHydrated(true);
       setSaveState("saved");
-      void refreshAudio(result.project.bpm, result.project.beatsPerMeasure, false);
+      if (isDemoProject) {
+        loadDemoAudio({ bpm: result.project.bpm, duration: result.project.durationSeconds, beatsPerMeasure: result.project.beatsPerMeasure });
+      } else {
+        void refreshAudio(result.project.bpm, result.project.beatsPerMeasure, false);
+      }
       void api.getWaveformPeaks(projectId).then((peaks) => { if (peaks) setWaveform(peaks); }).catch(() => undefined);
     }).catch((error: unknown) => {
       if (!active) return;
       setLoadError(error instanceof Error ? error.message : "This project could not be opened.");
     });
-    return () => { active = false; if (audioRefreshTimer) window.clearTimeout(audioRefreshTimer); };
-  }, [loadAudioSources, projectId, replace]);
+    return () => {
+      active = false;
+      hydratedRef.current = false;
+      if (audioRefreshTimer) window.clearTimeout(audioRefreshTimer);
+      clearAudioSources();
+    };
+  }, [clearAudioSources, isDemoProject, loadAudioSources, loadDemoAudio, projectId, replace]);
 
   useEffect(() => {
     latestEventsRef.current = events;
@@ -350,6 +363,17 @@ export function EditorClient({ projectId }: { projectId: string }) {
         <h1>This transcription could not be opened.</h1>
         <p>{loadError}</p>
         <div><Link className="button button-primary" href="/projects">Back to projects</Link><button className="button" type="button" onClick={() => window.location.reload()}>Try again</button></div>
+      </div>
+    );
+  }
+
+  if (!hydrated) {
+    return (
+      <div className="editor-load-error" role="status">
+        <Brand />
+        <span>Loading project</span>
+        <h1>Preparing your editor…</h1>
+        <p>Your notation and its matching audio are loading together.</p>
       </div>
     );
   }

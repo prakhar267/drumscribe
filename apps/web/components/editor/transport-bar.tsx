@@ -15,7 +15,7 @@ export function TransportBar() {
     <footer className="editor-transport" aria-label="Playback controls">
       <div className="transport-section transport-left">
         <button className="icon-button" type="button" aria-label="Previous measure" onClick={() => transport.skipMeasure(-1)}><ChevronLeft /></button>
-        <button className="transport-main-play" type="button" onClick={() => transport.playWithCountIn(countIn)} aria-label={transport.playing ? "Pause" : transport.countingIn ? "Cancel count-in" : "Play"} data-testid="transport-play">{transport.playing ? <Pause /> : <Play />}</button>
+        <button className="transport-main-play" type="button" disabled={!transport.audioReady} onClick={() => transport.playWithCountIn(countIn)} aria-label={transport.playing ? "Pause" : transport.countingIn ? "Cancel count-in" : transport.audioReady ? "Play" : "Loading audio"} data-testid="transport-play">{transport.playing ? <Pause /> : <Play />}</button>
         <button className="icon-button" type="button" aria-label="Next measure" onClick={() => transport.skipMeasure(1)}><ChevronRight /></button>
         <span className="transport-time"><strong>{formatTime(transport.currentTime)}</strong><i>/</i>{formatTime(transport.duration)}</span>
       </div>

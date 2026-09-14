@@ -5,5 +5,5 @@ export const metadata: Metadata = { title: "Practice", robots: { index: false, f
 
 export default async function PracticePage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
-  return <PracticeClient projectId={projectId} />;
+  return <PracticeClient key={projectId} projectId={projectId} />;
 }

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Pause, Play } from "lucide-react";
+import { useEffect } from "react";
 import { useTransport } from "@/components/transport-provider";
 import { demoWaveform } from "@/lib/demo-data";
 import { formatTime } from "@/lib/file-validation";
@@ -12,8 +13,14 @@ const notes = [
 
 export function HomeDemo() {
   const transport = useTransport();
+  const { clearAudioSources, loadDemoAudio } = transport;
   const visibleDuration = 8.6;
   const playhead = (transport.currentTime % visibleDuration) / visibleDuration * 100;
+
+  useEffect(() => {
+    loadDemoAudio();
+    return clearAudioSources;
+  }, [clearAudioSources, loadDemoAudio]);
 
   return (
     <section className="demo-stage" aria-label="Interactive DrumToScore demo">
@@ -43,7 +50,7 @@ export function HomeDemo() {
         </div>
         <div className="demo-transport">
           <div className="demo-legend"><span><i /> Audio + notation, one clock</span></div>
-          <button className="transport-play" type="button" onClick={transport.togglePlayback} aria-label={transport.playing ? "Pause demo" : "Play demo"} data-testid="demo-play">
+          <button className="transport-play" type="button" disabled={!transport.audioReady} onClick={transport.togglePlayback} aria-label={transport.playing ? "Pause demo" : transport.audioReady ? "Play demo" : "Loading demo audio"} data-testid="demo-play">
             {transport.playing ? <Pause /> : <Play />}
           </button>
           <span className="demo-time">{formatTime(transport.currentTime)} / {formatTime(visibleDuration)}</span>

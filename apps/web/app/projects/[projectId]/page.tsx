@@ -5,5 +5,5 @@ export const metadata: Metadata = { title: "Editor", robots: { index: false, fol
 
 export default async function EditorPage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
-  return <main id="main-content"><EditorClient projectId={projectId} /></main>;
+  return <main id="main-content"><EditorClient key={projectId} projectId={projectId} /></main>;
 }

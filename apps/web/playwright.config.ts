@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const fullStack = process.env.DRUMSCRIBE_FULL_STACK_E2E === "1";
+const useSystemChrome = process.env.PLAYWRIGHT_USE_SYSTEM_CHROME === "1";
 
 export default defineConfig({
   testDir: "./e2e",
@@ -11,6 +12,7 @@ export default defineConfig({
   snapshotPathTemplate: "{testDir}/__screenshots__/{arg}-{platform}{ext}",
   use: {
     baseURL: fullStack ? "http://localhost:3000" : "http://127.0.0.1:3100",
+    channel: useSystemChrome ? "chrome" : undefined,
     trace: "on-first-retry",
   },
   webServer: fullStack ? undefined : {

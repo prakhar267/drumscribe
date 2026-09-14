@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { Brand } from "@/components/brand";
 import { useTransport } from "@/components/transport-provider";
 import { api } from "@/lib/api/client";
-import { createDemoEvents, demoProject } from "@/lib/demo-data";
+import { createDemoEvents, demoProject, demoProjects } from "@/lib/demo-data";
 import type { DrumEvent, DrumProject } from "@/lib/domain";
 import { formatTime } from "@/lib/file-validation";
 
@@ -15,7 +15,8 @@ const NotationView = dynamic(() => import("@/components/editor/notation-view"), 
 
 export function PracticeClient({ projectId }: { projectId: string }) {
   const transport = useTransport();
-  const { loadAudioSources } = transport;
+  const { clearAudioSources, loadAudioSources, loadDemoAudio } = transport;
+  const isDemoProject = demoProjects.some((item) => item.id === projectId);
   const [project, setProject] = useState<DrumProject>({ ...demoProject, id: projectId });
   const [events, setEvents] = useState<DrumEvent[]>(createDemoEvents());
   const [countIn, setCountIn] = useState<0 | 1 | 2>(1);
@@ -25,6 +26,7 @@ export function PracticeClient({ projectId }: { projectId: string }) {
   useEffect(() => {
     let active = true;
     let audioRefreshTimer: number | undefined;
+    clearAudioSources();
     const refreshAudio = async (bpm: number, beatsPerMeasure: number, preservePosition: boolean) => {
       try {
         const sources = await api.getAudioSources(projectId);
@@ -38,10 +40,18 @@ export function PracticeClient({ projectId }: { projectId: string }) {
       if (!active) return;
       setProject(result.project);
       setEvents(result.events);
-      void refreshAudio(result.project.bpm, result.project.beatsPerMeasure, false);
+      if (isDemoProject) {
+        loadDemoAudio({ bpm: result.project.bpm, duration: result.project.durationSeconds, beatsPerMeasure: result.project.beatsPerMeasure });
+      } else {
+        void refreshAudio(result.project.bpm, result.project.beatsPerMeasure, false);
+      }
     });
-    return () => { active = false; if (audioRefreshTimer) window.clearTimeout(audioRefreshTimer); };
-  }, [loadAudioSources, projectId]);
+    return () => {
+      active = false;
+      if (audioRefreshTimer) window.clearTimeout(audioRefreshTimer);
+      clearAudioSources();
+    };
+  }, [clearAudioSources, isDemoProject, loadAudioSources, loadDemoAudio, projectId]);
   const setMeasureLoop = (measure: number, extend: boolean) => {
     const selectedStart = measure * measureDuration;
     const selectedEnd = Math.min(project.durationSeconds, selectedStart + measureDuration);
@@ -60,7 +70,7 @@ export function PracticeClient({ projectId }: { projectId: string }) {
         <div className="measure-loop-strip" aria-label="Choose measures to loop">{Array.from({ length: Math.ceil(project.durationSeconds / measureDuration) }, (_, measure) => { const measureStart = measure * measureDuration; const selected = transport.loop.enabled && measureStart >= transport.loop.start - .05 && measureStart < transport.loop.end - .05; return <button className={selected ? "is-active" : ""} type="button" key={measure} onClick={(event) => setMeasureLoop(measure, event.shiftKey)} title="Click for one measure; Shift-click to extend the loop">{measure + 1}</button>; })}</div>
       </section>
       <section className="practice-controls">
-        <div className="practice-control-group"><button className="practice-play" type="button" onClick={() => transport.playWithCountIn(countIn)} aria-label={transport.playing ? "Pause" : transport.countingIn ? "Cancel count-in" : "Play"}>{transport.playing ? <Pause /> : <Play />}</button><div><span className="field-label">Transport</span><strong>{transport.countingIn ? `${countIn}-bar count-in` : transport.playing ? "Playing" : "Ready"}</strong></div></div>
+        <div className="practice-control-group"><button className="practice-play" type="button" disabled={!transport.audioReady} onClick={() => transport.playWithCountIn(countIn)} aria-label={transport.playing ? "Pause" : transport.countingIn ? "Cancel count-in" : transport.audioReady ? "Play" : "Loading audio"}>{transport.playing ? <Pause /> : <Play />}</button><div><span className="field-label">Transport</span><strong>{transport.countingIn ? `${countIn}-bar count-in` : transport.playing ? "Playing" : transport.audioReady ? "Ready" : "Loading audio…"}</strong></div></div>
         <label className="practice-control"><span><SlidersHorizontal /> Speed</span><select value={transport.playbackRate} onChange={(event) => transport.setPlaybackRate(Number(event.target.value))}>{[.25,.5,.75,.9,1,1.1,1.25,1.5].map((rate) => <option key={rate} value={rate}>{rate}×</option>)}</select></label>
         <button className={`practice-control${transport.loop.enabled ? " is-active" : ""}`} type="button" onClick={() => transport.setLoop({ ...transport.loop, enabled: !transport.loop.enabled })}><span><Repeat2 /> Loop</span><strong>{transport.loop.enabled ? "On" : "Off"}</strong></button>
         <button className={`practice-control${transport.mixer.metronome > 0 ? " is-active" : ""}`} type="button" onClick={() => transport.setMixer({ ...transport.mixer, metronome: transport.mixer.metronome > 0 ? 0 : .75 })}><span><ListMusic /> Click</span><strong>{transport.mixer.metronome > 0 ? "On" : "Off"}</strong></button>
