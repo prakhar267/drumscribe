@@ -6,6 +6,23 @@ const json = (value: unknown, status = 200) => new Response(JSON.stringify(value
 
 afterEach(() => vi.unstubAllGlobals());
 
+describe("built-in product demo", () => {
+  it("remains available when production disables offline API fallback", async () => {
+    vi.resetModules();
+    vi.stubEnv("NEXT_PUBLIC_DEMO_MODE", "false");
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { api: productionApi } = await import("@/lib/api/client");
+    const result = await productionApi.getProject("demo-groove");
+
+    expect(result.project.id).toBe("demo-groove");
+    expect(result.events.length).toBeGreaterThan(0);
+    expect(fetchMock).not.toHaveBeenCalled();
+    vi.unstubAllEnvs();
+  });
+});
+
 describe("versioned API client", () => {
   it("unwraps paginated project responses and includes session credentials", async () => {
     const fetchMock = vi.fn().mockResolvedValue(json({ items: [{ id: "4d509a14-cd42-4ef2-96a5-1ddeca87b2f0", title: "Real project", artist: null, durationSeconds: 42, status: "READY", editVersion: 1, createdAt: "2026-08-01T00:00:00Z", updatedAt: "2026-08-02T00:00:00Z" }], total: 1, limit: 24, offset: 0 }));

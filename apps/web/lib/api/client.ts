@@ -6,6 +6,10 @@ const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE !== "false";
 const STORAGE_KEY = "drumscribe:demo-events:v2";
 const DEMO_PROJECT_STORAGE_KEY = "drumscribe:demo-projects:v1";
 
+function isBuiltInDemoProject(projectId: string) {
+  return demoProjects.some((project) => project.id === projectId);
+}
+
 interface EventChanges {
   upserts: DrumEvent[];
   deleteIds: string[];
@@ -306,7 +310,7 @@ export const api = {
   },
 
   async getProject(projectId: string): Promise<{ project: DrumProject; events: DrumEvent[]; revision: number }> {
-    if (DEMO_MODE && demoProjects.some((project) => project.id === projectId)) {
+    if (isBuiltInDemoProject(projectId)) {
       return { project: readDemoProject(projectId), events: readDemoEvents(), revision: 1 };
     }
     try {
@@ -332,7 +336,7 @@ export const api = {
     revision: number,
     editingDurationSeconds?: number,
   ) {
-    if (typeof window !== "undefined" && DEMO_MODE && demoProjects.some((project) => project.id === projectId)) {
+    if (typeof window !== "undefined" && isBuiltInDemoProject(projectId)) {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(changes.snapshot));
       return { revision: revision + 1, savedAt: new Date().toISOString() };
     }
@@ -350,7 +354,7 @@ export const api = {
   },
 
   async getTiming(projectId: string): Promise<TimingMap> {
-    if (DEMO_MODE && demoProjects.some((project) => project.id === projectId)) {
+    if (isBuiltInDemoProject(projectId)) {
       return demoTiming(readDemoProject(projectId));
     }
     return request<TimingMap>(`/projects/${encodeURIComponent(projectId)}/timing`);
@@ -367,7 +371,7 @@ export const api = {
     preserveManualEdits: boolean;
     editingDurationSeconds?: number;
   }): Promise<TimingMap> {
-    if (DEMO_MODE && demoProjects.some((project) => project.id === projectId)) {
+    if (isBuiltInDemoProject(projectId)) {
       return {
         timingVersion: input.expectedVersion + 1,
         transcriptionVersion: input.expectedVersion + 1,
@@ -393,7 +397,7 @@ export const api = {
     preserveManualEdits: boolean;
     editingDurationSeconds?: number;
   }): Promise<TimingMap> {
-    if (DEMO_MODE && demoProjects.some((project) => project.id === projectId)) {
+    if (isBuiltInDemoProject(projectId)) {
       return demoTiming(readDemoProject(projectId));
     }
     return request<TimingMap>(`/projects/${encodeURIComponent(projectId)}/timing/reset`, {
@@ -453,7 +457,7 @@ export const api = {
   },
 
   async getAudioSources(projectId: string): Promise<{ originalUrl: string; drumsUrl?: string; expiresAt: string } | null> {
-    if (DEMO_MODE && demoProjects.some((project) => project.id === projectId)) return null;
+    if (isBuiltInDemoProject(projectId)) return null;
     try {
       const original = await request<{ url: string; expiresAt: string }>(`/projects/${encodeURIComponent(projectId)}/audio/original/url`);
       let drumsUrl: string | undefined;
@@ -474,7 +478,7 @@ export const api = {
   },
 
   async getWaveformPeaks(projectId: string): Promise<number[] | null> {
-    if (DEMO_MODE && demoProjects.some((project) => project.id === projectId)) return null;
+    if (isBuiltInDemoProject(projectId)) return null;
     try {
       const signed = await request<{ url: string }>(`/projects/${encodeURIComponent(projectId)}/waveform/url`);
       const response = await fetch(signed.url);
@@ -495,7 +499,7 @@ export const api = {
   },
 
   async generateExport(projectId: string, format: "MIDI" | "MUSICXML" | "PDF"): Promise<string | null> {
-    if (DEMO_MODE && demoProjects.some((project) => project.id === projectId)) return null;
+    if (isBuiltInDemoProject(projectId)) return null;
     const idempotencyKey = `export-${projectId}-${format}-${Date.now()}`.slice(0, 128);
     const created = await request<{ id: string; status: "QUEUED" | "GENERATING" | "READY" | "FAILED" | "CANCELLED" }>(`/projects/${encodeURIComponent(projectId)}/exports`, {
       method: "POST",
@@ -512,7 +516,7 @@ export const api = {
   },
 
   async updateProject(projectId: string, changes: { title?: string; artist?: string | null }) {
-    if (DEMO_MODE && demoProjects.some((project) => project.id === projectId)) {
+    if (isBuiltInDemoProject(projectId)) {
       const next = { ...readDemoProject(projectId), ...changes, artist: changes.artist === null ? undefined : changes.artist, updatedAt: new Date().toISOString() };
       writeDemoProject(next);
       return next;
@@ -521,22 +525,22 @@ export const api = {
   },
 
   async duplicateProject(projectId: string, title?: string) {
-    if (DEMO_MODE && demoProjects.some((project) => project.id === projectId)) return null;
+    if (isBuiltInDemoProject(projectId)) return null;
     return toProject(await request<WireProject>(`/projects/${encodeURIComponent(projectId)}/duplicate`, { method: "POST", body: JSON.stringify({ title }) }));
   },
 
   async deleteProject(projectId: string) {
-    if (DEMO_MODE && demoProjects.some((project) => project.id === projectId)) return;
+    if (isBuiltInDemoProject(projectId)) return;
     await request(`/projects/${encodeURIComponent(projectId)}`, { method: "DELETE" });
   },
 
   async restoreProject(projectId: string) {
-    if (DEMO_MODE && demoProjects.some((project) => project.id === projectId)) return;
+    if (isBuiltInDemoProject(projectId)) return;
     await request(`/projects/${encodeURIComponent(projectId)}/restore`, { method: "POST", body: JSON.stringify({}) });
   },
 
   async listRevisions(projectId: string): Promise<ProjectRevision[]> {
-    if (DEMO_MODE && demoProjects.some((project) => project.id === projectId)) return [];
+    if (isBuiltInDemoProject(projectId)) return [];
     return (await request<{ items: ProjectRevision[] }>(`/projects/${encodeURIComponent(projectId)}/revisions`)).items;
   },
 
