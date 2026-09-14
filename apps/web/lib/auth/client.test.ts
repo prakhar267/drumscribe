@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   getSession: vi.fn(),
   signOut: vi.fn(),
   exchangeNeonSession: vi.fn(),
+  deleteAccount: vi.fn(),
   logout: vi.fn(),
 }));
 
@@ -15,6 +16,7 @@ vi.mock("@neondatabase/auth/next", () => ({
 vi.mock("@/lib/api/client", () => ({
   api: {
     exchangeNeonSession: mocks.exchangeNeonSession,
+    deleteAccount: mocks.deleteAccount,
     logout: mocks.logout,
   },
 }));
@@ -83,5 +85,22 @@ describe("Neon account bridge", () => {
 
     await expect(completeNeonAuthentication()).rejects.toThrow("Unauthorized");
     expect(mocks.exchangeNeonSession).not.toHaveBeenCalled();
+  });
+
+  it("clears the Neon session after deleting the product account", async () => {
+    vi.stubEnv("NEXT_PUBLIC_AUTH_PROVIDER", "neon");
+    mocks.deleteAccount.mockResolvedValue({ accepted: true });
+    mocks.logout.mockResolvedValue(undefined);
+    mocks.signOut.mockResolvedValue({ error: null });
+
+    const { deleteAccountEverywhere } = await import("@/lib/auth/client");
+    await deleteAccountEverywhere();
+
+    expect(mocks.deleteAccount).toHaveBeenCalledOnce();
+    expect(mocks.logout).toHaveBeenCalledOnce();
+    expect(mocks.signOut).toHaveBeenCalledOnce();
+    expect(mocks.deleteAccount.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.signOut.mock.invocationCallOrder[0],
+    );
   });
 });

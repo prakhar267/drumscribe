@@ -59,3 +59,11 @@ export async function signOutEverywhere() {
     : null;
   await Promise.allSettled([api.logout(), neonSignOut]);
 }
+
+export async function deleteAccountEverywhere() {
+  // Delete the product account first, then clear both authentication layers.
+  // Otherwise a still-valid Neon browser session can immediately recreate the
+  // deleted identity on the next OAuth attempt.
+  await api.deleteAccount();
+  await signOutEverywhere();
+}
