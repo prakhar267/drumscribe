@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -23,6 +24,16 @@ from typing import Any
 import httpx
 
 TERMINAL_STAGES = {"READY", "FAILED", "CANCELLED"}
+
+
+def audio_content_type(filename: str) -> str:
+    suffix = Path(filename).suffix.casefold()
+    return {
+        ".flac": "audio/flac",
+        ".mp3": "audio/mpeg",
+        ".m4a": "audio/mp4",
+        ".wav": "audio/wav",
+    }.get(suffix, "application/octet-stream")
 
 
 def utc_now() -> str:
@@ -63,8 +74,10 @@ def prepare_journey(
     base_url: str,
     audio: bytes,
     filename: str,
+    session_token: str | None = None,
 ) -> Journey:
     started = time.monotonic()
+    authenticated = False
     client = httpx.Client(
         base_url=base_url,
         follow_redirects=True,
@@ -72,8 +85,15 @@ def prepare_journey(
         headers={"User-Agent": "DrumToScore-production-concurrency-probe/1"},
     )
     try:
-        session = checked(client.post("/api/v1/auth/anonymous-session"), {200, 201})
-        user_id = str(session["user"]["id"])
+        if session_token:
+            client.headers["Authorization"] = f"Bearer {session_token}"
+            account = checked(client.get("/api/v1/account/me"), {200})
+            user_id = str(account["id"])
+            authenticated = True
+        else:
+            session = checked(client.post("/api/v1/auth/anonymous-session"), {200, 201})
+            user_id = str(session["user"]["id"])
+            authenticated = True
         project = checked(
             client.post(
                 "/api/v1/projects",
@@ -87,22 +107,26 @@ def prepare_journey(
                 f"/api/v1/projects/{project_id}/uploads/presign",
                 json={
                     "filename": filename,
-                    "contentType": "audio/wav",
+                    "contentType": audio_content_type(filename),
                     "sizeBytes": len(audio),
                     "rightToUploadConfirmed": True,
                 },
             ),
             {201},
         )
-        upload = client.put(
+        # Use a separate client for the presigned storage request. Reusing the
+        # API client would forward its Authorization header in registered mode,
+        # leaking the app session token and invalidating the S3 signature.
+        upload = httpx.put(
             str(presign["uploadUrl"]),
             content=audio,
             headers=dict(presign["requiredHeaders"]),
             timeout=httpx.Timeout(180.0, connect=15.0),
         )
         if upload.status_code not in {200, 201, 204}:
+            redacted_url = upload.request.url.copy_with(query=None)
             raise RuntimeError(
-                f"PUT {upload.request.url} returned {upload.status_code}: {upload.text[:500]}"
+                f"PUT {redacted_url} returned {upload.status_code}: {upload.text[:500]}"
             )
         checked(client.post(f"/api/v1/uploads/{presign['assetId']}/complete", json={}), {200})
         return Journey(
@@ -113,6 +137,16 @@ def prepare_journey(
             preparation_seconds=round(time.monotonic() - started, 3),
         )
     except Exception:
+        if authenticated:
+            try:
+                client.request(
+                    "DELETE",
+                    "/api/v1/account",
+                    json={"confirmation": "DELETE MY ACCOUNT"},
+                    timeout=90,
+                )
+            except httpx.HTTPError as cleanup_error:
+                print(f"preparation_cleanup_failed={type(cleanup_error).__name__}", flush=True)
         client.close()
         raise
 
@@ -219,6 +253,9 @@ def main() -> int:
     if not 1 <= args.users <= 20:
         parser.error("--users must be between 1 and 20")
     audio = args.audio.read_bytes()
+    session_token = os.environ.get("DRUMTOSCORE_PROBE_SESSION_TOKEN")
+    if session_token and args.users != 1:
+        parser.error("DRUMTOSCORE_PROBE_SESSION_TOKEN can only be used with --users 1")
     run_started_at = utc_now()
     run_started = time.monotonic()
     journeys: list[Journey] = []
@@ -232,6 +269,7 @@ def main() -> int:
                     base_url=args.base_url.rstrip("/"),
                     audio=audio,
                     filename=args.audio.name,
+                    session_token=session_token,
                 )
                 for index in range(1, args.users + 1)
             ]
@@ -259,6 +297,7 @@ def main() -> int:
         "startedAt": run_started_at,
         "baseUrl": args.base_url.rstrip("/"),
         "users": args.users,
+        "authentication": "registered" if session_token else "anonymous",
         "audio": {
             "filename": args.audio.name,
             "sizeBytes": len(audio),
