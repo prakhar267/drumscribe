@@ -47,19 +47,35 @@
     "generalizable_to_full_song": false
   },
   "drumtoscore_full_song": {
-    "micro_f1": {
+    "standardized_reference_alignment": {
+      "formula": "audio_time = intercept_seconds + scale * score_time",
+      "intercept_seconds": -0.3498714285,
+      "scale": 0.9992
+    },
+    "supersedes_previous_unstandardized_scores": true,
+    "previous_reported_micro_f1": {
       "30_ms": 0.4638,
       "50_ms": 0.6742,
       "100_ms": 0.8958
     },
-    "precision_50_ms": 0.6498,
-    "recall_50_ms": 0.7005,
+    "micro_f1": {
+      "30_ms": 0.8898265354,
+      "50_ms": 0.8945147679,
+      "100_ms": 0.8945147679
+    },
+    "predicted_events": 1107,
+    "reference_events": 1026,
+    "true_positives_50_ms": 954,
+    "false_positives_50_ms": 153,
+    "false_negatives_50_ms": 72,
+    "precision_50_ms": 0.8617886179,
+    "recall_50_ms": 0.9298245614,
     "family_f1_50_ms": {
-      "kick": 0.7372,
-      "hihat": 0.6645,
-      "cymbal": 0.6316,
-      "snare": 0.6313,
-      "tom": 0.3871
+      "kick": 0.9424572317,
+      "hihat": 0.8912809473,
+      "cymbal": 0.8051948052,
+      "snare": 0.8565121413,
+      "tom": 0.7741935484
     }
   },
   "second_competitor": {
@@ -131,5 +147,83 @@
       "reference_time_signature": "4/4"
     },
     "free_preview_consumed": true
+  },
+  "fourth_competitor": {
+    "name": "DrumScript",
+    "version": "0.2.1",
+    "release_url": "https://github.com/DrumScript/DrumScript/releases/tag/v0.2.1",
+    "git_commit": "d1e1f744d29ff8564628aa45c238f2365bc5e0e3",
+    "license": "Apache-2.0",
+    "same_audio_submitted": true,
+    "full_song": true,
+    "payment_method_used": false,
+    "account_required": false,
+    "processing_time_seconds_approx": 326,
+    "detected_tempo_bpm": 103.4,
+    "reference_tempo_bpm": 105,
+    "output_files": [
+      "pdf",
+      "midi",
+      "json"
+    ],
+    "onset_records": 949,
+    "classified_events_evaluated": 1174,
+    "unmapped_unknown_events": 42,
+    "event_scores": {
+      "30_ms": {
+        "drumtoscore_micro_f1": 0.8898265354,
+        "drumscript_micro_f1": 0.1981818182
+      },
+      "50_ms": {
+        "reference_events": 1026,
+        "matching": "one-to-one five-family onset matching",
+        "drumtoscore": {
+          "predicted_events": 1107,
+          "true_positives": 954,
+          "false_positives": 153,
+          "false_negatives": 72,
+          "precision": 0.8617886179,
+          "recall": 0.9298245614,
+          "micro_f1": 0.8945147679,
+          "family_f1": {
+            "kick": 0.9424572317,
+            "snare": 0.8565121413,
+            "hihat": 0.8912809473,
+            "tom": 0.7741935484,
+            "cymbal": 0.8051948052
+          }
+        },
+        "drumscript": {
+          "predicted_events": 1174,
+          "true_positives": 365,
+          "false_positives": 809,
+          "false_negatives": 661,
+          "precision": 0.3109028961,
+          "recall": 0.3557504873,
+          "micro_f1": 0.3318181818,
+          "family_f1": {
+            "kick": 0.3225806452,
+            "snare": 0.3076923077,
+            "hihat": 0.3965517241,
+            "tom": 0.0,
+            "cymbal": 0.0733944954
+          }
+        },
+        "winner": "DrumToScore",
+        "winner_margin_percentage_points": 56.26965861
+      },
+      "100_ms": {
+        "drumtoscore_micro_f1": 0.8945147679,
+        "drumscript_micro_f1": 0.4954545455
+      }
+    },
+    "local_artifact_directory": "/Users/prakhar/Downloads/DrumScript-Linkin-Park-full-song"
+  },
+  "excluded_candidate": {
+    "name": "PineThink Score",
+    "url": "https://pinethink.com/score/",
+    "same_audio_processed": true,
+    "payment_method_used": false,
+    "reason": "The Drums tab retained drums as practice audio and did not convert the rhythm to notation."
   }
 }

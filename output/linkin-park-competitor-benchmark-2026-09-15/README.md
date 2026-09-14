@@ -30,17 +30,21 @@ All scores below use one-to-one, class-aware onset matching. Every matched event
 
 Drum2Notes wins this limited probe. Both systems found five of the six reference hits; DrumToScore produced four more false positives. Drum2Notes' tempo error was 2 BPM, while DrumToScore's was 15 BPM.
 
-## DrumToScore full-song result
+## Standardized DrumToScore full-song result
 
-Against the full Songsterr transcription previously extracted for this same project:
+The full-song score was rerun with the same audio alignment later used for every
+competitor (`audio_time = -0.3498714285 + 0.9992 × score_time`). This supersedes
+the earlier unaligned 46.38%/67.42%/89.58% comparison recorded during the first
+probe.
 
 | Timing tolerance | Precision | Recall | Micro F1 |
 |---|---:|---:|---:|
-| 30 ms | — | — | 46.38% |
-| 50 ms | 64.98% | 70.05% | 67.42% |
-| 100 ms | 86.33% | 93.07% | 89.58% |
+| 30 ms | 85.73% | 92.50% | 88.98% |
+| 50 ms | 86.18% | 92.98% | **89.45%** |
+| 100 ms | 86.18% | 92.98% | 89.45% |
 
-Family F1 at 50 ms: kick 73.72%, hi-hat 66.45%, cymbal 63.16%, snare 63.13%, and tom 38.71%.
+Family F1 at 50 ms: kick 94.25%, hi-hat 89.13%, snare 85.65%, cymbal 80.52%,
+and tom 77.42%.
 
 Drum2Notes does not expose a full-song result without payment, so no honest full-song head-to-head number is available from its free tier.
 
@@ -71,5 +75,51 @@ DrumToScore wins this 30-second comparison by **12.15 percentage points**. Music
 Music Demixer's beat-aligned export correctly identified **105 BPM**, but encoded the section in **3/4** instead of the reference **4/4**. DrumToScore's project tempo remained **120 BPM**, so DrumToScore won event placement while Music Demixer won tempo detection; neither result is perfect notation.
 
 The free preview was consumed without entering or using a payment method. Its downloaded ZIP remains local and is not committed because it is derived from the user-supplied recording.
+
+## Fourth competitor: DrumScript full song
+
+[DrumScript v0.2.1](https://github.com/DrumScript/DrumScript/releases/tag/v0.2.1)
+is an Apache-2.0 open-source command-line competitor. The exact v0.2.1 release
+commit (`d1e1f744d29ff8564628aa45c238f2365bc5e0e3`) processed the complete
+216.4-second file with its documented `--full-song` mode. It generated a
+three-page PDF, MIDI, and JSON without an account, payment, or card.
+
+Both systems were evaluated over the complete song against the same 1,026
+Songsterr events, using the same alignment, five-family mapping, and one-to-one
+class-aware onset matcher.
+
+| System | Predicted events | TP | FP | FN | Precision | Recall | Micro F1 @ 50 ms |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| DrumToScore | 1,107 | 954 | 153 | 72 | 86.18% | 92.98% | **89.45%** |
+| DrumScript v0.2.1 | 1,174 | 365 | 809 | 661 | 31.09% | 35.58% | **33.18%** |
+
+| System | 30 ms F1 | 50 ms F1 | 100 ms F1 | Tempo |
+|---|---:|---:|---:|---:|
+| DrumToScore | **88.98%** | **89.45%** | **89.45%** | 120 BPM project metadata |
+| DrumScript v0.2.1 | 19.82% | 33.18% | 49.55% | 103.4 BPM detected |
+
+Family F1 at 50 ms:
+
+| System | Kick | Snare | Hi-hat | Toms | Cymbals |
+|---|---:|---:|---:|---:|---:|
+| DrumToScore | 94.25% | 85.65% | 89.13% | 77.42% | 80.52% |
+| DrumScript v0.2.1 | 32.26% | 30.77% | 39.66% | 0.00% | 7.34% |
+
+DrumToScore wins this full-song test by **56.27 percentage points** at 50 ms.
+DrumScript exported no tom-class events, generated 809 false positives, and its
+score-grid timing drifted because the detected 103.4 BPM was below the 105 BPM
+reference. The DrumScript run took approximately 5 minutes 26 seconds on this
+Mac (its Demucs stage reported 2.60 minutes).
+
+The generated DrumScript PDF, MIDI, and JSON were copied to
+`~/Downloads/DrumScript-Linkin-Park-full-song/` for manual inspection. They are
+not committed because they are derived from the user-supplied recording.
+
+## Excluded full-song candidate
+
+[PineThink Score](https://pinethink.com/score/) processed the full song locally
+without an account or card, but its Drums tab explicitly kept drums as practice
+audio and did not convert the rhythm to notes. It is therefore a stem-separation
+tool for this use case, not a valid drum-notation competitor, and was not scored.
 
 No payment method was entered or used for any competitor test.
