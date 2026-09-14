@@ -67,7 +67,8 @@ function NeonAccountForm({ verified }: { verified: boolean }) {
     setError(null);
     try {
       if (mode === "reset") {
-        const { error: resetError } = await getNeonAuthClient().requestPasswordReset({
+        const authClient = await getNeonAuthClient();
+        const { error: resetError } = await authClient.requestPasswordReset({
           email,
           redirectTo: `${window.location.origin}/auth/reset-password`,
         });
@@ -76,7 +77,8 @@ function NeonAccountForm({ verified }: { verified: boolean }) {
         return;
       }
       if (mode === "sign-up") {
-        const { error: signUpError } = await getNeonAuthClient().signUp.email({
+        const authClient = await getNeonAuthClient();
+        const { error: signUpError } = await authClient.signUp.email({
           name: name.trim(),
           email,
           password,
@@ -86,7 +88,8 @@ function NeonAccountForm({ verified }: { verified: boolean }) {
         setSent(true);
         return;
       }
-      const { error: signInError } = await getNeonAuthClient().signIn.email({
+      const authClient = await getNeonAuthClient();
+      const { error: signInError } = await authClient.signIn.email({
         email,
         password,
         rememberMe: true,
@@ -104,7 +107,8 @@ function NeonAccountForm({ verified }: { verified: boolean }) {
     setBusy(true);
     setError(null);
     try {
-      const { error: socialError } = await getNeonAuthClient().signIn.social({
+      const authClient = await getNeonAuthClient();
+      const { error: socialError } = await authClient.signIn.social({
         provider,
         callbackURL: `${window.location.origin}/auth/complete`,
         newUserCallbackURL: `${window.location.origin}/auth/complete`,
