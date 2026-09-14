@@ -1,6 +1,7 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
+  createAuthClient: vi.fn(),
   getSession: vi.fn(),
   signOut: vi.fn(),
   exchangeNeonSession: vi.fn(),
@@ -8,10 +9,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@neondatabase/auth/next", () => ({
-  createAuthClient: () => ({
-    getSession: mocks.getSession,
-    signOut: mocks.signOut,
-  }),
+  createAuthClient: mocks.createAuthClient,
 }));
 
 vi.mock("@/lib/api/client", () => ({
@@ -21,12 +19,26 @@ vi.mock("@/lib/api/client", () => ({
   },
 }));
 
+beforeEach(() => {
+  mocks.createAuthClient.mockReturnValue({
+    getSession: mocks.getSession,
+    signOut: mocks.signOut,
+  });
+});
+
 afterEach(() => {
   vi.clearAllMocks();
   vi.unstubAllGlobals();
+  vi.resetModules();
 });
 
 describe("Neon account bridge", () => {
+  it("does not initialize the browser SDK in module scope", async () => {
+    await import("@/lib/auth/client");
+
+    expect(mocks.createAuthClient).not.toHaveBeenCalled();
+  });
+
   it("exchanges the verified OAuth session for a DrumToScore API session", async () => {
     mocks.getSession.mockResolvedValue({
       data: { session: { id: "session-1" }, user: { id: "user-1" } },

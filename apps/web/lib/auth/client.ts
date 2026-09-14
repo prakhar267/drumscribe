@@ -8,13 +8,24 @@ export const neonAuthSocialProviders = (process.env.NEXT_PUBLIC_AUTH_SOCIAL_PROV
   .split(",")
   .map((provider) => provider.trim())
   .filter((provider): provider is "google" | "github" => provider === "google" || provider === "github");
-export const neonAuthClient = createAuthClient();
+
+let client: ReturnType<typeof createAuthClient> | null = null;
+
+/**
+ * Create the browser SDK only when an auth action actually runs. Cloudflare
+ * Workers forbid random-number generation and asynchronous I/O in module
+ * scope, both of which the SDK may perform during construction.
+ */
+export function getNeonAuthClient() {
+  if (!client) client = createAuthClient();
+  return client;
+}
 
 export async function completeNeonAuthentication() {
   // OAuth returns with a one-time verifier in the callback URL. `getSession()`
   // exchanges that verifier for the signed, first-party session cookie before
   // we ask Neon for the JWT that our API validates.
-  const { data: session, error: sessionError } = await neonAuthClient.getSession();
+  const { data: session, error: sessionError } = await getNeonAuthClient().getSession();
   if (sessionError || !session?.user) {
     throw new Error(sessionError?.message ?? "Your verified account session could not be opened.");
   }
@@ -35,5 +46,5 @@ export async function completeNeonAuthentication() {
 }
 
 export async function signOutEverywhere() {
-  await Promise.allSettled([api.logout(), neonAuthEnabled ? neonAuthClient.signOut() : null]);
+  await Promise.allSettled([api.logout(), neonAuthEnabled ? getNeonAuthClient().signOut() : null]);
 }

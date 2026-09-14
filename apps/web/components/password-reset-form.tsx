@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
-import { neonAuthClient } from "@/lib/auth/client";
+import { getNeonAuthClient } from "@/lib/auth/client";
 
 export function PasswordResetForm() {
   const token = useSearchParams().get("token") ?? "";
@@ -29,7 +29,7 @@ export function PasswordResetForm() {
       <p className="eyebrow">Account recovery</p>
       <h1>Choose a new password.</h1>
       <p>Use at least 8 characters and avoid reusing a password from another service.</p>
-      <form onSubmit={(event) => { event.preventDefault(); setBusy(true); setError(null); void neonAuthClient.resetPassword({ newPassword: password, token }).then(({ error: resetError }) => { if (resetError) throw new Error(resetError.message || "Password reset failed."); setDone(true); }).catch((reason: unknown) => setError(reason instanceof Error ? reason.message : "Password reset failed.")).finally(() => setBusy(false)); }}>
+      <form onSubmit={(event) => { event.preventDefault(); setBusy(true); setError(null); void getNeonAuthClient().resetPassword({ newPassword: password, token }).then(({ error: resetError }) => { if (resetError) throw new Error(resetError.message || "Password reset failed."); setDone(true); }).catch((reason: unknown) => setError(reason instanceof Error ? reason.message : "Password reset failed.")).finally(() => setBusy(false)); }}>
         <div className="field"><label htmlFor="new-password">New password</label><input className="text-input" id="new-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="new-password" minLength={8} maxLength={128} required /></div>
         {!token && <p className="form-error" role="alert">This password-reset link is incomplete. Request a new one.</p>}
         {error && <p className="form-error" role="alert">{error}</p>}

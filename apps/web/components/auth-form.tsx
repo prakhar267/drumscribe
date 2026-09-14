@@ -7,7 +7,7 @@ import { ArrowRight, CheckCircle2, KeyRound } from "lucide-react";
 import { api } from "@/lib/api/client";
 import {
   completeNeonAuthentication,
-  neonAuthClient,
+  getNeonAuthClient,
   neonAuthEnabled,
   neonAuthSocialProviders,
 } from "@/lib/auth/client";
@@ -67,7 +67,7 @@ function NeonAccountForm({ verified }: { verified: boolean }) {
     setError(null);
     try {
       if (mode === "reset") {
-        const { error: resetError } = await neonAuthClient.requestPasswordReset({
+        const { error: resetError } = await getNeonAuthClient().requestPasswordReset({
           email,
           redirectTo: `${window.location.origin}/auth/reset-password`,
         });
@@ -76,7 +76,7 @@ function NeonAccountForm({ verified }: { verified: boolean }) {
         return;
       }
       if (mode === "sign-up") {
-        const { error: signUpError } = await neonAuthClient.signUp.email({
+        const { error: signUpError } = await getNeonAuthClient().signUp.email({
           name: name.trim(),
           email,
           password,
@@ -86,7 +86,7 @@ function NeonAccountForm({ verified }: { verified: boolean }) {
         setSent(true);
         return;
       }
-      const { error: signInError } = await neonAuthClient.signIn.email({
+      const { error: signInError } = await getNeonAuthClient().signIn.email({
         email,
         password,
         rememberMe: true,
@@ -104,7 +104,7 @@ function NeonAccountForm({ verified }: { verified: boolean }) {
     setBusy(true);
     setError(null);
     try {
-      const { error: socialError } = await neonAuthClient.signIn.social({
+      const { error: socialError } = await getNeonAuthClient().signIn.social({
         provider,
         callbackURL: `${window.location.origin}/auth/complete`,
         newUserCallbackURL: `${window.location.origin}/auth/complete`,
