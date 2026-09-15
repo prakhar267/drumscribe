@@ -33,7 +33,7 @@ function LegacyMagicLinkForm() {
     <div className="auth-form">
       <p className="eyebrow">Save your work</p>
       <h1>Pick up where you left off.</h1>
-      <p>Sign in with a private email link to claim one complete song free. Your anonymous project comes with you.</p>
+      <p>Sign in with a private email link to save your projects. Free 30-second previews do not require an account.</p>
       <form onSubmit={(event) => { event.preventDefault(); if (!email) return; setSending(true); setError(null); setDevToken(null); void api.requestMagicLink(email).then((result) => { setDevToken(result.devToken ?? null); setSent(true); }).catch((reason: unknown) => setError(reason instanceof Error ? reason.message : "We couldn’t send that link.")).finally(() => setSending(false)); }}>
         <div className="field"><label htmlFor="email">Email address</label><input className="text-input" id="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" autoComplete="email" required /></div>
         {error && <p className="form-error" role="alert">{error}</p>}
@@ -139,7 +139,7 @@ function NeonAccountForm({ verified }: { verified: boolean }) {
     <div className="auth-form">
       <p className="eyebrow">Your DrumToScore account</p>
       <h1>{mode === "sign-up" ? "Create your account." : mode === "reset" ? "Reset your password." : "Welcome back."}</h1>
-      <p>{mode === "sign-up" ? "Save your projects and claim one complete song free." : mode === "reset" ? "We’ll send one secure reset email." : "Use your password or continue with a trusted account."}</p>
+      <p>{mode === "sign-up" ? "Save your projects and keep your free 30-second previews." : mode === "reset" ? "We’ll send one secure reset email." : "Use your password or continue with a trusted account."}</p>
       {verified && mode === "sign-in" && <p className="form-success" role="status">Email verified. Sign in with the password you chose.</p>}
 
       {mode !== "reset" && neonAuthSocialProviders.length > 0 && (

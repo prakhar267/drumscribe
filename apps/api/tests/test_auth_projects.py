@@ -171,7 +171,7 @@ def test_deleted_account_can_register_the_same_email_again(client: TestClient) -
     registered = client.post("/api/v1/auth/magic-link/consume", json={"token": second_link})
     assert registered.status_code == 200, registered.text
     assert registered.json()["user"]["email"] == "returning@example.com"
-    assert registered.json()["user"]["freeTranscriptionsRemaining"] == 1
+    assert registered.json()["user"]["freeTranscriptionsRemaining"] == 0
 
 
 def test_gmail_aliases_share_one_free_transcription_identity() -> None:

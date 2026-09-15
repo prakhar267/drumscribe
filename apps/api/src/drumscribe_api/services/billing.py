@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..enums import TranscriptionCreditSource, UserKind
+from ..enums import TranscriptionCreditSource
 from ..errors import APIError
 from ..models import CreditPurchase, FreeTranscriptionClaim, ProcessingJob, Project, User
 from ..security import utcnow
@@ -22,41 +22,12 @@ async def reserve_processing_credit(
     if job.credit_source is not None and job.credit_refunded_at is None:
         return
 
-    if user.kind == UserKind.ANONYMOUS:
-        # The existing short anonymous preview remains available. It is not the
-        # account's one free full-song transcription.
-        job.credit_source = TranscriptionCreditSource.ANONYMOUS_PREVIEW
-    elif user.free_transcription_claim_hash is not None:
-        claim = (
-            await db.execute(
-                select(FreeTranscriptionClaim)
-                .where(FreeTranscriptionClaim.identity_hash == user.free_transcription_claim_hash)
-                .with_for_update()
-            )
-        ).scalar_one_or_none()
-        if claim is None:
-            raise APIError(
-                409,
-                "FREE_TRANSCRIPTION_CLAIM_MISSING",
-                "Your account entitlement could not be verified. Sign in again and retry.",
-            )
-        if claim.used_at is None:
-            used_at = utcnow()
-            claim.used_at = used_at
-            user.free_transcription_used_at = used_at
-            job.credit_source = TranscriptionCreditSource.FREE
-        else:
-            user.free_transcription_used_at = claim.used_at
-            await _reserve_paid_credit(db, user, job)
-    elif user.free_transcription_used_at is None:
-        # Compatibility for registered accounts created before the durable
-        # identity-claim migration. Their next sign-in attaches a claim.
-        user.free_transcription_used_at = utcnow()
-        job.credit_source = TranscriptionCreditSource.FREE
-    elif user.paid_credit_balance > 0:
+    if user.paid_credit_balance > 0:
         await _reserve_paid_credit(db, user, job)
     else:
-        _raise_credit_required()
+        # Free access is a server-enforced 30-second preview for anonymous and
+        # registered users. The validation stage rejects longer recordings.
+        job.credit_source = TranscriptionCreditSource.ANONYMOUS_PREVIEW
     job.credit_refunded_at = None
     await db.flush()
 
@@ -65,7 +36,7 @@ def _raise_credit_required() -> None:
     raise APIError(
         402,
         "TRANSCRIPTION_CREDIT_REQUIRED",
-        "Your free song has been used. Buy transcription credits to process another song.",
+        "A complete-song transcription requires a paid credit.",
         title="Transcription credit required",
     )
 
@@ -141,4 +112,18 @@ async def refund_processing_credit(db: AsyncSession, job: ProcessingJob) -> None
             if purchase is not None:
                 purchase.remaining_credit_count += 1
     job.credit_refunded_at = utcnow()
+    await db.flush()
+
+
+async def use_free_preview_for_short_recording(
+    db: AsyncSession,
+    job: ProcessingJob,
+) -> None:
+    """Return an eager paid reservation when the probed recording fits the free preview."""
+    if job.credit_source != TranscriptionCreditSource.PAID:
+        return
+    await refund_processing_credit(db, job)
+    job.credit_source = TranscriptionCreditSource.ANONYMOUS_PREVIEW
+    job.credit_purchase_id = None
+    job.credit_refunded_at = None
     await db.flush()

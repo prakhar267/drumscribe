@@ -7,10 +7,9 @@ test-mode acceptance flow passed.
 
 ## Product rules implemented
 
-- A verified account receives one complete transcription at no charge.
-- Gmail and Googlemail dot/plus aliases share the same free-song claim.
-- The free-song claim survives account deletion as a keyed HMAC and used timestamp; the email is not
-  copied into the anti-abuse claim.
+- Any user can process a recording up to 30 seconds at no charge.
+- Legacy free-song claims remain stored only for backward-compatible migrations; they no longer
+  grant a complete-song transcription.
 - Processing reserves an entitlement atomically. Repeated request keys and job retries do not spend
   twice. A failed or cancelled job returns its reservation.
 - Paid credits are associated with their originating purchase pack.
@@ -61,7 +60,7 @@ configuration and must not be copied into this document, Git, logs or support ti
 2. Run `uv run python -m drumscribe_api.ops backfill-free-transcription-claims` once. It is idempotent.
 3. Configure the Dodo values with `DRUMSCRIBE_DODO_PAYMENTS_ENVIRONMENT=test_mode` and keep the web
    checkout flag off.
-4. In test mode, verify: one free song, second song blocked, checkout idempotency, signed success,
+4. In test mode, verify: 30-second preview, longer song requires credit, checkout idempotency, signed success,
    ten credits, paid reservation, failed-job return, full refund, duplicate event, and stale-success
    replay after refund.
 5. Verify audit records and balances directly in the database, then complete a restore rehearsal.

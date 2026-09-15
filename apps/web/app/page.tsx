@@ -64,10 +64,10 @@ export default function HomePage() {
         <section className="home-pricing" aria-labelledby="home-pricing-title">
           <div>
             <p className="eyebrow">Start without a card</p>
-            <h2 className="section-title" id="home-pricing-title">Your first full song is free.</h2>
+            <h2 className="section-title" id="home-pricing-title">Try 30 seconds free.</h2>
           </div>
           <div className="home-pricing-offer">
-            <p><strong>Then 10 songs for $15.</strong> One-time credit pack, no subscription. Failed or cancelled processing does not cost a credit.</p>
+            <p><strong>Full songs: 10 for $15.</strong> One-time credit pack, no subscription. Failed or cancelled processing does not cost a credit.</p>
             <Link className="button" href="/pricing">See pricing <ArrowRight size={17} /></Link>
           </div>
         </section>

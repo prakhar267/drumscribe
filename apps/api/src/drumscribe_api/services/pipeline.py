@@ -41,7 +41,7 @@ from ..enums import (
     JobStage,
     ProjectStatus,
     RevisionKind,
-    UserKind,
+    TranscriptionCreditSource,
 )
 from ..errors import APIError
 from ..models import (
@@ -52,10 +52,10 @@ from ..models import (
     Project,
     Transcription,
     TranscriptionRevision,
-    User,
 )
 from ..security import utcnow
 from .audio import AudioProbe
+from .billing import use_free_preview_for_short_recording
 from .commercial_providers import (
     AudioShakeSourceSeparationProvider,
     CommercialHTTPConfig,
@@ -975,19 +975,25 @@ class PipelineService:
                     declared_content_type=asset.content_type or "application/octet-stream",
                     size_bytes=metadata.size_bytes,
                 )
-            owner = await db.get(User, project.owner_id)
+            preview_limit = self.settings.anonymous_max_audio_duration_seconds
             if (
-                owner is not None
-                and owner.kind == UserKind.ANONYMOUS
-                and audio.duration_seconds > self.settings.anonymous_max_audio_duration_seconds
+                audio.duration_seconds <= preview_limit
+                and job.credit_source == TranscriptionCreditSource.PAID
+            ):
+                # Credit selection happens before the worker can safely probe the
+                # file. Short recordings remain free even for paying customers.
+                await use_free_preview_for_short_recording(db, job)
+            if (
+                job.credit_source != TranscriptionCreditSource.PAID
+                and audio.duration_seconds > preview_limit
             ):
                 raise APIError(
                     422,
                     JobErrorCode.AUDIO_TOO_LONG.value,
                     (
-                        "Anonymous trials currently support up to "
-                        f"{self.settings.anonymous_max_audio_duration_seconds:g} seconds. "
-                        "Sign in to process a full recording."
+                        "Free previews support up to "
+                        f"{preview_limit:g} seconds. "
+                        "Use a transcription credit to process a full recording."
                     ),
                 )
             asset.status = AssetStatus.VERIFIED

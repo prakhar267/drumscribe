@@ -12,7 +12,7 @@ export default function UploadPage() {
       <main className="page-shell" id="main-content">
         <div className="page-heading">
           <div><p className="eyebrow">New transcription</p><h1>Bring the song.<br />We’ll find the drums.</h1></div>
-          <p>Try a short preview without an account, or sign in to claim one complete song free. After that, each new song uses one credit. <Link href="/legal/copyright" style={{ color: "var(--lime)" }}>Upload policy</Link></p>
+          <p>Try any recording up to 30 seconds free, without an account or card. A complete song uses one credit. <Link href="/legal/copyright" style={{ color: "var(--lime)" }}>Upload policy</Link></p>
         </div>
         <UploadForm />
       </main>

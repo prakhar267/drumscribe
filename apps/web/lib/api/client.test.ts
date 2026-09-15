@@ -91,7 +91,7 @@ describe("versioned API client", () => {
   it("preserves the credit-required problem code for the upgrade flow", async () => {
     const fetchMock = vi.fn().mockResolvedValue(json({
       code: "TRANSCRIPTION_CREDIT_REQUIRED",
-      detail: "Your free song has been used.",
+      detail: "A complete-song transcription requires a paid credit.",
     }, 402));
     vi.stubGlobal("fetch", fetchMock);
 
@@ -100,7 +100,7 @@ describe("versioned API client", () => {
     expect(error).toMatchObject({
       status: 402,
       code: "TRANSCRIPTION_CREDIT_REQUIRED",
-      message: "Your free song has been used.",
+      message: "A complete-song transcription requires a paid credit.",
     });
     expect(fetchMock.mock.calls[0][1]).toMatchObject({
       method: "POST",

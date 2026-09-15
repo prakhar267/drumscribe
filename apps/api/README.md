@@ -59,9 +59,8 @@ commercially approved `drumscribe_music` provider package.
 
 ## Freemium billing
 
-Each verified account receives one complete transcription. A new processing job atomically
-reserves the free use first and then paid credits; failed or cancelled jobs return the reservation.
-Anonymous processing remains a short preview and does not consume the later registered free song.
+Recordings up to 30 seconds use the free-preview path for anonymous and registered users. A longer
+processing job atomically reserves one paid credit; failed or cancelled jobs return the reservation.
 
 Dodo Payments is the merchant-of-record adapter for the one-time 10-credit pack. Keep
 `DRUMSCRIBE_BILLING_PROVIDER=disabled` until the following server-only values have been configured

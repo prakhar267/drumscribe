@@ -34,7 +34,7 @@ class DodoBillingService:
             raise APIError(
                 503,
                 "CHECKOUT_UNAVAILABLE",
-                "Secure checkout is being activated. Your free song remains available.",
+                "Secure checkout is being activated. Free 30-second previews remain available.",
             )
         api_key = self.settings.dodo_payments_api_key
         product_id = self.settings.dodo_credit_pack_product_id

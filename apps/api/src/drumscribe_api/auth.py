@@ -40,7 +40,7 @@ async def attach_free_transcription_claim(
     email: str,
     settings: Settings,
 ) -> None:
-    """Attach and synchronize the durable pseudonymous one-free-song claim."""
+    """Attach the legacy free-song claim retained for migration compatibility."""
     # Every entitlement mutation uses the same user -> claim lock order.
     user = (await db.execute(select(User).where(User.id == user.id).with_for_update())).scalar_one()
     identity_hash = privacy_hash(

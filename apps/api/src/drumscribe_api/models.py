@@ -90,7 +90,9 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
 
     @property
     def free_transcriptions_remaining(self) -> int:
-        return int(self.kind == UserKind.REGISTERED and self.free_transcription_used_at is None)
+        # Kept in the response contract for older clients. Free access is now a
+        # 30-second preview, not a complete-song entitlement.
+        return 0
 
     @property
     def paid_credits(self) -> int:
@@ -98,11 +100,11 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
 
     @property
     def can_start_full_transcription(self) -> bool:
-        return self.free_transcriptions_remaining > 0 or self.paid_credit_balance > 0
+        return self.paid_credit_balance > 0
 
 
 class FreeTranscriptionClaim(TimestampMixin, Base):
-    """Pseudonymous, durable one-free-song entitlement used for abuse prevention."""
+    """Legacy free-song claim retained so older deployments can be migrated safely."""
 
     __tablename__ = "free_transcription_claims"
 

@@ -9,7 +9,7 @@ from drumscribe_api.enums import CreditPurchaseStatus, UserKind
 from drumscribe_api.models import CreditPurchase, FreeTranscriptionClaim, ProcessingJob, User
 from drumscribe_api.security import utcnow
 
-from .conftest import create_project, create_session, process_project, upload_wav
+from .conftest import create_project, create_session, process_project, upload_wav, wav_bytes
 
 
 def register_account(client: TestClient, email: str = "drummer@example.com") -> dict[str, Any]:
@@ -30,43 +30,41 @@ async def grant_paid_credits(app: Any, email: str, amount: int) -> None:
         await db.commit()
 
 
-def test_registered_account_gets_one_free_song_then_needs_credits(
+def test_registered_account_gets_free_30_second_previews_and_uses_credits_for_full_songs(
     client: TestClient,
     app: Any,
 ) -> None:
     create_session(client)
     account = register_account(client)
-    assert account["freeTranscriptionsRemaining"] == 1
+    assert account["freeTranscriptionsRemaining"] == 0
     assert account["paidCredits"] == 0
-    assert account["canStartFullTranscription"] is True
+    assert account["canStartFullTranscription"] is False
 
-    free_project = create_project(client, title="Free song")
+    free_project = create_project(client, title="Free preview")
     upload_wav(client, free_project["id"])
     job = process_project(client, app, free_project["id"])
     assert job["stage"] == "READY"
 
-    used_account = client.get("/api/v1/account/me").json()
-    assert used_account["freeTranscriptionsRemaining"] == 0
-    assert used_account["canStartFullTranscription"] is False
-
-    paid_project = create_project(client, title="Second song")
-    upload_wav(client, paid_project["id"])
-    blocked = client.post(
-        f"/api/v1/projects/{paid_project['id']}/process",
-        json={},
-        headers={"Idempotency-Key": "second-song"},
-    )
-    assert blocked.status_code == 402, blocked.text
-    assert blocked.json()["code"] == "TRANSCRIPTION_CREDIT_REQUIRED"
+    another_preview = create_project(client, title="Another free preview")
+    upload_wav(client, another_preview["id"])
+    assert process_project(client, app, another_preview["id"])["stage"] == "READY"
 
     assert client.portal is not None
     client.portal.call(grant_paid_credits, app, "drummer@example.com", 2)
+    paid_project = create_project(client, title="Complete song")
+    upload_wav(client, paid_project["id"], wav_bytes(31))
     started = client.post(
         f"/api/v1/projects/{paid_project['id']}/process",
         json={},
         headers={"Idempotency-Key": "second-song"},
     )
     assert started.status_code == 202, started.text
+    assert client.get("/api/v1/account/me").json()["paidCredits"] == 1
+
+    short_paid_project = create_project(client, title="Paid account preview")
+    upload_wav(client, short_paid_project["id"])
+    short_job = process_project(client, app, short_paid_project["id"])
+    assert short_job["stage"] == "READY"
     assert client.get("/api/v1/account/me").json()["paidCredits"] == 1
 
     repeated = client.post(
@@ -79,7 +77,7 @@ def test_registered_account_gets_one_free_song_then_needs_credits(
     assert client.get("/api/v1/account/me").json()["paidCredits"] == 1
 
 
-def test_cancelled_job_returns_reserved_free_song(client: TestClient) -> None:
+def test_cancelled_free_preview_does_not_change_paid_balance(client: TestClient) -> None:
     create_session(client)
     register_account(client, "cancel@example.com")
     project = create_project(client)
@@ -90,17 +88,17 @@ def test_cancelled_job_returns_reserved_free_song(client: TestClient) -> None:
         headers={"Idempotency-Key": "cancel-free"},
     )
     assert started.status_code == 202, started.text
-    assert client.get("/api/v1/account/me").json()["freeTranscriptionsRemaining"] == 0
+    assert client.get("/api/v1/account/me").json()["paidCredits"] == 0
 
     cancelled = client.post(f"/api/v1/jobs/{started.json()['id']}/cancel")
     assert cancelled.status_code == 200, cancelled.text
     assert cancelled.json()["stage"] == "CANCELLED"
     account = client.get("/api/v1/account/me").json()
-    assert account["freeTranscriptionsRemaining"] == 1
-    assert account["canStartFullTranscription"] is True
+    assert account["freeTranscriptionsRemaining"] == 0
+    assert account["canStartFullTranscription"] is False
 
 
-def test_anonymous_preview_does_not_consume_registered_free_song(
+def test_anonymous_preview_remains_free_after_registration(
     client: TestClient,
     app: Any,
 ) -> None:
@@ -115,8 +113,8 @@ def test_anonymous_preview_does_not_consume_registered_free_song(
     assert anonymous["canStartFullTranscription"] is False
 
     registered = register_account(client, "preview@example.com")
-    assert registered["freeTranscriptionsRemaining"] == 1
-    assert registered["canStartFullTranscription"] is True
+    assert registered["freeTranscriptionsRemaining"] == 0
+    assert registered["canStartFullTranscription"] is False
 
 
 def test_used_free_song_survives_account_deletion_and_gmail_alias_signup(

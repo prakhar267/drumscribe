@@ -107,7 +107,9 @@ class Settings(BaseSettings):
 
     max_upload_bytes: int = 150 * 1024 * 1024
     max_audio_duration_seconds: float = 12 * 60
-    anonymous_max_audio_duration_seconds: float = 90
+    # Free previews are intentionally short. This limit applies to every job
+    # that did not reserve a paid credit, regardless of account type.
+    anonymous_max_audio_duration_seconds: float = 30
     max_bulk_events: int = 5_000
     max_concurrent_jobs_per_user: int = 2
     max_concurrent_jobs_anonymous: int = 1

@@ -20,7 +20,7 @@ live.
 | Address | 25/38 Kaveri Path, Mansarovar, Jaipur, Rajasthan 302020, India | Founder supplied and confirmed for service notices |
 | GST status | Currently not GST-registered | Present-status disclosure only; registration obligations must be monitored as turnover, customer locations and law change |
 | Launch territory | India and international | Too broad for one generic legal review; prioritize actual sales countries |
-| Commercial model | One full song free, then a one-time 10-credit pack for USD 15 | Implemented; production checkout is live |
+| Commercial model | Free 30-second previews, then a one-time 10-credit pack for USD 15 | Implemented; production checkout is live |
 | Refund approach | Final sale/no change-of-mind refunds, with exceptions for failed delivery, duplicate or unauthorized charges, material defects, merchant rules and mandatory law | Founder supplied “no refund”; narrowed to a legally safer enforceable form |
 | Merchant of record | Dodo Payments | Verification complete; live checkout enabled after a no-charge display smoke test |
 

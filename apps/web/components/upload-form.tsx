@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { AlertTriangle, AudioLines, Check, Coins, FileAudio, LockKeyhole, Trash2, UploadCloud } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { ApiError, api, type Account } from "@/lib/api/client";
-import { formatBytes, formatTime, MAX_UPLOAD_BYTES, MAX_UPLOAD_SECONDS, validateAudioFile, type ValidatedAudioFile } from "@/lib/file-validation";
+import { formatBytes, formatTime, FREE_PREVIEW_SECONDS, MAX_UPLOAD_BYTES, MAX_UPLOAD_SECONDS, validateAudioFile, type ValidatedAudioFile } from "@/lib/file-validation";
 
 interface AudioSelection extends ValidatedAudioFile {
   duration: number | null;
@@ -49,7 +49,10 @@ export function UploadForm() {
     return () => { active = false; };
   }, []);
 
-  const hasNoFullSongCredits = account?.kind === "REGISTERED" && !account.canStartFullTranscription;
+  const hasNoFullSongCredits = Boolean(account && !account.canStartFullTranscription);
+  const selectionNeedsCredit = Boolean(
+    hasNoFullSongCredits && selection?.duration !== null && selection?.duration !== undefined && selection.duration > FREE_PREVIEW_SECONDS,
+  );
 
   const selectFile = async (file?: File) => {
     if (!file) return;
@@ -76,7 +79,7 @@ export function UploadForm() {
     } catch (reason) {
       if (reason instanceof ApiError && reason.code === "TRANSCRIPTION_CREDIT_REQUIRED") {
         setUpgradeRequired(true);
-        setError("Your free song has been used. Add a 10-song credit pack to continue.");
+        setError("Full-song transcription requires a credit. You can still try a free 30-second recording.");
         void api.getAccount().then(setAccount).catch(() => undefined);
       } else {
         setError(reason instanceof Error ? reason.message : "The upload could not be started. Your file has not been stored; please try again.");
@@ -92,14 +95,10 @@ export function UploadForm() {
           <div className={`credit-status${hasNoFullSongCredits ? " is-empty" : ""}`} data-testid="credit-status">
             <Coins aria-hidden="true" />
             <div>
-              {account.kind === "ANONYMOUS" ? (
-                <><strong>Try a short preview now</strong><span><Link href="/auth">Sign in</Link> to claim one complete song free.</span></>
-              ) : account.freeTranscriptionsRemaining > 0 ? (
-                <><strong>Your first full song is free</strong><span>No card required. This free transcription is used only when processing succeeds.</span></>
-              ) : account.paidCredits > 0 ? (
+              {account.paidCredits > 0 ? (
                 <><strong>{account.paidCredits} paid {account.paidCredits === 1 ? "credit" : "credits"} available</strong><span>One credit is used per new song. Failed or cancelled jobs are returned.</span></>
               ) : (
-                <><strong>Your free song has been used</strong><span><Link href="/pricing">Buy 10 credits for $15</Link> to transcribe another song.</span></>
+                <><strong>Free 30-second preview</strong><span>No card or account required. <Link href="/pricing">Buy 10 credits for $15</Link> for complete songs.</span></>
               )}
             </div>
           </div>
@@ -150,7 +149,7 @@ export function UploadForm() {
             <input type="checkbox" checked={rightsConfirmed} onChange={(event) => setRightsConfirmed(event.target.checked)} />
             <span>I have the right to upload and process this audio. I understand my project stays private and is not used to train models without separate consent.</span>
           </label>
-          {hasNoFullSongCredits ? (
+          {selectionNeedsCredit ? (
             <Link className="button button-primary" href="/pricing" data-testid="upgrade-before-upload">Buy credits to continue</Link>
           ) : (
             <button className="button button-primary" type="button" disabled={!selection || !rightsConfirmed || submitting} onClick={() => void submit()} data-testid="start-transcription">
@@ -167,7 +166,7 @@ export function UploadForm() {
         </section>
         <section className="surface aside-card">
           <h3><Check size={16} style={{ verticalAlign: "middle", marginRight: 7 }} />Simple pricing</h3>
-          <p>One full song free per verified account. Then $15 for 10 transcription credits—no subscription.</p>
+          <p>Preview any 30-second recording free. Full songs are $15 for 10 transcription credits—no subscription.</p>
           <Link className="aside-link" href="/pricing">See everything included →</Link>
         </section>
         <section className="surface aside-card">

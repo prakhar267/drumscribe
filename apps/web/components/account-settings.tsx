@@ -23,11 +23,7 @@ export function AccountSettings() {
       setAccountKind(account.kind === "ANONYMOUS" ? "Anonymous workspace" : "Email account");
       setAllowModelImprovement(account.allowModelImprovement);
       setCreditSummary(
-        account.kind === "ANONYMOUS"
-          ? "Sign in to claim one full song free"
-          : account.freeTranscriptionsRemaining > 0
-            ? "1 free song + " + account.paidCredits + " paid credits"
-            : account.paidCredits + " paid credits",
+        account.paidCredits + " paid credits · 30-second previews are free",
       );
     }).catch(() => { setEmail("Account details unavailable"); setAccountKind("Reconnect to load"); });
   }, []);

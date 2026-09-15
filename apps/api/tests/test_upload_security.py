@@ -123,6 +123,33 @@ def test_duration_limit_uses_queued_probe_not_client_metadata(
     assert failed["errorCode"] == "AUDIO_TOO_LONG"
 
 
+def test_free_preview_is_limited_to_30_seconds_by_server_probe(
+    client: TestClient, app, settings
+) -> None:
+    create_session(client)
+    project = create_project(client)
+    audio = wav_bytes(settings.anonymous_max_audio_duration_seconds + 1, sample_rate=100)
+    presign = client.post(
+        f"/api/v1/projects/{project['id']}/uploads/presign",
+        json={
+            "filename": "preview-too-long.wav",
+            "contentType": "audio/wav",
+            "sizeBytes": len(audio),
+            "rightToUploadConfirmed": True,
+        },
+    ).json()
+    assert (
+        client.put(
+            presign["uploadUrl"], content=audio, headers=presign["requiredHeaders"]
+        ).status_code
+        == 204
+    )
+    assert client.post(f"/api/v1/uploads/{presign['assetId']}/complete", json={}).status_code == 200
+    failed = _run_failed_validation(client, app, project["id"], "preview-too-long")
+    assert failed["stage"] == "FAILED"
+    assert failed["errorCode"] == "AUDIO_TOO_LONG"
+
+
 def test_signed_url_expiry_and_tampering(settings) -> None:
     storage = LocalPrivateStorage(settings)
     key = "users/test/projects/test/originals/object"

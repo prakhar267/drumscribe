@@ -11,6 +11,7 @@ export const SUPPORTED_AUDIO_TYPES = [
 
 export const MAX_UPLOAD_BYTES = Number(process.env.NEXT_PUBLIC_MAX_UPLOAD_BYTES ?? 150 * 1024 * 1024);
 export const MAX_UPLOAD_SECONDS = Number(process.env.NEXT_PUBLIC_MAX_UPLOAD_SECONDS ?? 12 * 60);
+export const FREE_PREVIEW_SECONDS = 30;
 
 export type AudioKind = "MP3" | "WAV" | "M4A/AAC" | "FLAC";
 
