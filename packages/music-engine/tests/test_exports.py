@@ -78,6 +78,63 @@ def test_musicxml_rejects_event_id_collisions_that_would_make_invalid_xml():
         generate_musicxml([first, second], tempo)
 
 
+def test_musicxml_quantizes_arbitrary_event_boundaries_to_complete_measures():
+    tempo = TempoMap.constant()
+    event = DrumEvent(
+        id="fractional-position",
+        instrument=Instrument.KICK,
+        onset_seconds=tempo.beat_to_seconds(Fraction(519, 200)),
+        beat_position=Fraction(519, 200),
+    )
+
+    root = ET.fromstring(generate_musicxml([event], tempo))
+    measure = root.find("./part/measure")
+    assert measure is not None
+    notes = measure.findall("note")
+    assert [int(note.findtext("duration", "0")) for note in notes] == [62, 24, 10]
+    assert sum(int(note.findtext("duration", "0")) for note in notes) == 4 * 24
+
+
+def test_musicxml_preserves_tuplets_and_coalesces_nearby_boundaries():
+    tempo = TempoMap.constant()
+    events = [
+        DrumEvent(
+            id="exact-triplet",
+            instrument=Instrument.KICK,
+            onset_seconds=tempo.beat_to_seconds(Fraction(1, 3)),
+            beat_position=Fraction(1, 3),
+        ),
+        DrumEvent(
+            id="noisy-triplet",
+            instrument=Instrument.SNARE,
+            onset_seconds=tempo.beat_to_seconds(Fraction(1001, 3000)),
+            beat_position=Fraction(1001, 3000),
+        ),
+        DrumEvent(
+            id="sixteenth-triplet",
+            instrument=Instrument.CLOSED_HIHAT,
+            onset_seconds=tempo.beat_to_seconds(Fraction(1, 2)),
+            beat_position=Fraction(1, 2),
+        ),
+    ]
+
+    root = ET.fromstring(generate_musicxml(events, tempo))
+    exact = root.find(".//note[@id='event-exact-triplet']")
+    noisy = root.find(".//note[@id='event-noisy-triplet']")
+    assert exact is not None and noisy is not None
+    assert noisy.find("chord") is not None
+    assert exact.findtext("duration") == noisy.findtext("duration") == "4"
+    assert exact.findtext("time-modification/actual-notes") == "3"
+    assert (
+        sum(
+            int(note.findtext("duration", "0"))
+            for note in root.findall("./part/measure/note")
+            if note.find("chord") is None
+        )
+        == 4 * 24
+    )
+
+
 def test_midi_is_format_one_with_conductor_and_channel_10_percussion():
     tempo, events = _events()
     payload = generate_midi(events, tempo)

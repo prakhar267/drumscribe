@@ -1,6 +1,6 @@
 # Launch legal and data checklist
 
-Last audited: 2026-09-14
+Last audited: 2026-09-15
 
 This is an engineering and product-readiness record, not legal advice. It keeps
 confirmed facts separate from founder decisions and items that require qualified
@@ -49,15 +49,20 @@ are not counsel-approved final terms and should not be presented as such.
 
 | Provider | Purpose and likely data | Recorded location | Current status / open evidence |
 | --- | --- | --- | --- |
-| Cloudflare | Website delivery, edge proxy, request/network metadata | Global edge | Free plan active; obtain/retain applicable DPA and subprocessor list |
-| Oracle Cloud | API and ML worker; temporarily processes customer audio and project/job requests | Mumbai, India | Always Free host live; record tenancy terms, security ownership and deletion procedure |
-| Modal | GPU source separation; temporarily receives the uploaded audio and returns a drum stem to the Oracle worker | Asia-Pacific South request route; provider-managed compute locations | Protected endpoint, scale-to-zero L4 and $1 hard cap active; retain DPA, subprocessor, deletion and location evidence before paid launch |
-| Neon | Account/project database plus private audio and exports | AWS Ohio, USA | Live; private bucket and signed links verified; beta-storage terms and DPA need review |
-| Upstash | Queue, job coordination and rate-limit state | AWS Ohio, USA | Live; confirm persistence, retention and DPA settings |
-| Resend | Account email and one-time sign-in messages | Provider-managed | Live and domain verified; retain DPA/subprocessor/retention terms |
-| Sentry | Error and sampled performance telemetry; default PII sending disabled | Provider-managed | Live at 5% trace sampling; document retention, scrubbing and access settings |
+| Cloudflare | Website delivery, edge proxy, request/network metadata and inbound email routing | Global edge | Free plan active; public DPA and service-subprocessor evidence indexed on 15 September; retain the dashboard/account acceptance record |
+| Oracle Cloud | API, private Valkey queue and ML worker; temporarily processes customer audio and project/job requests | Mumbai, India | Always Free host live; public contract/security evidence indexed; Oracle's exact accepted DPA and subprocessor list require the tenancy order and My Oracle Support export |
+| Modal | GPU source separation; temporarily receives the uploaded audio and returns a drum stem to the Oracle worker | Asia-Pacific South request route; provider-managed compute locations | Protected endpoint and scale-to-zero L4 active; public DPA/subprocessor evidence indexed; exact deletion/location settings still need account evidence |
+| Neon | Managed Auth, account/project database, private audio and exports | AWS Ohio, USA | Live; private bucket, signed links and managed Better Auth verified; public Neon/Databricks DPA and subprocessor evidence indexed; retain the accepted account version and review beta-storage terms |
+| Private Valkey | Queue, job coordination and rate-limit state on the Oracle host | Mumbai, India | Not an external processor; Valkey 8 uses append-only persistence, `noeviction`, a private Docker network and no published host port. Upstash is no longer used in production |
+| Resend | Account-verification and password-reset email sent through Neon Auth SMTP | Provider-managed | Live and domain verified; public DPA/subprocessor evidence indexed; retain the signed dashboard copy and enforce the 30-day delivery-metadata schedule |
+| Sentry | Error and sampled performance telemetry; default PII sending disabled | Provider-managed | Live at 5% trace sampling; public DPA/subprocessor evidence indexed; verify 30-day retention/scrubbing in the dashboard and add the missing GitHub source-map token |
 | GitHub | Public source repository, CI and endpoint uptime checks | Provider-managed | Live; uptime checks do not intentionally send customer audio |
-| Dodo Payments | Checkout, tax, order, payer and refund data; no uploaded audio | Provider-managed | Verification complete; live checkout enabled; retain DPA, subprocessor and retention evidence |
+| Dodo Payments | Checkout, tax, order, payer and refund data; no uploaded audio | Provider-managed | Verification complete; live checkout enabled; public DPA indexed. The public DPA says the current subprocessor list is available on written request, so that provider response remains to be archived |
+
+The public-source evidence URLs, retrieval hashes and account-specific follow-ups
+are recorded in `PROVIDER_DPA_EVIDENCE_2026-09-15.md`. A public URL/checksum is
+not a substitute for the exact agreement accepted by this account or for counsel
+approving cross-border transfers.
 
 The privacy policy names the current providers, but counsel must select lawful
 bases, international-transfer mechanisms, contractual safeguards, retention
@@ -76,11 +81,21 @@ Unless production overrides them, current application defaults are:
 | Inactive anonymous account/project | Scheduled cleanup after 24 hours |
 | Deleted signed-in project | Access revoked immediately; 7-day recovery window, then media purge |
 | Deleted account | Sessions revoked and email removed immediately; media/exports requested for immediate deletion; opaque audit/tombstone records may remain |
-| Product/audit records | No complete production retention schedule is configured; counsel and operations must set one |
+| Active registered project, source audio, transcription and edits | Retained while the project/account exists; deletion follows the rules above |
+| Product and ordinary audit events | 12 months, then delete or irreversibly aggregate |
+| Authentication/security logs and Sentry events | 30 days by default; preserve only a scoped incident record when required |
+| Transactional email delivery metadata | 30 days |
+| Ordinary support records | 24 months after closure |
+| Privacy-request record | 3 years after closure |
+| Payment/refund/tax/chargeback, security-incident and legal-dispute records | Up to 7 years, or the period mandatory law requires |
+| Database backup/recovery branch | Maximum 30 days; release-drill branches expire within 24 hours |
 
-The production environment does not override the listed duration defaults as of
-this audit. Storage cleanup is asynchronous and retryable, so an operational
-deletion drill must verify actual completion.
+The production environment does not override the media/export duration defaults
+as of this audit. Storage cleanup is asynchronous and retryable. The hourly
+worker enforces object and export lifecycles; database audit/product-event and
+operator-held support/email purges require a recorded quarterly review until
+automation exists. The 15 September drill verified deletion and recovery paths
+without accessing customer objects.
 
 ## Model, checkpoint and dataset evidence
 
@@ -113,10 +128,12 @@ conclusions have since changed.
 3. Monitor the first genuine Dodo purchase for a signed HTTP `200` webhook and
    an exactly-once 10-credit grant. The live checkout display was verified
    without making a real purchase before enabling the public Buy button.
-4. Set a defensible retention schedule for database, product, audit, support,
-   email, queue and Sentry records; run deletion and restore drills.
-5. Retain provider DPAs/subprocessor lists and approve cross-border transfer
-   mechanisms for prioritized launch countries.
+4. Automate the adopted 12-month database-event purge and record the quarterly
+   mailbox/support deletion review. The retention periods themselves are now set
+   in `DATA_RETENTION.md`.
+5. Download the exact account-accepted provider DPAs and restricted subprocessor
+   evidence identified in `PROVIDER_DPA_EVIDENCE_2026-09-15.md`, then have
+   counsel approve cross-border transfer mechanisms for prioritized launch countries.
 6. Operate and periodically rehearse
    `docs/operations/SUPPORT_AND_INCIDENT_PROCEDURE.md`, which now records the
    request routes, response owner, internal targets and incident workflow.

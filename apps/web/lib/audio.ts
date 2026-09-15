@@ -1,4 +1,8 @@
-const SAMPLE_RATE = 8000;
+// Use a standard audio rate here. Firefox can parse an 8 kHz PCM WAV's
+// metadata, but its media sink rejects it once playback starts in headless
+// environments. 44.1 kHz keeps the generated demo portable across all of
+// the browsers we support.
+const SAMPLE_RATE = 44_100;
 
 function writeAscii(view: DataView, offset: number, value: string) {
   for (let index = 0; index < value.length; index += 1) view.setUint8(offset + index, value.charCodeAt(index));

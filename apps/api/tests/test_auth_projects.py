@@ -110,9 +110,7 @@ def test_neon_identity_transfers_anonymous_projects(
     async def verified_identity(_token, _settings) -> NeonIdentity:
         return NeonIdentity(subject="neon-user-1", email="drummer@example.com")
 
-    monkeypatch.setattr(
-        "drumscribe_api.api.routes.auth.verify_neon_identity", verified_identity
-    )
+    monkeypatch.setattr("drumscribe_api.api.routes.auth.verify_neon_identity", verified_identity)
     create_session(client)
     project = create_project(client, title="Keep me through provider signup")
 

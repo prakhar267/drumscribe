@@ -13,12 +13,21 @@ The provided Compose stack is for local development and acceptance testing. The 
 3. Create a private bucket with block-public-access and narrowly scoped workload credentials. `DRUMSCRIBE_S3_SERVER_SIDE_ENCRYPTION=auto` omits unsupported AWS SSE request headers for Neon Object Storage and Cloudflare R2 while retaining `AES256` for AWS/MinIO. When the provider does not expose lifecycle or versioning controls, the retention worker and recoverable delete prefixes are authoritative.
 4. Set `DRUMSCRIBE_S3_PUBLIC_ENDPOINT_URL` to a browser-reachable TLS endpoint while keeping `DRUMSCRIBE_S3_ENDPOINT_URL` private.
 5. Provision exact-origin bucket CORS for `GET`, `HEAD`, and signed `PUT` plus the required `Content-Type` headers. Set `DRUMSCRIBE_S3_CONFIGURE_BUCKET_CORS=true` only when the API workload is intentionally allowed to manage that policy; otherwise manage the equivalent rule in infrastructure.
-6. Set secure cookies, exact API CORS origins, trusted proxy ranges, and Redis-backed production rate limits. Set `DRUMSCRIBE_ALLOWED_HOSTS` to the public API hostname and retain a one-year-or-longer `DRUMSCRIBE_HSTS_MAX_AGE_SECONDS` after TLS is verified.
+6. Set secure cookies, exact API CORS origins, trusted proxy ranges, and Valkey-backed production rate limits. Set `DRUMSCRIBE_ALLOWED_HOSTS` to the public API hostname and retain a one-year-or-longer `DRUMSCRIBE_HSTS_MAX_AGE_SECONDS` after TLS is verified.
    Managed dependencies can cold-start; keep `DRUMSCRIBE_READINESS_TIMEOUT_SECONDS=10` unless target-region measurements justify a lower bounded value.
-7. Configure Resend or the magic-link delivery webhook and its secret; disable development token exposure. Resend requires a verified sending domain before emails can be sent to customers.
+7. Enable Neon Auth on the production Neon branch, register every public redirect
+   origin, and configure the server-only auth base URL/cookie secret plus the API
+   JWKS URL. Configure email/password verification and password reset through
+   Neon Auth's Resend SMTP provider. Enable only reviewed social providers and
+   expose the matching `NEXT_PUBLIC_AUTH_SOCIAL_PROVIDERS` list at web build time.
+   Keep the legacy magic-link API disabled as a production sign-in option and
+   disable development token exposure.
 8. Set `DRUMSCRIBE_PIPELINE_PROVIDER=music_engine` and select only provider adapters whose exact code, weights, data, contract, and commercial use are approved in `MODEL_LICENSING.md`. Set `DRUMSCRIBE_DEMUCS_MODEL=htdemucs` for the benchmarked Oracle fast path or `htdemucs_ft` for the slower rollback quality ensemble. The owner-approved self-hosted path must use the exact pinned revisions and hashes recorded in the approval evidence; changing a model or weight requires a new review.
 9. Run Celery workers and exactly one Celery Beat (or equivalent managed scheduler) so retention and deletion purges execute. Compose uses `worker --beat` only for a single-node local stack.
-10. Configure Sentry-compatible exception/tracing capture with filename and audio-metadata redaction.
+10. Configure Sentry-compatible exception/tracing capture with filename and
+    audio-metadata redaction. Runtime DSNs do not authorize source-map upload:
+    create a least-privilege Sentry organization token separately and store it as
+    the GitHub Actions secret `SENTRY_AUTH_TOKEN`. Never commit or print it.
 11. Run web, API, music-engine, migration, authorization, signed-URL, bucket-CORS, and full-stack browser tests against the release images.
 12. Verify backup restore, anonymous retention, quarantine restore/purge, project deletion, and account deletion in the target environment.
 
@@ -35,14 +44,14 @@ The public `prakhar267/drumscribe` repository deploys from `main` to the Ampere 
 | `drumscribe-beat` | API image | No public port | Celery Beat with a writable local schedule | Exactly one instance schedules the hourly idempotent retention task. |
 | `caddy` | `caddy:2.10.2-alpine` | Public ports `80` and `443` | `infra/oracle/Caddyfile` | Automatic TLS and security headers; persistent certificate state. |
 
-The API and worker use Neon's pooled URL; the API entrypoint applies compatible Alembic migrations before serving traffic. Schema changes are first verified on a temporary Neon branch with its direct URL. All workloads share the production environment, Redis, private-storage, provider-approval, and Sentry configuration, but the API image does not receive the private model-bundle variables. The worker additionally receives:
+The API and worker use Neon's pooled URL; the API entrypoint applies compatible Alembic migrations before serving traffic. Schema changes are first verified on a temporary Neon branch with its direct URL. All workloads share the production environment, private Valkey queue, private-storage, provider-approval, and Sentry configuration, but the API image does not receive the private model-bundle variables. The worker additionally receives:
 
 ```text
 DRUMSCRIBE_MODEL_BUNDLE_KEY=runtime-models/drumscribe-recall-fusion-v6-f2b01777aae9be87.tar.gz
 DRUMSCRIBE_MODEL_BUNDLE_SHA256=f2b01777aae9be874af24dcef06345e13cf15fe516280e1ce07381b7e837d675
 ```
 
-Its entrypoint downloads that private Neon object, verifies the archive and every approved checkpoint hash, installs it atomically, and only then starts Celery. Public Beat This and Demucs artifacts are revision- and hash-pinned in the image and run with the Hugging Face client offline at runtime. Redis uses `rediss://` with `ssl_cert_reqs=required`.
+Its entrypoint downloads that private Neon object, verifies the archive and every approved checkpoint hash, installs it atomically, and only then starts Celery. Public Beat This and Demucs artifacts are revision- and hash-pinned in the image and run with the Hugging Face client offline at runtime. Production Celery and rate limiting use the private `redis://valkey:6379/0` service on the Compose network; no Valkey port is published by the host.
 
 The canonical public web origin is `https://drumtoscore.com`; `https://www.drumtoscore.com` redirects to the canonical host while preserving the path and query string. Cloudflare enforces HTTPS, TLS 1.2 or newer, and the production response-header rule. The API remains `https://api.137.23.63.132.nip.io` behind the web worker's same-origin `/api/v1/*` proxy. The Cloudflare build uses `NEXT_PUBLIC_API_URL=/api/v1`, `NEXT_PUBLIC_DEMO_MODE=false`, and that API hostname as `API_ORIGIN`, so secure session cookies remain first-party. The Workers URL is retained only as a deployment fallback.
 
@@ -59,7 +68,7 @@ Scale API processes independently from workers. Queue routing can later separate
 
 The free launch host is one Oracle `VM.Standard.A1.Flex` instance with 4 OCPUs, 24 GB RAM, and a 46.6 GB boot volume. It consumes the console-confirmed A1 Always Free allowance. Keep worker concurrency at one and use queue backpressure. This is appropriate for validation and a low-traffic beta, not an advertised availability or processing-time SLA.
 
-- API: one process on the free host. For sustained traffic, move the API to redundant hosts only after the owner explicitly approves a paid capacity plan. The API is stateless, and rate-limit/session state is in Redis.
+- API: one process on the free host. For sustained traffic, move the API to redundant hosts only after the owner explicitly approves a paid capacity plan. The API is stateless, and rate-limit/queue state is in private Valkey while authentication identity is in Neon Auth.
 - Worker: concurrency remains `1`; scale from queue age/depth only after capacity and budget are explicitly approved. Do not increase Celery concurrency inside the free host because Demucs and transcription models are memory-heavy.
 - Scheduler: exactly `1` hourly retention job. Never autoscale or duplicate it.
 - Neon: retain the current pooled application endpoint and `0.25–2 CU` autoscaling range for beta, then raise the ceiling only after connection, CPU, and latency measurements justify it. Migrations always use the direct endpoint.

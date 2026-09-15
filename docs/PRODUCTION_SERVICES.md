@@ -7,9 +7,10 @@ This is the non-secret source of truth for DrumToScore's pre-launch service topo
 | Product boundary | Service | App configuration | Current pre-launch status |
 | --- | --- | --- | --- |
 | PostgreSQL | Neon project `drumstick` (`cool-cell-64604736`), organization `Prakhar` (`org-winter-sea-89158570`), AWS Ohio | `DRUMSCRIBE_DATABASE_URL` | CLI/MCP are configured. All migrations passed first on an ephemeral branch and then on `production`; pooled application connectivity is verified. |
-| Durable queue and rate-limit state | Upstash Redis `drumscribe-production`, AWS Ohio | `DRUMSCRIBE_REDIS_URL`; production uses `DRUMSCRIBE_QUEUE_BACKEND=celery` | TLS authentication and write/read/delete verified. Localhost stays `inline` so it remains usable without a separate worker process. |
+| Durable queue and rate-limit state | Private Valkey 8 on the Oracle production VM, Mumbai | `DRUMSCRIBE_REDIS_URL=redis://valkey:6379/0`; production uses `DRUMSCRIBE_QUEUE_BACKEND=celery` | Append-only persistence, `noeviction`, health checking and the private `valkey-data` volume are enabled. The service has no host-published port. Localhost stays `inline` so it remains usable without a separate worker process. Upstash is no longer in the production path. |
 | Private audio and exports | Neon Object Storage bucket `drumscribe-private`, AWS Ohio | `DRUMSCRIBE_S3_*` | Private bucket, scoped production credential, exact-origin CORS, signed browser upload/download, unsigned denial, streamed move fallback, and cleanup are live-verified. The production API keeps CORS aligned with `https://drumtoscore.com`, `https://www.drumtoscore.com`, and the fallback Workers URL. Neon Object Storage is beta, so application retention/deletion remains authoritative. The existing public-read `drumstick` bucket is unused for customer media. |
-| Transactional sign-in email | Resend | `DRUMSCRIBE_MAGIC_LINK_DELIVERY=resend`, `DRUMSCRIBE_RESEND_*` | `drumtoscore.com` is verified with DKIM, SPF, and DMARC records published through Cloudflare. A production magic link from `DrumToScore <sign-in@drumtoscore.com>` was accepted by the API and marked delivered by Resend on 10 September 2026. |
+| Authentication | Neon Auth (managed Better Auth) on the Neon `production` branch | Web: `NEXT_PUBLIC_AUTH_PROVIDER=neon`, `NEON_AUTH_BASE_URL`, `NEON_AUTH_COOKIE_SECRET`; API: `DRUMSCRIBE_NEON_AUTH_BASE_URL`, `DRUMSCRIBE_NEON_AUTH_JWKS_URL` | Email/password, verified email, password reset and social OAuth are implemented. The API exchanges the Neon JWT into the existing first-party product session so project ownership and the one-free-song ledger remain unchanged. The legacy magic-link API is retained only as a development fallback and is not the production sign-in path. |
+| Transactional authentication email | Resend SMTP through Neon Auth | Neon Auth email-provider configuration; no browser secret | `drumtoscore.com` is verified with DKIM, SPF and DMARC records through Cloudflare. Neon Auth uses `smtp.resend.com` and `sign-in@drumtoscore.com` for account verification and password-reset email; ordinary password sign-in does not send a new link. |
 | Inbound customer email | Cloudflare Email Routing | DNS-managed routing only; no application secret | Free routing is enabled for `support@`, `privacy@`, `copyright@`, and `security@drumtoscore.com`; each active rule forwards to the founder's verified Gmail destination. The `support@` route was live-tested with a production DrumToScore email on 10 September 2026. |
 | Merchant of record and credits | Dodo Payments | `DRUMSCRIBE_BILLING_*`, `DRUMSCRIBE_DODO_*`, `NEXT_PUBLIC_BILLING_ENABLED` | One free complete song and the one-time USD 15/10-credit pack are live. Dodo verification is complete, the API runs in `live_mode`, and Cloudflare Worker version `03a3fb2c-9ec2-4bac-aaa6-17fae9baba6a` exposes the public Buy action. The no-charge live checkout-display smoke test passed; the first genuine signed live payment webhook must be monitored. |
 | API error monitoring | Sentry `python-fastapi` | `DRUMSCRIBE_SENTRY_DSN`, `DRUMSCRIBE_SENTRY_TRACES_SAMPLE_RATE` | SDK wiring and a live ingestion event are verified. |
@@ -24,7 +25,14 @@ This is the non-secret source of truth for DrumToScore's pre-launch service topo
 
 DrumToScore uses Neon PostgreSQL and Neon Object Storage. Other Neon primitives stay disabled unless they are deliberately adopted:
 
-- Authentication is the application's own first-party magic-link and session implementation, delivered through Resend.
+- Authentication uses Neon Auth (managed Better Auth). Neon owns credential and
+  identity-provider handling; the web server keeps the Neon Auth cookie secret
+  server-side, and the API validates the Neon JWKS before exchanging identity
+  into the existing owner-scoped application session.
+- Production email/password requires email verification. Neon Auth sends
+  verification and password-reset mail through the configured Resend SMTP
+  provider. Legacy magic-link routes remain for local/fallback compatibility and
+  are not advertised or selected in production.
 - Private audio and generated exports use the existing S3-compatible boundary backed by the private `drumscribe-private` bucket.
 - Neon requires path-style S3 addressing and does not currently expose `CopyObject`; the adapter streams recoverable moves through a temporary local file.
 - `DRUMSCRIBE_S3_SERVER_SIDE_ENCRYPTION=auto` omits unsupported AWS SSE request headers for Neon while retaining provider-managed at-rest encryption.
@@ -54,9 +62,11 @@ DrumToScore uses Neon PostgreSQL and Neon Object Storage. Other Neon primitives 
    privacy and current GST wording. The founder-supplied individual operator,
    address and policy decisions are now recorded and published in source.
 3. Repeat backup/restore and deletion/security drills before material releases.
-   The 10 and 12 September no-card rehearsals passed database parity, restore,
-   private-object playback/export/restore, account deletion and public security
-   checks without touching customer objects.
+   The 15 September no-card rehearsal passed 19 lifecycle/security tests, exact
+   17-table Neon branch row-count and schema parity, private-object
+   playback/export/delete/byte-exact restore, final canary cleanup and all nine
+   public edge checks without reading or changing a customer object. Evidence is
+   in `docs/audit/operations-drill-2026-09-15.md`.
 4. Monitor the first genuine Dodo purchase for a signed HTTP `200` webhook and
    one exactly-once 10-credit grant. Live checkout-display verification passed
    without a real purchase; no card or charge was used for activation testing.
@@ -66,3 +76,7 @@ DrumToScore uses Neon PostgreSQL and Neon Object Storage. Other Neon primitives 
 6. Approve paid redundant capacity before promising an SLA or scaling beyond the
    single free host. The free-beta thresholds and measured evidence are documented
    in `OPERATIONS.md` and `docs/audit/launch-readiness-2026-09-12.md`.
+7. Create a least-privilege Sentry organization token and save it as the GitHub
+   Actions secret `SENTRY_AUTH_TOKEN` before expecting CI/deployment builds to
+   upload browser source maps. Runtime error ingestion works without it; source
+   map upload does not.

@@ -1,5 +1,9 @@
 # DrumToScore launch execution record — 10 September 2026
 
+> Historical deployment snapshot. Production subsequently moved queue state
+> from Upstash to private Valkey and authentication from product magic links to
+> Neon Auth. See `docs/PRODUCTION_SERVICES.md` for the current topology.
+
 This is the non-secret handoff record for the production-readiness work performed
 on 10 September 2026. It intentionally excludes passwords, API keys, webhook
 secrets, database URLs, storage credentials, card data, cookies and sign-in links.

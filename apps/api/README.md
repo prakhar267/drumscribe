@@ -105,5 +105,7 @@ uv run python -m drumscribe_api.ops backfill-free-transcription-claims
 - Project deletion moves recoverable objects to new private quarantine keys before returning, so
   already-issued download URLs are revoked immediately; retention permanently deletes the
   quarantined objects after the configured restore window.
-- Session and magic-link secrets are only stored as SHA-256 hashes.
+- Product sessions are stored as SHA-256 hashes. Production identity comes from
+  Neon Auth after JWKS verification; legacy development magic-link secrets are
+  also stored only as SHA-256 hashes.
 - The right-to-upload acknowledgement is mandatory and audited.

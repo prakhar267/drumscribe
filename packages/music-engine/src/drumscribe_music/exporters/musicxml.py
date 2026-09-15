@@ -69,6 +69,13 @@ def generate_musicxml(
         if beat is None:
             beat = tempo_map.seconds_to_beat(event.notation_onset_seconds)
         beat = max(Fraction(0), beat)
+        # MusicXML durations are integer multiples of ``divisions``.  Imported and
+        # manually edited events can carry arbitrary rational beat positions (for
+        # example 519/200), so project the absolute position onto the score's tick
+        # grid before deriving measures and rests.  Quantizing the boundary once is
+        # important: rounding each adjacent duration independently can make a
+        # measure one tick too long or short.
+        beat = _quantize_beat(beat)
         position = tempo_map.beat_to_position(beat)
         grouped[position.measure_index][position.beat_in_measure].append(event)
         last_beat = max(last_beat, beat)
@@ -199,6 +206,16 @@ def _duration_ticks(duration: Fraction) -> int:
     if ticks.denominator != 1:
         raise ValueError(f"duration {duration} cannot be represented at {DIVISIONS} divisions")
     return ticks.numerator
+
+
+def _quantize_beat(beat: Fraction) -> Fraction:
+    """Return the nearest MusicXML tick, resolving exact half ticks forward."""
+
+    ticks = beat * DIVISIONS
+    quotient, remainder = divmod(ticks.numerator, ticks.denominator)
+    if remainder * 2 >= ticks.denominator:
+        quotient += 1
+    return Fraction(quotient, DIVISIONS)
 
 
 def _duration_type(duration: Fraction) -> str | None:

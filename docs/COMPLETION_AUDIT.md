@@ -1,5 +1,9 @@
 # DrumScribe completion audit
 
+> Historical snapshot from 29 August 2026. It does not describe the current
+> production topology or authentication flow. See `docs/PRODUCTION_SERVICES.md`
+> and the dated launch/operations evidence for the current state.
+
 Audit date: 2026-08-29
 
 Audited revision: `513b15d`

@@ -214,7 +214,11 @@ export function TransportProvider({ children }: { children: ReactNode }) {
     };
     audio.onloadedmetadata = resume;
     audio.onerror = () => {
-      if (sourceVersion === sourceVersionRef.current) setAudioReady(false);
+      if (sourceVersion !== sourceVersionRef.current) return;
+      audio.pause();
+      stemRef.current?.pause();
+      setPlaying(false);
+      setAudioReady(false);
     };
     audio.load();
     if (sources.bpm) setBpm(sources.bpm);

@@ -75,17 +75,17 @@ This plan continues the existing architecture. It does not rebuild the applicati
 
 ### P1.4 Production environment
 
-- [ ] Deploy separate web, API and Celery worker/beat services.
-- [ ] Provision isolated staging/production PostgreSQL, Valkey and private object storage.
-- [ ] Configure production magic-link delivery, domain verification, SPF/DKIM, failure handling and environment-correct links.
-- [ ] Configure TLS, secure cookies, trusted proxy handling, HSTS decision and exact CORS.
-- [ ] Configure backups/PITR, retention/lifecycle/orphan cleanup and restore drills.
+- [x] Deploy separate web, API and Celery worker/beat services.
+- [x] Provision production Lakebase Postgres, private Valkey and private Neon Object Storage; use Neon branches for isolated release checks.
+- [x] Configure production Neon Auth email/password plus social OAuth, verified Resend SMTP for verification/password reset, domain validation and environment-correct callbacks. Keep the legacy magic-link path development-only.
+- [x] Configure TLS, secure cookies, trusted proxy handling, one-year HSTS and exact CORS.
+- [x] Configure branch/PITR recovery procedures, retention/lifecycle cleanup and dated restore/deletion drills. Manual audit/support retention review remains until automated.
 - [x] Configure Sentry-compatible monitoring and documented alerts.
 - [ ] Verify all migrations from zero against the target PostgreSQL release image.
 
 ### P1.5 Security, privacy and legal
 
-- [ ] Threat-model each external provider and document audio transfer, retention, training use and deletion behavior.
+- [x] Map each external provider and index its public DPA/subprocessor evidence; account-specific agreement exports and counsel approval remain external gates.
 - [x] Record owner commercial approval for the selected self-hosted Demucs, ADTOF and Beat This artifacts.
 - [ ] Complete legal review of Privacy, Terms and Copyright policy.
 - [ ] Run authorization, signed-URL, media-parser, rate-limit, secret-redaction and deletion tests against staging.

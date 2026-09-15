@@ -1,6 +1,6 @@
 # DrumToScore support and incident procedure
 
-Last reviewed: 12 September 2026
+Last reviewed: 15 September 2026
 
 This is the operating procedure for the current individual business. It sets
 internal response targets, not a contractual service-level agreement.
@@ -19,7 +19,7 @@ Routing forwards these domain addresses to the founder's verified mailbox:
 
 The owner must check the destination mailbox and spam folder at least once each
 business day. Never request or retain a complete card number, CVV, password,
-magic link, API key or private audio by ordinary email.
+verification/password-reset link, API key or private audio by ordinary email.
 
 ## Intake record
 
@@ -68,3 +68,9 @@ impact, fix, preventive action and evidence links without including secrets.
 Do not promise an uptime or processing-time SLA while the free production tier
 uses one API host and one worker. Capacity thresholds and paid scaling require an
 explicit founder decision before any card, paid plan or charge is used.
+
+Ordinary support records must be deleted 24 months after closure. Privacy-request
+records may be retained for three years, and payment, security-incident or legal
+records for up to seven years or the period required by law. Keep the minimum
+record necessary, do not attach customer audio, and record any scoped legal hold
+for review at least every 90 days.

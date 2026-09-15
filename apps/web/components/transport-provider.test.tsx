@@ -49,7 +49,9 @@ function Probe() {
   return (
     <>
       <output data-testid="ready">{transport.audioReady ? "ready" : "blocked"}</output>
+      <output data-testid="playing">{transport.playing ? "playing" : "stopped"}</output>
       <button type="button" onClick={() => transport.loadDemoAudio()}>Load demo</button>
+      <button type="button" onClick={transport.togglePlayback}>Toggle playback</button>
       <button type="button" onClick={transport.clearAudioSources}>Clear</button>
     </>
   );
@@ -87,5 +89,19 @@ describe("transport audio isolation", () => {
     fireEvent.click(screen.getByRole("button", { name: "Clear" }));
     expect(screen.getByTestId("ready")).toHaveTextContent("blocked");
     expect(FakeAudio.instances[0]?.src).toBe("");
+  });
+
+  it("leaves playback stopped when the active audio source fails", async () => {
+    render(<TransportProvider><Probe /></TransportProvider>);
+
+    fireEvent.click(screen.getByRole("button", { name: "Load demo" }));
+    await waitFor(() => expect(screen.getByTestId("ready")).toHaveTextContent("ready"));
+    fireEvent.click(screen.getByRole("button", { name: "Toggle playback" }));
+    await waitFor(() => expect(screen.getByTestId("playing")).toHaveTextContent("playing"));
+
+    FakeAudio.instances[0]?.onerror?.(new Event("error"));
+
+    await waitFor(() => expect(screen.getByTestId("playing")).toHaveTextContent("stopped"));
+    expect(screen.getByTestId("ready")).toHaveTextContent("blocked");
   });
 });

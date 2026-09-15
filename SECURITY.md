@@ -11,7 +11,12 @@ Every project, asset, event, revision, and export operation is scoped to the aut
 - MIME declarations are advisory. FFprobe verifies the container, codec, duration, channel count, and sample rate before processing.
 - Configurable byte, duration, rate, and concurrency limits apply before expensive work.
 - FFmpeg/FFprobe run through argument arrays with timeouts and constrained working directories.
-- Session cookies are HTTP-only, same-site, and secure outside local development. Magic-link tokens are single-use, short-lived, and stored as hashes.
+- Production authentication uses Neon Auth (managed Better Auth) for verified
+  email/password and configured social providers. Neon credentials and provider
+  secrets remain outside the application database. The API accepts a Neon JWT
+  only after JWKS verification and exchanges it into an HTTP-only, same-site,
+  secure product session. Verification and password-reset links are single
+  purpose and short-lived; legacy application magic links remain development-only.
 - Production rejects unlisted Host headers and emits one-year HSTS after TLS termination is verified.
 - Bulk edits are transactional, authorized, bounded, and revisioned.
 - Structured errors contain stable codes; logs exclude raw audio, signed URLs, tokens, and full user filenames.
@@ -22,7 +27,7 @@ Every project, asset, event, revision, and export operation is scoped to the aut
 
 Run workers as an unprivileged user with a read-only root filesystem, bounded scratch volume, CPU/memory/PID limits, no Docker socket, and outbound network access limited to required object storage and approved model endpoints. Scan images and dependencies, rotate secrets, encrypt data at rest, and enable database point-in-time recovery.
 
-Set an exact origin allow-list; do not use wildcard CORS with credentials. At the edge, add request-body limits, bot/abuse controls, TLS/HSTS, and queue admission limits. Retain audit events longer than transient processing logs but never include media contents.
+Set an exact origin allow-list; do not use wildcard CORS with credentials. At the edge, add request-body limits, bot/abuse controls, TLS/HSTS, and queue admission limits. Ordinary audit/product events are limited to 12 months and transient authentication/security telemetry to 30 days under `DATA_RETENTION.md`; neither may include media contents.
 
 ## Reporting
 

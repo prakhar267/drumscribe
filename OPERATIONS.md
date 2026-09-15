@@ -14,8 +14,8 @@ providers; they need no inbound public port.
 - Readiness: `GET /api/v1/health/ready` checks database, queue, storage and the
   selected pipeline configuration. Remove an instance from traffic on failure.
 - Alert on readiness failure, elevated 5xx/429 rates, queue age, failed/retried
-  jobs, provider timeouts, retention failures, storage errors and magic-link
-  delivery failures.
+  jobs, provider timeouts, retention failures, storage errors, Neon Auth failures
+  and account-verification/password-reset email delivery failures.
 - Track provider success, p50/p95 duration, cost/audio minute, request IDs and
   retention expiry without logging media URLs or names.
 
@@ -30,6 +30,11 @@ providers; they need no inbound public port.
 5. Retention runs hourly. Alert if no successful run occurs for two hours.
 6. Rotate session, database, object-storage, mail and provider secrets through the
    deployment secret manager. A session-secret rotation logs out all users.
+7. Quarterly, apply `DATA_RETENTION.md`: delete or irreversibly aggregate product
+   and ordinary audit events older than 12 months, delete ordinary support records
+   24 months after closure, delete transactional delivery metadata after 30 days,
+   and record every exception/legal hold. This is a manual control until the
+   database and mailbox schedules are automated.
 
 ## Backup and restore
 
@@ -46,6 +51,14 @@ exporting customer rows. Second, use a schema-only branch with a synthetic
 canary, run PostgreSQL 18 `pg_dump`/`pg_restore` into a fresh database, compare
 the canary hash, verify the Alembic head, and delete the branch. Never restore a
 production dump into a public or shared environment.
+
+The 15 September 2026 rehearsal repeated the safe path: a read-only branch of
+`production` matched all 17 public-table row counts, the normalized schema hash
+and Alembic revision, then the exact disposable branch was deleted. A uniquely
+prefixed private-object canary passed signed playback, export parsing, deletion,
+byte-exact restore and final cleanup. Nineteen local deletion/security tests and
+all nine public edge checks passed. See
+`docs/audit/operations-drill-2026-09-15.md`.
 
 Run the read-only edge drill with:
 
