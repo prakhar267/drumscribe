@@ -58,18 +58,21 @@ private Compose network, and the worker has no inbound port. Restrict SSH at bot
 the OCI network layer and the host firewall.
 
 The worker starts through `nice -n 10` so model inference yields CPU time to the
-public API and scheduler on the four-OCPU beta host. Keep Celery concurrency at
-one until a sealed capacity run proves that greater concurrency preserves API
-readiness; niceness protects responsiveness but does not make the free host
-suitable for an advertised processing-time or availability SLA.
+public API and scheduler on the four-OCPU beta host. Celery concurrency is two:
+a sealed same-input production probe completed two jobs in parallel while the
+API remained ready and worker memory stayed below 1.3 GiB. Keep the prefetch
+multiplier at one so each process reserves only one job. Niceness protects
+responsiveness but does not make the free host suitable for an advertised
+processing-time or availability SLA.
 
 Immediately before the single worker starts, `drumscribe_api.worker_recovery`
 requeues every non-terminal job that had advanced beyond `RECEIVED`. This
 closes Redis visibility-timeout downtime after a worker or VM process crash.
 The durable stage checkpoint reruns the interrupted stage; if the broker's old
 delivery becomes visible later, the terminal-state guard turns it into a no-op.
-This startup reconciler assumes this Compose deployment's single-worker model;
-replace it with leased job ownership before horizontally scaling workers.
+This startup reconciler assumes this Compose deployment's single worker-service
+model; replace it with leased job ownership before horizontally scaling to
+multiple hosts or worker services.
 
 The original 13 September 2026 180-second production-equivalent probe took 10
 minutes 26 seconds on 4 OCPUs/24 GB with the four-model HTDemucs-ft ensemble.

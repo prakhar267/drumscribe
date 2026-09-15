@@ -75,8 +75,9 @@ unbounded cost event.
 
 ### Free-beta capacity policy
 
-- Keep exactly one API, one worker at concurrency `1`, and one scheduler on the
-  current 4 OCPU/24 GB Oracle host. Do not promise an SLA on this single host.
+- Keep exactly one API, one worker service at concurrency `2`, and one scheduler
+  on the current 4 OCPU/24 GB Oracle host. Prefetch remains one per process. Do
+  not promise an SLA on this single host.
 - Run the CPU-heavy worker at niceness 10 so an active transcription yields CPU
   time to the API, proxy and scheduler. This improves control-plane responsiveness
   but does not add throughput or redundancy.
@@ -111,6 +112,13 @@ unbounded cost event.
 - The same audit removed 21.08 GB of unused, regenerable Docker build cache;
   active images, volumes and both current and rollback release tags were kept.
   Root-disk use fell from 78% to 40%.
+- On 16 September a same-input production probe compared one process with two.
+  One 29.5-second job reached READY in 105.7 seconds. With two worker processes,
+  two simultaneous copies both reached READY in approximately 101--109 seconds
+  instead of serializing to roughly 211 seconds. A three-user run completed the
+  first pair in approximately 96--103 seconds and the queued third in 171.9
+  seconds. Worker CPU saturated the four OCPUs as intended, memory peaked near
+  1.2 GiB, readiness remained healthy, and all synthetic accounts were deleted.
 - GitHub's scheduled probe is a best-effort free alert and can run later than
   its 15-minute cron expression. Do not call it a 15-minute detection SLA. Add
   a redundant monitor only after choosing a provider that needs no card.

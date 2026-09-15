@@ -45,6 +45,29 @@ class SamePathTranscriber:
         )
 
 
+def test_pipeline_materializes_uploaded_audio_once_per_run(client, app, monkeypatch) -> None:
+    create_session(client)
+    project_payload = create_project(client)
+    upload_wav(client, project_payload["id"])
+
+    storage = app.state.storage
+    assert isinstance(storage, LocalPrivateStorage)
+    original_materialize = storage.materialize
+    materialized: list[str] = []
+
+    @contextlib.asynccontextmanager
+    async def counting_materialize(key: str) -> AsyncIterator[Path]:
+        materialized.append(key)
+        async with original_materialize(key) as path:
+            yield path
+
+    monkeypatch.setattr(storage, "materialize", counting_materialize)
+    completed = process_project(client, app, project_payload["id"])
+
+    assert completed["stage"] == "READY"
+    assert len(materialized) == 1
+
+
 def test_full_mix_recall_fusion_downloads_normalized_audio_once(client, app, monkeypatch) -> None:
     create_session(client)
     project_payload = create_project(client)

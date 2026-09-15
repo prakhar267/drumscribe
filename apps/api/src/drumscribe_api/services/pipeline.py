@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 import importlib
 import inspect
 import json
@@ -10,7 +11,7 @@ import statistics
 import tempfile
 import time
 import uuid
-from collections.abc import Iterable
+from collections.abc import AsyncIterator, Iterable
 from datetime import datetime
 from itertools import pairwise
 from pathlib import Path
@@ -863,6 +864,9 @@ class PipelineService:
             project = await db.get(Project, job.project_id)
             if project is None or project.deleted_at is not None:
                 return
+            scratch_directory = tempfile.TemporaryDirectory(prefix=f"drumscribe-job-{job_id}-")
+            scratch_root = Path(scratch_directory.name)
+            materialized_assets: dict[uuid.UUID, Path] = {}
             try:
                 while job.stage not in TERMINAL_JOB_STAGES:
                     if job.cancel_requested_at is not None:
@@ -882,7 +886,14 @@ class PipelineService:
                         await db.commit()
                     current_stage = job.stage
                     started = time.monotonic()
-                    await self._run_stage(db, job, project, current_stage)
+                    await self._run_stage(
+                        db,
+                        job,
+                        project,
+                        current_stage,
+                        scratch_root=scratch_root,
+                        materialized_assets=materialized_assets,
+                    )
                     timings = dict(job.stage_timings or {})
                     timings[current_stage.value] = round(time.monotonic() - started, 4)
                     job.stage_timings = timings
@@ -947,6 +958,8 @@ class PipelineService:
                     await db.commit()
                 logger.exception("pipeline_failed", job_id=str(job_id))
                 raise
+            finally:
+                scratch_directory.cleanup()
 
     def _configured_provider_for_stage(self, stage: JobStage) -> str:
         if stage == JobStage.SEPARATING_DRUMS:
@@ -963,13 +976,16 @@ class PipelineService:
         job: ProcessingJob,
         project: Project,
         stage: JobStage,
+        *,
+        scratch_root: Path | None = None,
+        materialized_assets: dict[uuid.UUID, Path] | None = None,
     ) -> None:
         if stage == JobStage.VALIDATING:
             asset = await self._original_asset(db, project, job)
             metadata = await self.storage.head(asset.storage_key)
             if metadata.size_bytes > self.settings.max_upload_bytes:
                 raise APIError(413, JobErrorCode.AUDIO_TOO_LARGE.value, "Audio is too large.")
-            async with self.storage.materialize(asset.storage_key) as path:
+            async with self._materialize_asset(asset, scratch_root, materialized_assets) as path:
                 audio = await self.audio_probe.inspect(
                     path,
                     declared_content_type=asset.content_type or "application/octet-stream",
@@ -1007,11 +1023,24 @@ class PipelineService:
             return
         if stage == JobStage.NORMALIZING:
             source = await self._original_asset(db, project, job)
-            await self._ensure_normalized(db, project, source, job)
+            await self._ensure_normalized(
+                db,
+                project,
+                source,
+                job,
+                scratch_root=scratch_root,
+                materialized_assets=materialized_assets,
+            )
             return
         if stage == JobStage.SEPARATING_DRUMS:
             source = await self._asset(db, project.id, AssetKind.NORMALIZED)
-            _, provider_metadata = await self._ensure_drum_stem(db, project, source)
+            _, provider_metadata = await self._ensure_drum_stem(
+                db,
+                project,
+                source,
+                scratch_root=scratch_root,
+                materialized_assets=materialized_assets,
+            )
             versions = dict(job.provider_versions or {})
             versions["separation"] = (
                 f"{provider_metadata.provider}/{provider_metadata.model_version}"
@@ -1035,7 +1064,9 @@ class PipelineService:
                 AssetKind.NORMALIZED if input_kind == "full_mix" else AssetKind.DRUM_STEM
             )
             transcription_input = await self._asset(db, project.id, input_asset_kind)
-            async with self.storage.materialize(transcription_input.storage_key) as path:
+            async with self._materialize_asset(
+                transcription_input, scratch_root, materialized_assets
+            ) as path:
                 if (
                     self.settings.music_transcription_provider.casefold()
                     == "drumscribe_recall_fusion"
@@ -1048,8 +1079,8 @@ class PipelineService:
                             mixture_path=path,
                         )
                     else:
-                        async with self.storage.materialize(
-                            mixture_asset.storage_key
+                        async with self._materialize_asset(
+                            mixture_asset, scratch_root, materialized_assets
                         ) as mixture_path:
                             transcription_result = await self.music.transcribe(
                                 path,
@@ -1110,7 +1141,9 @@ class PipelineService:
             # The full mix supplies stable pulse/downbeat evidence that may be absent
             # from a sparse or imperfectly separated drum stem.
             normalized = await self._asset(db, project.id, AssetKind.NORMALIZED)
-            async with self.storage.materialize(normalized.storage_key) as path:
+            async with self._materialize_asset(
+                normalized, scratch_root, materialized_assets
+            ) as path:
                 beat_analysis = await self.music.track_beats(path)
             summary = dict(run.summary)
             summary["beatAnalysis"] = beat_analysis
@@ -1274,7 +1307,12 @@ class PipelineService:
             return
         if stage == JobStage.FINALIZING:
             await self._transcription(db, project)
-            await self._ensure_waveform(db, project)
+            await self._ensure_waveform(
+                db,
+                project,
+                scratch_root=scratch_root,
+                materialized_assets=materialized_assets,
+            )
             normalized = await self._asset(db, project.id, AssetKind.NORMALIZED)
             normalized.status = AssetStatus.DELETING
             normalized.deleted_at = utcnow()
@@ -1331,6 +1369,9 @@ class PipelineService:
         project: Project,
         source: AudioAsset,
         job: ProcessingJob,
+        *,
+        scratch_root: Path | None = None,
+        materialized_assets: dict[uuid.UUID, Path] | None = None,
     ) -> AudioAsset:
         existing = await self._active_asset(db, project.id, AssetKind.NORMALIZED)
         if existing is not None:
@@ -1339,9 +1380,16 @@ class PipelineService:
             f"users/{project.owner_id}/projects/{project.id}/working/"
             f"{source.id}/{job.id}/normalized.wav"
         )
-        with tempfile.TemporaryDirectory(prefix="drumscribe-normalize-") as directory:
-            output = Path(directory) / "normalized.wav"
-            async with self.storage.materialize(source.storage_key) as input_path:
+        temporary_directory: tempfile.TemporaryDirectory[str] | None = None
+        if scratch_root is None:
+            temporary_directory = tempfile.TemporaryDirectory(prefix="drumscribe-normalize-")
+            output = Path(temporary_directory.name) / "normalized.wav"
+        else:
+            output = scratch_root / "normalized.wav"
+        try:
+            async with self._materialize_asset(
+                source, scratch_root, materialized_assets
+            ) as input_path:
                 ffmpeg = shutil.which(self.settings.ffmpeg_binary)
                 if ffmpeg:
                     engine = self.music._engine()
@@ -1366,33 +1414,49 @@ class PipelineService:
                 size_bytes=output_size,
             )
             await self.storage.put_file(key, output, "audio/wav")
-        return await self._upsert_asset(
-            db,
-            project,
-            kind=AssetKind.NORMALIZED,
-            key=key,
-            content_type=metadata.content_type,
-            size_bytes=metadata.size_bytes,
-            duration_seconds=metadata.duration_seconds,
-            codec=metadata.codec,
-            sample_rate=metadata.sample_rate,
-            channels=metadata.channels,
-        )
+            asset = await self._upsert_asset(
+                db,
+                project,
+                kind=AssetKind.NORMALIZED,
+                key=key,
+                content_type=metadata.content_type,
+                size_bytes=metadata.size_bytes,
+                duration_seconds=metadata.duration_seconds,
+                codec=metadata.codec,
+                sample_rate=metadata.sample_rate,
+                channels=metadata.channels,
+            )
+            if scratch_root is not None and materialized_assets is not None:
+                materialized_assets[asset.id] = output
+            return asset
+        finally:
+            if temporary_directory is not None:
+                temporary_directory.cleanup()
 
     async def _ensure_drum_stem(
         self,
         db: AsyncSession,
         project: Project,
         source: AudioAsset,
+        *,
+        scratch_root: Path | None = None,
+        materialized_assets: dict[uuid.UUID, Path] | None = None,
     ) -> tuple[AudioAsset, ProviderRunMetadata | None]:
         existing = await self._active_asset(db, project.id, AssetKind.DRUM_STEM)
         if existing is not None:
             return existing, None
         input_asset_id = project.original_asset_id or source.id
         key = f"users/{project.owner_id}/projects/{project.id}/stems/{input_asset_id}/drums.wav"
-        with tempfile.TemporaryDirectory(prefix="drumscribe-separate-") as directory:
-            output = Path(directory) / "drums.wav"
-            async with self.storage.materialize(source.storage_key) as input_path:
+        temporary_directory: tempfile.TemporaryDirectory[str] | None = None
+        if scratch_root is None:
+            temporary_directory = tempfile.TemporaryDirectory(prefix="drumscribe-separate-")
+            output = Path(temporary_directory.name) / "drums.wav"
+        else:
+            output = scratch_root / "drums.wav"
+        try:
+            async with self._materialize_asset(
+                source, scratch_root, materialized_assets
+            ) as input_path:
                 provider_metadata = await self.music.separate(input_path, output)
             output_size = (await asyncio.to_thread(output.stat)).st_size
             metadata = await self.audio_probe.inspect(
@@ -1401,19 +1465,52 @@ class PipelineService:
                 size_bytes=output_size,
             )
             await self.storage.put_file(key, output, "audio/wav")
-        asset = await self._upsert_asset(
-            db,
-            project,
-            kind=AssetKind.DRUM_STEM,
-            key=key,
-            content_type=metadata.content_type,
-            size_bytes=metadata.size_bytes,
-            duration_seconds=metadata.duration_seconds,
-            codec=metadata.codec,
-            sample_rate=metadata.sample_rate,
-            channels=metadata.channels,
-        )
-        return asset, provider_metadata
+            asset = await self._upsert_asset(
+                db,
+                project,
+                kind=AssetKind.DRUM_STEM,
+                key=key,
+                content_type=metadata.content_type,
+                size_bytes=metadata.size_bytes,
+                duration_seconds=metadata.duration_seconds,
+                codec=metadata.codec,
+                sample_rate=metadata.sample_rate,
+                channels=metadata.channels,
+            )
+            if scratch_root is not None and materialized_assets is not None:
+                materialized_assets[asset.id] = output
+            return asset, provider_metadata
+        finally:
+            if temporary_directory is not None:
+                temporary_directory.cleanup()
+
+    @contextlib.asynccontextmanager
+    async def _materialize_asset(
+        self,
+        asset: AudioAsset,
+        scratch_root: Path | None,
+        materialized_assets: dict[uuid.UUID, Path] | None,
+    ) -> AsyncIterator[Path]:
+        """Materialize an object once for the lifetime of one pipeline run.
+
+        Durable stage outputs are still uploaded before the stage is committed.
+        The job-scoped copy only avoids downloading the same original,
+        normalized mix, and stem again in later stages. A retry after a process
+        crash starts with an empty cache and reconstructs it from durable storage.
+        """
+
+        if scratch_root is None or materialized_assets is None:
+            async with self.storage.materialize(asset.storage_key) as path:
+                yield path
+            return
+
+        cached = materialized_assets.get(asset.id)
+        if cached is None or not cached.is_file():
+            cached = scratch_root / f"{asset.id}.audio"
+            async with self.storage.materialize(asset.storage_key) as source:
+                await asyncio.to_thread(shutil.copyfile, source, cached)
+            materialized_assets[asset.id] = cached
+        yield cached
 
     async def _active_asset(
         self, db: AsyncSession, project_id: uuid.UUID, kind: AssetKind
@@ -1472,7 +1569,14 @@ class PipelineService:
             raise RuntimeError("transcription checkpoint missing")
         return run
 
-    async def _ensure_waveform(self, db: AsyncSession, project: Project) -> AudioAsset:
+    async def _ensure_waveform(
+        self,
+        db: AsyncSession,
+        project: Project,
+        *,
+        scratch_root: Path | None = None,
+        materialized_assets: dict[uuid.UUID, Path] | None = None,
+    ) -> AudioAsset:
         existing = (
             (
                 await db.execute(
@@ -1491,7 +1595,9 @@ class PipelineService:
         normalized = await self._asset(db, project.id, AssetKind.NORMALIZED)
         try:
             engine = importlib.import_module("drumscribe_music")
-            async with self.storage.materialize(normalized.storage_key) as path:
+            async with self._materialize_asset(
+                normalized, scratch_root, materialized_assets
+            ) as path:
                 peaks = await asyncio.to_thread(engine.generate_waveform_peaks, path, bins=2_000)
                 data = engine.waveform_peaks_json(peaks)
         except (ImportError, OSError, ValueError, RuntimeError):

@@ -59,7 +59,7 @@ services:
       - >-
         python -m drumscribe_api.worker_recovery &&
         exec nice -n 10 celery -A drumscribe_api.tasks:celery_app worker
-        --loglevel=INFO --concurrency=1
+        --loglevel=INFO --concurrency=2
     depends_on:
       api:
         condition: service_healthy
