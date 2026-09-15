@@ -23,9 +23,18 @@ interface TransportContextValue {
   setLoop: (loop: LoopRange) => void;
   setMixer: (mixer: MixerState) => void;
   skipMeasure: (direction: -1 | 1) => void;
-  loadAudioSources: (sources: { originalUrl: string; drumsUrl?: string; bpm?: number; beatsPerMeasure?: number; preservePosition?: boolean }) => void;
+  loadAudioSources: (sources: AudioSources) => void;
   loadDemoAudio: (options?: { bpm?: number; duration?: number; beatsPerMeasure?: number }) => void;
   clearAudioSources: () => void;
+}
+
+interface AudioSources {
+  originalUrl: string;
+  drumsUrl?: string;
+  bpm?: number;
+  beatsPerMeasure?: number;
+  preservePosition?: boolean;
+  demoDurationSeconds?: number;
 }
 
 const TransportContext = createContext<TransportContextValue | null>(null);
@@ -35,8 +44,10 @@ export function TransportProvider({ children }: { children: ReactNode }) {
   const stemRef = useRef<HTMLAudioElement | null>(null);
   const frameRef = useRef<number | null>(null);
   const sourceRef = useRef<string | null>(null);
-  const pendingSourcesRef = useRef<{ originalUrl: string; drumsUrl?: string; bpm?: number; beatsPerMeasure?: number; preservePosition?: boolean } | null>(null);
+  const pendingSourcesRef = useRef<AudioSources | null>(null);
   const sourceVersionRef = useRef(0);
+  const demoDurationRef = useRef<number | null>(null);
+  const virtualPlaybackRef = useRef<{ startedAt: number; offset: number } | null>(null);
   const lastBeatRef = useRef(-1);
   const countInTimersRef = useRef<number[]>([]);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -85,12 +96,23 @@ export function TransportProvider({ children }: { children: ReactNode }) {
     const update = () => {
       const audio = audioRef.current;
       if (!audio) return;
-      if (loop.enabled && audio.currentTime >= loop.end - 0.012) {
-        audio.currentTime = loop.start;
-        if (stemRef.current) stemRef.current.currentTime = loop.start;
+      const virtual = virtualPlaybackRef.current;
+      let nextTime = virtual
+        ? virtual.offset + (performance.now() - virtual.startedAt) / 1_000 * playbackRateRef.current
+        : audio.currentTime;
+      if (loop.enabled && nextTime >= loop.end - 0.012) {
+        const loopLength = Math.max(0.1, loop.end - loop.start);
+        nextTime = loop.start + Math.max(0, (nextTime - loop.start) % loopLength);
+        audio.currentTime = nextTime;
+        if (stemRef.current) stemRef.current.currentTime = nextTime;
+        if (virtual) virtualPlaybackRef.current = { startedAt: performance.now(), offset: nextTime };
+      } else if (virtual && duration > 0 && nextTime >= duration) {
+        virtualPlaybackRef.current = null;
+        setCurrentTime(duration);
+        setPlaying(false);
+        return;
       }
-      if (stemRef.current && Math.abs(stemRef.current.currentTime - audio.currentTime) > 0.045) stemRef.current.currentTime = audio.currentTime;
-      const nextTime = audio.currentTime;
+      if (!virtual && stemRef.current && Math.abs(stemRef.current.currentTime - audio.currentTime) > 0.045) stemRef.current.currentTime = audio.currentTime;
       setCurrentTime(nextTime);
       const beat = Math.floor(nextTime / (60 / bpm));
       if (beat !== lastBeatRef.current) {
@@ -103,26 +125,44 @@ export function TransportProvider({ children }: { children: ReactNode }) {
     return () => {
       if (frameRef.current) cancelAnimationFrame(frameRef.current);
     };
-  }, [beatsPerMeasure, bpm, clickMetronome, loop, playing]);
+  }, [beatsPerMeasure, bpm, clickMetronome, duration, loop, playing]);
 
   const togglePlayback = useCallback(() => {
     const audio = audioRef.current;
     if (!audio || !audioReady) return;
-    if (audio.paused) {
-      if (loop.enabled && (audio.currentTime < loop.start || audio.currentTime >= loop.end)) audio.currentTime = loop.start;
-      void audio.play().then(() => {
+    if (playing) {
+      audio.pause();
+      stemRef.current?.pause();
+      virtualPlaybackRef.current = null;
+      setPlaying(false);
+      return;
+    }
+    if (loop.enabled && (audio.currentTime < loop.start || audio.currentTime >= loop.end)) audio.currentTime = loop.start;
+    if (demoDurationRef.current !== null) {
+      virtualPlaybackRef.current = { startedAt: performance.now(), offset: audio.currentTime };
+      setPlaying(true);
+    }
+    void audio
+      .play()
+      .then(() => {
+        const virtual = virtualPlaybackRef.current;
+        if (virtual) {
+          audio.currentTime = Math.min(
+            demoDurationRef.current ?? Number.POSITIVE_INFINITY,
+            virtual.offset + (performance.now() - virtual.startedAt) / 1_000 * playbackRateRef.current,
+          );
+          virtualPlaybackRef.current = null;
+        }
         if (stemRef.current) {
           stemRef.current.currentTime = audio.currentTime;
           void stemRef.current.play().catch(() => undefined);
         }
         setPlaying(true);
-      }).catch(() => setPlaying(false));
-    } else {
-      audio.pause();
-      stemRef.current?.pause();
-      setPlaying(false);
-    }
-  }, [audioReady, loop]);
+      })
+      .catch(() => {
+        if (demoDurationRef.current === null) setPlaying(false);
+      });
+  }, [audioReady, loop, playing]);
 
   const seek = useCallback((time: number) => {
     const safe = Math.max(0, Math.min(duration, time));
@@ -164,12 +204,14 @@ export function TransportProvider({ children }: { children: ReactNode }) {
   const setLoop = useCallback((value: LoopRange) => setLoopState({ ...value, end: Math.max(value.start + 0.1, value.end) }), []);
   const setMixer = useCallback((value: MixerState) => setMixerState(value), []);
   const skipMeasure = useCallback((direction: -1 | 1) => seek(currentTime + direction * beatsPerMeasure * 60 / bpm), [beatsPerMeasure, bpm, currentTime, seek]);
-  const loadAudioSources = useCallback((sources: { originalUrl: string; drumsUrl?: string; bpm?: number; beatsPerMeasure?: number; preservePosition?: boolean }) => {
+  const loadAudioSources = useCallback((sources: AudioSources) => {
     const previousPendingUrl = pendingSourcesRef.current?.originalUrl;
     if (previousPendingUrl?.startsWith("blob:") && previousPendingUrl !== sources.originalUrl && previousPendingUrl !== sourceRef.current) {
       URL.revokeObjectURL(previousPendingUrl);
     }
     pendingSourcesRef.current = sources;
+    demoDurationRef.current = sources.demoDurationSeconds ?? null;
+    virtualPlaybackRef.current = null;
     const audio = audioRef.current;
     if (!audio) return;
     const sourceVersion = ++sourceVersionRef.current;
@@ -217,10 +259,19 @@ export function TransportProvider({ children }: { children: ReactNode }) {
       if (sourceVersion !== sourceVersionRef.current) return;
       audio.pause();
       stemRef.current?.pause();
-      setPlaying(false);
-      setAudioReady(false);
+      if (demoDurationRef.current === null) {
+        setPlaying(false);
+        setAudioReady(false);
+      } else {
+        if (!virtualPlaybackRef.current) setPlaying(false);
+        setAudioReady(true);
+      }
     };
     audio.load();
+    if (sources.demoDurationSeconds !== undefined) {
+      setDuration(sources.demoDurationSeconds);
+      setAudioReady(true);
+    }
     if (sources.bpm) setBpm(sources.bpm);
     if (sources.beatsPerMeasure) setBeatsPerMeasure(sources.beatsPerMeasure);
     setCountingIn(false);
@@ -233,11 +284,14 @@ export function TransportProvider({ children }: { children: ReactNode }) {
       originalUrl: createSyntheticDemoAudioUrl(demoDuration, demoBpm),
       bpm: demoBpm,
       beatsPerMeasure: options?.beatsPerMeasure ?? 4,
+      demoDurationSeconds: demoDuration,
     });
   }, [loadAudioSources]);
 
   const clearAudioSources = useCallback(() => {
     pendingSourcesRef.current = null;
+    demoDurationRef.current = null;
+    virtualPlaybackRef.current = null;
     sourceVersionRef.current += 1;
     countInTimersRef.current.forEach((timer) => window.clearTimeout(timer));
     countInTimersRef.current = [];

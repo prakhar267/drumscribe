@@ -91,7 +91,7 @@ describe("transport audio isolation", () => {
     expect(FakeAudio.instances[0]?.src).toBe("");
   });
 
-  it("leaves playback stopped when the active audio source fails", async () => {
+  it("keeps the synthetic demo available when the media element fails", async () => {
     render(<TransportProvider><Probe /></TransportProvider>);
 
     fireEvent.click(screen.getByRole("button", { name: "Load demo" }));
@@ -102,6 +102,6 @@ describe("transport audio isolation", () => {
     FakeAudio.instances[0]?.onerror?.(new Event("error"));
 
     await waitFor(() => expect(screen.getByTestId("playing")).toHaveTextContent("stopped"));
-    expect(screen.getByTestId("ready")).toHaveTextContent("blocked");
+    expect(screen.getByTestId("ready")).toHaveTextContent("ready");
   });
 });
